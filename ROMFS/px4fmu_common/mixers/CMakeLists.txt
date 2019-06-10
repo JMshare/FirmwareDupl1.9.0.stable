@@ -86,4 +86,6 @@ px4_add_romfs_files(
 	vtol_delta.aux.mix
 	wingwing.main.mix
 	zmr250.main.mix
+	my_LQR_Custer.main.mix
+	my_LQR_S500_quad.main.mix
 )

@@ -872,7 +872,7 @@ PX4IO::task_main()
 	_t_actuator_controls_0 = orb_subscribe(ORB_ID(actuator_controls_0));
 	orb_set_interval(_t_actuator_controls_0, 20);		/* default to 50Hz */
 	_t_actuator_controls_1 = orb_subscribe(ORB_ID(actuator_controls_1));
-	orb_set_interval(_t_actuator_controls_1, 33);		/* default to 30Hz */
+	orb_set_interval(_t_actuator_controls_1, 20);		/* default to 30Hz */
 	_t_actuator_controls_2 = orb_subscribe(ORB_ID(actuator_controls_2));
 	orb_set_interval(_t_actuator_controls_2, 33);		/* default to 30Hz */
 	_t_actuator_controls_3 = orb_subscribe(ORB_ID(actuator_controls_3));
@@ -918,6 +918,8 @@ PX4IO::task_main()
 			}
 
 			orb_set_interval(_t_actuator_controls_0, _update_interval);
+			orb_set_interval(_t_actuator_controls_1, _update_interval);
+
 			/*
 			 * NOT changing the rate of groups 1-3 here, because only attitude
 			 * really needs to run fast.

@@ -617,6 +617,8 @@ void Logger::add_default_topics()
 	add_topic("actuator_controls_0", 100);
 	add_topic("actuator_controls_1", 100);
 	add_topic("actuator_outputs", 100);
+	add_topic("angular_rates_filtered");
+	add_topic("actuator_controls_virtual_fw");
 	add_topic("airspeed", 200);
 	add_topic("battery_status", 500);
 	add_topic("camera_capture");
@@ -679,6 +681,7 @@ void Logger::add_high_rate_topics()
 {
 	// maximum rate to analyze fast maneuvers (e.g. for racing)
 	add_topic("actuator_controls_0");
+	add_topic("actuator_controls_1");
 	add_topic("actuator_outputs");
 	add_topic("manual_control_setpoint");
 	add_topic("rate_ctrl_status");

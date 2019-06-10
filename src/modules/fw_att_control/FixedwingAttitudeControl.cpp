@@ -444,7 +444,7 @@ FixedwingAttitudeControl::vehicle_status_poll()
 				}
 
 			} else {
-				_actuators_id = ORB_ID(actuator_controls_0);
+				_actuators_id = ORB_ID(actuator_controls_virtual_fw);
 				_attitude_setpoint_id = ORB_ID(vehicle_attitude_setpoint);
 			}
 		}
