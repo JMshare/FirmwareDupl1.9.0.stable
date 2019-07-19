@@ -340,7 +340,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_TAILERONS, 0.3f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSP, 0.15f);
+PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSP, 0.3f);
 
 /**
  * Motorons yaw mixer scaling
@@ -353,7 +353,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSP, 0.15f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSR, 0.15f);
+PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSR, 0.3f);
 
 /**
  * Cutoff frequency for angular rates filter
