@@ -1,18 +1,14 @@
 #!/bin/sh
 #
-# @name my Custer airframe
+# @name my Custer airframe HIL
 #
-# @type Standard Plane
+# @type Simulation
 # @class Plane
 #
-# @output MAIN1 motor LW
-# @output MAIN2 motor RW
-# @output MAIN3 front motor servo
-# @output MAIN4 (aileron L) or BEC in
-# @output MAIN5 aileron R
-# @output MAIN6 elevator L
-# @output MAIN7 elevator R
-# @output MAIN8 rudders (& steering wheel)
+# @output MAIN1 aileron
+# @output MAIN2 elevator
+# @output MAIN3 rudder
+# @output MAIN4 throttle
 #
 # @maintainer Juraj Mihalik <jm1e16@soton.ac.uk>
 #
