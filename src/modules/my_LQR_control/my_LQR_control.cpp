@@ -425,6 +425,8 @@ int My_LQR_control::rc_loss_failsafe(){
 int My_LQR_control::control_fun(){
 
     Del_y  = y  - y_setpoint;
+    Del_y(11,0) = math::constrain(Del_y(11,0), -0.26f, 0.26f); // limit the yaw error to +-15 deg (0.26rad) not to freak out when heading too off course
+
     //Del_cf = cf - c_setpoint; // not used if not filter
     Del_r  = r  - r_setpoint;
 
