@@ -425,7 +425,7 @@ int My_LQR_control::rc_loss_failsafe(){
 int My_LQR_control::control_fun(){
 
     Del_y  = y  - y_setpoint;
-    Del_y(11,0) = math::constrain(Del_y(11,0), -0.26f, 0.26f); // limit the yaw error to +-15 deg (0.26rad) not to freak out when heading too off course
+    //Del_y(11,0) = math::constrain(Del_y(11,0), -0.26f, 0.26f); // limit the yaw error to +-15 deg (0.26rad) not to freak out when heading too off course
 
     //Del_cf = cf - c_setpoint; // not used if not filter
     Del_r  = r  - r_setpoint;
@@ -614,7 +614,7 @@ int My_LQR_control::filter_rates(){
 
     if(angular_rates_cutoff_freqn <= 100.0f){
         omg_filtered = lp_filter_angular_rates.apply(omg);
-        if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f)){ // if NAN this should come to false
+        if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f)){ // safety check, if NAN this should come to false
             omg_filtered = omg;
             PX4_ERR("Filtering rates results in NANs!");
         }
@@ -673,7 +673,7 @@ int My_LQR_control::read_y_setpoint(){
     y_setpoint(9,0) = 0.0f;
     y_setpoint(10,0) = pitch_setpoint;
     y_setpoint(11,0) = yaw_setpoint;
-    if(fabsf(y_setpoint(8,0)) > 0.01f || ((fabsf(y_setpoint(6,0)) > 0.01f) && (vehicle_id == 2)) || fabsf(yaw_setpoint) <= 0.0f){ // at yaw||(roll if fw) rate command or at the startup
+    if(fabsf(y_setpoint(8,0)) > 0.1f || ((fabsf(y_setpoint(6,0)) > 0.1f) && (vehicle_id == 2)) || fabsf(yaw_setpoint) <= 0.0f){ // at yaw||(roll if fw) rate command or at the startup
         yaw_setpoint = y(11,0);
     }
 
@@ -735,7 +735,7 @@ int My_LQR_control::initialize_variables(){
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.00f; K_feedback_y(3,7) =   0.00f; K_feedback_y(3,8) =   0.00f; K_feedback_y(3,9) =   0.00f; K_feedback_y(3,10) =   0.00f; K_feedback_y(3,11) =   0.00f; 
     }
     else if(vehicle_id == 2){ // Custer
-        K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.70f; K_feedback_y(0,7) =   0.00f; K_feedback_y(0,8) =   0.00f; K_feedback_y(0,9) =   1.30f; K_feedback_y(0,10) =   0.00f; K_feedback_y(0,11) =   0.00f; 
+        K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.70f; K_feedback_y(0,7) =   0.00f; K_feedback_y(0,8) =  -0.20f; K_feedback_y(0,9) =   1.30f; K_feedback_y(0,10) =   0.00f; K_feedback_y(0,11) =  -0.20f; 
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.00f; K_feedback_y(1,7) =   0.90f; K_feedback_y(1,8) =   0.00f; K_feedback_y(1,9) =   0.00f; K_feedback_y(1,10) =   1.30f; K_feedback_y(1,11) =   0.00f; 
         K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =   0.00f; K_feedback_y(2,7) =   0.00f; K_feedback_y(2,8) =   0.90f; K_feedback_y(2,9) =   0.00f; K_feedback_y(2,10) =   0.00f; K_feedback_y(2,11) =   1.30f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.00f; K_feedback_y(3,7) =   0.00f; K_feedback_y(3,8) =   0.00f; K_feedback_y(3,9) =   0.00f; K_feedback_y(3,10) =   0.00f; K_feedback_y(3,11) =   0.00f; 
