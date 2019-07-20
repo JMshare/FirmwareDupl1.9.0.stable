@@ -243,6 +243,19 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_EPS, 1.0f);
 PARAM_DEFINE_FLOAT(MY_LQR_K_SC_YAWR, 1.0f);
 
 /**
+ * Feedback matrix scaling, cross coupling term
+ * The feedback matrix will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CC, 1.0f);
+
+/**
  * Feedback matrix scaling
  * The feedback matrix will be scaled by this
  *

@@ -301,6 +301,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_K_SC_OMG>) k_sc_omg,
         (ParamFloat<px4::params::MY_LQR_K_SC_EPS>) k_sc_eps,
         (ParamFloat<px4::params::MY_LQR_K_SC_YAWR>) k_sc_yawr, // ok this is not consistent but may be useful to be able to tweak it
+        (ParamFloat<px4::params::MY_LQR_K_SC_CC>) k_sc_cc, // ok this is not consistent but may be useful to be able to tweak it
         (ParamFloat<px4::params::MY_LQR_K_SC_CF>) k_sc_cf,
         (ParamFloat<px4::params::MY_LQR_K_SC_R>) k_sc_r,
         (ParamFloat<px4::params::MY_LQR_DX_LIM>) dx_lim,
