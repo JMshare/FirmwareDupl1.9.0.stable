@@ -666,7 +666,7 @@ int My_LQR_control::read_y_setpoint(){
     y_setpoint(9,0) = 0.0f;
     y_setpoint(10,0) = pitch_setpoint;
     y_setpoint(11,0) = yaw_setpoint;
-    if(fabsf(y_setpoint(8,0)) > 0.01f || fabsf(yaw_setpoint) <= 0.0f){ // at yaw rate command or at the startup
+    if(fabsf(y_setpoint(8,0)) > 0.01f || ((fabsf(y_setpoint(6,0)) > 0.01f) && (vehicle_id == 2)) || fabsf(yaw_setpoint) <= 0.0f){ // at yaw||(roll if fw) rate command or at the startup
         yaw_setpoint = y(11,0);
     }
 
