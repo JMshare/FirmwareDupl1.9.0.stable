@@ -614,10 +614,15 @@ int My_LQR_control::filter_rates(){
 
     if(angular_rates_cutoff_freqn <= 100.0f){
         omg_filtered = lp_filter_angular_rates.apply(omg);
+        if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f)){ // if NAN this should come to false
+            omg_filtered = omg;
+            PX4_ERR("Filtering rates results in NANs!");
+        }
     }
     else{
         omg_filtered = omg;
     }
+
     return PX4_OK;
 }
 
