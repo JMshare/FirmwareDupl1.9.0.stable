@@ -104,12 +104,7 @@ then
 	param set GPS_UBX_DYNMODEL 8
 fi
 
-set MIXER my_LQR_Custer
-set MIXER_AUX my_LQR_Custer
-param set PWM_RATE 200
-param set PWM_AUX_RATE 200
-set PWM_OUT 12345678
-set PWM_AUX_OUT 12
+set MIXER AERT
 
 param set SYS_HITL 1
 
