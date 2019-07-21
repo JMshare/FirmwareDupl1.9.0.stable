@@ -408,8 +408,12 @@ int My_LQR_control::rc_loss_failsafe(){
     if(rc_channels.signal_lost == true){
         dt_rcloss = dt_rcloss + dt;
         if(dt_rcloss >= 2.0f){
-            cf(3,0) = 0.0f;
+            uf.setAll(0.0f);
+            cf.setAll(0.0f);
+
             uf(3,0) = math::min(0.1f, uf(3,0)); // not to kill the petrol engine if possible
+            cf(0,0) = 0.1f; // slight roll
+            cf(1,0) = 0.1f; // slight pich up
         }
         if(dt_rcloss >= 1000000.0f){ // not to get an overflow
             dt_rcloss = 3.0f;
