@@ -288,12 +288,12 @@ int My_LQR_control::angular_rates_filtered_publish(){
 }
 
 int My_LQR_control::setpoints_publish(){
-    setpoints_struct.y0 = y_setpoint(0,0);
-    setpoints_struct.y1 = y_setpoint(1,0);
-    setpoints_struct.y2 = y_setpoint(2,0);
-    setpoints_struct.y3 = y_setpoint(3,0);
-    setpoints_struct.y4 = y_setpoint(4,0);
-    setpoints_struct.y5 = y_setpoint(5,0);
+    setpoints_struct.y0 = y(6,0);
+    setpoints_struct.y1 = y(7,0);
+    setpoints_struct.y2 = y(8,0);
+    setpoints_struct.y3 = y(9,0);
+    setpoints_struct.y4 = y(10,0);
+    setpoints_struct.y5 = y(11,0);
     setpoints_struct.y6 = y_setpoint(6,0);
     setpoints_struct.y7 = y_setpoint(7,0);
     setpoints_struct.y8 = y_setpoint(8,0);
