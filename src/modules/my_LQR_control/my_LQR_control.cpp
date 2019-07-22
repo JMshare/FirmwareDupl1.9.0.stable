@@ -287,6 +287,37 @@ int My_LQR_control::angular_rates_filtered_publish(){
     return PX4_OK;
 }
 
+int My_LQR_control::setpoints_publish(){
+    setpoints_struct.y0 = y_setpoint(0,0);
+    setpoints_struct.y1 = y_setpoint(1,0);
+    setpoints_struct.y2 = y_setpoint(2,0);
+    setpoints_struct.y3 = y_setpoint(3,0);
+    setpoints_struct.y4 = y_setpoint(4,0);
+    setpoints_struct.y5 = y_setpoint(5,0);
+    setpoints_struct.y6 = y_setpoint(6,0);
+    setpoints_struct.y7 = y_setpoint(7,0);
+    setpoints_struct.y8 = y_setpoint(8,0);
+    setpoints_struct.y9 = y_setpoint(9,0);
+    setpoints_struct.y10 = y_setpoint(10,0);
+    setpoints_struct.y11 = y_setpoint(11,0);
+
+    setpoints_struct.c0 = c_setpoint(0,0);
+    setpoints_struct.c1 = c_setpoint(1,0);
+    setpoints_struct.c2 = c_setpoint(2,0);
+    setpoints_struct.c3 = c_setpoint(3,0);
+
+    setpoints_struct.pitch_setpoint = pitch_setpoint;
+
+    setpoints_struct.timestamp = hrt_absolute_time();
+    setpoints_struct.timestamp_sample = vehicle_attitude.timestamp;
+
+    if(orb_publish(ORB_ID(my_LQR_setpoints), setpoints_pub, &setpoints_struct) != PX4_OK){
+        PX4_WARN("Unable to publish my_setpoints!");
+    }
+    
+    return PX4_OK;
+}
+
 
 void My_LQR_control::run(){
     // subscribe to topics

@@ -72,6 +72,7 @@
 #include <uORB/topics/actuator_controls.h>
 #include <uORB/topics/home_position.h>
 #include <uORB/topics/angular_rates_filtered.h>
+#include <uORB/topics/my_LQR_setpoints.h>
 
 using matrix::Matrix;
 using matrix::Vector3f;
@@ -121,6 +122,7 @@ private:
 		int home_position_poll();
 		int actuator_controls_publish();
 		int angular_rates_filtered_publish();
+		int setpoints_publish();
 		int timer_clock();
 		int update_parameters(bool force = false);
 		int initialize_variables();
@@ -160,6 +162,7 @@ private:
 		struct actuator_controls_s actuator_controls_virtual{};
 		struct home_position_s home_position{};		
 		struct angular_rates_filtered_s angular_rates_filtered{};
+		struct my_LQR_setpoints_s setpoints_struct{};
 
         /**
         * My subscription topics subsribtors
@@ -179,6 +182,7 @@ private:
 		orb_advert_t actuator_controls_0_pub = nullptr;		
 		orb_advert_t actuator_controls_1_pub = nullptr;
 		orb_advert_t angular_rates_filtered_pub = nullptr;
+		orb_advert_t setpoints_pub = nullptr;
 
 		/**
 		* My ORB IDs
