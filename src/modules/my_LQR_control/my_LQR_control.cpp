@@ -334,6 +334,7 @@ void My_LQR_control::run(){
     actuator_controls_0_pub = orb_advertise(ORB_ID(actuator_controls_0), &actuator_controls_0);    
     actuator_controls_1_pub = orb_advertise(ORB_ID(actuator_controls_1), &actuator_controls_1);
     angular_rates_filtered_pub = orb_advertise(ORB_ID(angular_rates_filtered), &angular_rates_filtered);
+    setpoints_pub = orb_advertise(ORB_ID(my_LQR_setpoints), &setpoints_struct);
     
     // initialize parameters
     initialize_variables();
@@ -369,6 +370,8 @@ void My_LQR_control::run(){
                 angular_rates_filtered_publish();
                 
                 read_setpoints();
+
+                setpoints_publish();
 
                 gains_tune();
 
@@ -413,6 +416,7 @@ void My_LQR_control::run(){
     orb_unadvertise(actuator_controls_0_pub);    
     orb_unadvertise(actuator_controls_1_pub);
     orb_unadvertise(angular_rates_filtered_pub);
+    orb_unadvertise(setpoints_pub);
 }
 
 int My_LQR_control::timer_clock(){
