@@ -655,6 +655,8 @@ int My_LQR_control::read_c_setpoint(){
     /* we control thrust directly by rc */
     thrust_setpoint = manual_control_setpoint.z - 0.5f; 
     c_setpoint(3,0) = math::constrain(c_nominal_control(3,0) + thrust_setpoint, 0.0f, 1.0f);
+
+    pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*1.047f; // 0 to 60 deg based on RS stick input
     
     return PX4_OK;
 }
