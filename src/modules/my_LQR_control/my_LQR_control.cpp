@@ -846,6 +846,9 @@ int My_LQR_control::initialize_variables(){
     Del_c_lim.setAll(1.0f);
 
     E2B.setAll(0.0f);
+    E2B(0,0) = 1.0f;
+    E2B(1,1) = 1.0f;
+    E2B(2,2) = 1.0f;
 
     update_parameters(true);
 
