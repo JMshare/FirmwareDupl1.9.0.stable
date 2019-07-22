@@ -529,7 +529,7 @@ int My_LQR_control::supporting_outputs(){
     // roll and yaw support to the wing motors
     if(rc_channels.channels[12] > 0.5f){
         uf(6,0) = motorons_p_scaling*cf(0,0);
-        uf(7,0) = motorons_r_scaling*cf(2,0);
+        // uf(7,0) = motorons_r_scaling*cf(2,0);
     }
     
     return PX4_OK;
