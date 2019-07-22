@@ -488,10 +488,10 @@ int My_LQR_control::gains_tune(){
 
     for(int i=0; i<4; i++){
         for(int j=6; j<9; j++){
-            K_feedback_y_scaled_tuned(i,j) *= powf(100.0f, rc_channels.channels[11]);
+            K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[11]);
         }
         for(int j=9; j<12; j++){
-            K_feedback_y_scaled_tuned(i,j) *= powf(100.0f, rc_channels.channels[10]);
+            K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[10]);
         }
     }
 
