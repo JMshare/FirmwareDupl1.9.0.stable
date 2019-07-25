@@ -242,6 +242,7 @@ private:
 		Vector3f omg_filtered;
 		float angular_rates_cutoff_freqn = 50.0f;
 		math::LowPassFilter2pVector3f lp_filter_angular_rates{loop_update_freqn, angular_rates_cutoff_freqn};
+		bool filter_error = 0;
 		
 		Matrix<float,4,12> K_feedback_y_scaled;
 		Matrix<float,4,6> K_feedback_int_scaled; 

@@ -655,8 +655,9 @@ int My_LQR_control::filter_rates(){
         omg_filtered = lp_filter_angular_rates.apply(omg);
         if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f)){ // safety check, if NAN this should come to false
             omg_filtered = omg;
-            PX4_ERR("Filtering rates results in NANs!");
+            filter_error = 1;
         }
+        filter_error = 0;
     }
     else{
         omg_filtered = omg;
@@ -740,6 +741,10 @@ int My_LQR_control::printouts(){
 
         PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
 
+        if(filter_error == 1){
+            PX4_ERR("Filtering rates results in NANs!");
+        }
+        
         //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
         //Del_c_eps.print();
         //(-K_feedback_y.T().slice<3,8>(9,0)).T().print();
