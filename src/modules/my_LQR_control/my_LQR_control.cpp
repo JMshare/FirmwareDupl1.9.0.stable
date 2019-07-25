@@ -446,7 +446,7 @@ int My_LQR_control::rc_loss_failsafe(){
             uf.setAll(0.0f);
             cf.setAll(0.0f);
 
-            uf(3,0) = math::min(0.1f, uf(3,0)); // not to kill the petrol engine if possible
+            uf(3,0) = math::min(0.0f, uf(3,0)); // not to kill the petrol engine if possible. should set PWM min to idle at 0 and PWM disarmed to kill
             cf(0,0) = 0.1f; // slight roll
             cf(1,0) = 0.1f; // slight pich up
         }
