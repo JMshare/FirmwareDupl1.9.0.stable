@@ -218,7 +218,7 @@ int Logger::task_spawn(int argc, char *argv[])
 	_task_id = px4_task_spawn_cmd("logger",
 				      SCHED_DEFAULT,
 				      SCHED_PRIORITY_LOG_CAPTURE,
-				      3700,
+				      4000,
 				      (px4_main_t)&run_trampoline,
 				      (char *const *)argv);
 
@@ -325,7 +325,7 @@ Logger *Logger::instantiate(int argc, char *argv[])
 					s = 1;
 				}
 
-				log_buffer_size = 1024 * s;
+				log_buffer_size = 1024 * s * 4;
 			}
 			break;
 
