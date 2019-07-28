@@ -100,7 +100,7 @@ then
 	param set GPS_UBX_DYNMODEL 8
 fi
 
-set MIXER AERT
+set MIXER my_LQR_Custer_HIL
 
 param set SYS_HITL 1
 
