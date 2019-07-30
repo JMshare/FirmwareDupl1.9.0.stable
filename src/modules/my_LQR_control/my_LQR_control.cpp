@@ -480,7 +480,11 @@ int My_LQR_control::control_fun(){
 
     Del_c_x   = -K_feedback_y_scaled_tuned.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
     Del_c_v   = -K_feedback_y_scaled_tuned.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
-    Del_c_omg = -K_feedback_y_scaled_tuned.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
+    // Del_c_omg = -K_feedback_y_scaled_tuned.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
+    Del_c_omg = -K_feedback_y_scaled_tuned.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution
+    Del_c_omg(0,0) += y_setpoint(6,0); // p
+    Del_c_omg(1,0) += y_setpoint(7,0); // q
+    Del_c_omg(2,0) += y_setpoint(8,0); // r
     Del_c_eps = -K_feedback_y_scaled_tuned.T().slice<3,4>(9,0).T()*Del_y_eps; // slice eps contribution
     for(int i = 0; i < 4; i++){
         Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0));
@@ -534,11 +538,14 @@ int My_LQR_control::gains_tune(){
 }
 
 int My_LQR_control::setpoints_scale(){
+/*
 // Scale the setpoints such that at Del_eps=0 and omg=0 the y_setpoint results in RC pass through
-
+    
     y_setpoint(6,0) /= K_feedback_y_scaled_tuned(0,6);
     y_setpoint(7,0) /= K_feedback_y_scaled_tuned(1,7);
     y_setpoint(8,0) /= K_feedback_y_scaled_tuned(2,8);
+commented out cos now this happens directly in control_fun to avoid division by zero here 
+*/
 
 // RC pass through scaled by RC_scale cos i.e. for multicopters we don't want such high rates
     y_setpoint(6,0) *= RC_scale;
