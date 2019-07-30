@@ -416,6 +416,17 @@ PARAM_DEFINE_FLOAT(MY_LQR_PERT_T, 0.5f);
  */
 PARAM_DEFINE_FLOAT(MY_LQR_PERT_M, 0.0f);
 
+
+/**
+ * PDP bool
+ * Project the heading psi error to 180 deg
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_PDP, 1);
+
+
 /**
  * E2B bool
  * Use the nonlinear transformation on epsilon to get it to body frame

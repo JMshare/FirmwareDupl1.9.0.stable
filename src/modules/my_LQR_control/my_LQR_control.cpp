@@ -476,6 +476,8 @@ int My_LQR_control::control_fun(){
         //cf = cf + dt*Tf*(-Del_cf + Del_c); // not used if not filter
     }
     
+    Del_y_eps = Del_y.slice<3,1>(9,0);
+    project_del_psi();
     del_epsilon_to_body_frame();
 
     Del_c_x   = -K_feedback_y_scaled_tuned.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
@@ -501,6 +503,20 @@ int My_LQR_control::control_fun(){
     return PX4_OK;
 }
 
+int My_LQR_control::project_del_psi(){
+// If the heading error is more than 180 degree, it is faster to correct for it by turning the opposite way.
+    if(proj_dpsi){
+        if(Del_y_eps(2,0) >  MY_PI){
+            Del_y_eps(2,0) = -2*MY_PI + Del_y_eps(2,0);
+        }
+        if(Del_y_eps(2,0) < -MY_PI){
+            Del_y_eps(2,0) =  2*MY_PI + Del_y_eps(2,0);
+        }
+    }
+
+    return PX4_OK;
+}
+
 int My_LQR_control::del_epsilon_to_body_frame(){
 // Non-linear transformation on the Del_epsilon     
     if(e2b){
@@ -512,9 +528,6 @@ int My_LQR_control::del_epsilon_to_body_frame(){
         E2B(2,2) = cos(y(9,0))*cos(y(10,0));
 
         Del_y_eps = E2B*Del_y.slice<3,1>(9,0);
-    }
-    else{
-        Del_y_eps = Del_y.slice<3,1>(9,0);
     }
 
     return PX4_OK;
@@ -942,6 +955,8 @@ int My_LQR_control::local_parameters_update(){
     pert_magnitude = param_pert_magnitude.get();
 
     e2b = bool_e2b.get() == 1;
+
+    proj_dpsi = bool_proj_dpsi.get() == 1;
 
     do_flip = bool_do_flip.get() == 1;
 
