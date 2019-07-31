@@ -687,10 +687,10 @@ int My_LQR_control::filter_rates(){
 }
 
 int My_LQR_control::convert_quaternions(){
-    matrix::Eulerf euler = matrix::Quatf(vehicle_attitude.q);
-    attitude(0,0) = euler.phi();
-    attitude(1,0) = euler.theta();
-    attitude(2,0) = euler.psi();
+    euler_angles = matrix::Quatf(vehicle_attitude.q);
+    attitude(0,0) = euler_angles.phi();
+    attitude(1,0) = euler_angles.theta();
+    attitude(2,0) = euler_angles.psi();
     return PX4_OK;
 }
 

@@ -237,6 +237,8 @@ private:
 		float RC_scale = 1.0f;
 		
 		Matrix<float,3,1> attitude;
+		matrix::Eulerf euler_angles;
+
 		float thrust_setpoint = 0.0f;
 		float pitch_setpoint = 0.0f;
 		float yaw_setpoint = 0.0f;
