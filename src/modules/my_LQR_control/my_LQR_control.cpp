@@ -687,10 +687,48 @@ int My_LQR_control::filter_rates(){
 }
 
 int My_LQR_control::convert_quaternions(){
-    euler_angles = matrix::Quatf(vehicle_attitude.q);
+    Qdcm = Quatf(vehicle_attitude.q);
+    euler_angles = Qdcm; // this is how you convert the Dcm into Euler angles (readme.md in matrix lib)
+    project_theta();
+
     attitude(0,0) = euler_angles.phi();
     attitude(1,0) = euler_angles.theta();
     attitude(2,0) = euler_angles.psi();
+    return PX4_OK;
+}
+
+int My_LQR_control::project_theta(){
+// Extending the -90 to +90 deg range on theta to -110 to 110 deg
+    if(proj_theta){
+        Qdcm_proj = Qdcm; // predefine
+        if(euler_angles.theta() > 1.2217f){ // if > 70 deg
+            // rotate the device by -90 deg
+            Qdcm_proj(0,0) = Qdcm(0,2); // z to x
+            Qdcm_proj(1,0) = Qdcm(1,2);
+            Qdcm_proj(2,0) = Qdcm(2,2);
+
+            Qdcm_proj(0,2) = -Qdcm(0,0); // x to -z
+            Qdcm_proj(1,2) = -Qdcm(1,0);
+            Qdcm_proj(2,2) = -Qdcm(2,0);
+
+            euler_angles = Qdcm_proj; // get the corresponding euler angles
+            euler_angles.theta() = euler_angles.theta() + 1.57079633f; // bring back the unrotated theta
+        }
+        else if(euler_angles.theta() < -1.2217f){ // if < -70 deg
+            // rotate the device by 90 deg
+            Qdcm_proj(0,0) = -Qdcm(0,2); // z to -x
+            Qdcm_proj(1,0) = -Qdcm(1,2);
+            Qdcm_proj(2,0) = -Qdcm(2,2);
+
+            Qdcm_proj(0,2) = Qdcm(0,0); // x to z
+            Qdcm_proj(1,2) = Qdcm(1,0);
+            Qdcm_proj(2,2) = Qdcm(2,0);
+
+            euler_angles = Qdcm_proj; // get the corresponding euler angles
+            euler_angles.theta() = euler_angles.theta() + 1.57079633f; // bring back the unrotated theta
+        }
+    }
+
     return PX4_OK;
 }
 
@@ -955,6 +993,8 @@ int My_LQR_control::local_parameters_update(){
     pert_magnitude = param_pert_magnitude.get();
 
     e2b = bool_e2b.get() == 1;
+
+    proj_theta = bool_proj_tht.get() == 1;
 
     proj_dpsi = bool_proj_dpsi.get() == 1;
 

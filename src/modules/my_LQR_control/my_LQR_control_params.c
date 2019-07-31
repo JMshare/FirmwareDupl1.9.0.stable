@@ -416,6 +416,14 @@ PARAM_DEFINE_FLOAT(MY_LQR_PERT_T, 0.5f);
  */
 PARAM_DEFINE_FLOAT(MY_LQR_PERT_M, 0.0f);
 
+/**
+ * PTT bool
+ * Project the pitch theta to extend to -110 to +110 deg
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_PTT, 1);
 
 /**
  * PDP bool

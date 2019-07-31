@@ -76,6 +76,9 @@
 
 using matrix::Matrix;
 using matrix::Vector3f;
+using matrix::Eulerf;
+using matrix::Dcmf;
+using matrix::Quatf;
 
 #include <mathlib/math/filter/LowPassFilter2pVector3f.hpp>
 
@@ -144,6 +147,7 @@ private:
 		int printouts();
 		int controller_mode();
 		int px4_override();
+		int project_theta();
 		int project_del_psi();
 		int del_epsilon_to_body_frame();
 		int perturb_control();
@@ -237,7 +241,9 @@ private:
 		float RC_scale = 1.0f;
 		
 		Matrix<float,3,1> attitude;
-		matrix::Eulerf euler_angles;
+		Eulerf euler_angles;
+		Dcmf Qdcm;
+		Dcmf Qdcm_proj;
 
 		float thrust_setpoint = 0.0f;
 		float pitch_setpoint = 0.0f;
@@ -262,7 +268,8 @@ private:
 		Matrix<float,4,1> Del_c_eps; 
 		Matrix<float,4,1> Del_c_lim; // limits on max Del_c for x,v,omg,eps
 
-		bool proj_dpsi;
+		bool proj_theta = 0;
+		bool proj_dpsi = 0;
 
 		Matrix<float,3,3> E2B; // matrix to convert from euler to body frame
 		bool e2b;
@@ -276,11 +283,11 @@ private:
 		int pert_idx;
 		float pert_time;
 		float pert_magnitude;
-		bool do_perturb_control;
+		bool do_perturb_control = 0;
 
 		float flip_sign;
 		bool in_flip = false;
-		bool do_flip;
+		bool do_flip = 0;
 
 		/**
         * My global decision variables
@@ -329,6 +336,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_TAILERONS>) tailerons_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSP>) motorons_p_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSR>) motorons_r_sc,
+        (ParamInt<px4::params::MY_LQR_BOOL_PTT>) bool_proj_tht,
         (ParamInt<px4::params::MY_LQR_BOOL_PDP>) bool_proj_dpsi,
         (ParamInt<px4::params::MY_LQR_BOOL_E2B>) bool_e2b
         )// Just the handles, need to .get() them
