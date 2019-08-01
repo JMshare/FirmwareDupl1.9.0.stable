@@ -701,7 +701,7 @@ int My_LQR_control::project_theta(){
 // Extending the -90 to +90 deg range on theta to -110 to 110 deg
     if(proj_theta){
         Qdcm_proj = Qdcm; // predefine
-        if(euler_angles.theta() > deg2rad(50f)){ // if > 50 deg
+        if(euler_angles.theta() > deg2rad(50.0f)){ // if > 50 deg
             // rotate the device by -90 deg
             Qdcm_proj(0,0) = Qdcm(0,2); // z to x
             Qdcm_proj(1,0) = Qdcm(1,2);
@@ -712,9 +712,9 @@ int My_LQR_control::project_theta(){
             Qdcm_proj(2,2) = -Qdcm(2,0);
 
             euler_angles = Qdcm_proj; // get the corresponding euler angles
-            euler_angles.theta() = euler_angles.theta() + deg2rad(90f); // bring back the unrotated theta
+            euler_angles.theta() = euler_angles.theta() + deg2rad(90.0f); // bring back the unrotated theta
         }
-        else if(euler_angles.theta() < -deg2rad(50f)){ // if < -50 deg
+        else if(euler_angles.theta() < -deg2rad(50.0f)){ // if < -50 deg
             // rotate the device by 90 deg
             Qdcm_proj(0,0) = -Qdcm(0,2); // z to -x
             Qdcm_proj(1,0) = -Qdcm(1,2);
@@ -725,7 +725,7 @@ int My_LQR_control::project_theta(){
             Qdcm_proj(2,2) = Qdcm(2,0);
 
             euler_angles = Qdcm_proj; // get the corresponding euler angles
-            euler_angles.theta() = euler_angles.theta() - deg2rad(90f); // bring back the unrotated theta
+            euler_angles.theta() = euler_angles.theta() - deg2rad(90.0f); // bring back the unrotated theta
         }
     }
 
@@ -751,7 +751,7 @@ int My_LQR_control::read_c_setpoint(){
     c_setpoint(3,0) = math::constrain(c_nominal_control(3,0) + thrust_setpoint, 0.0f, 1.0f);
 
     //pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(60f); // 0 to 60 deg based on RS stick input
-    pitch_setpoint = rc_channels.channels[9]*deg2rad(90f); // -90 to 90 deg based on RS stick input just for test
+    pitch_setpoint = rc_channels.channels[9]*deg2rad(90.0f); // -90 to 90 deg based on RS stick input just for test
     
     return PX4_OK;
 }
