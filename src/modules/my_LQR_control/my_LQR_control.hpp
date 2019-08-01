@@ -82,7 +82,7 @@ using matrix::Quatf;
 
 #include <mathlib/math/filter/LowPassFilter2pVector3f.hpp>
 
-#define MY_PI 3.14159f
+#define MY_PI 3.14159265359f
 
 
 extern "C" __EXPORT int my_LQR_control_main(int argc, char *argv[]);
@@ -152,6 +152,7 @@ private:
 		int del_epsilon_to_body_frame();
 		int perturb_control();
 		int flip();
+		float deg2rad(float);
 		
 		
 

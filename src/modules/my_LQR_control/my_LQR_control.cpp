@@ -1060,6 +1060,10 @@ int My_LQR_control::perturb_control(){
     return PX4_OK;
 }
 
+float My_LQR_control::deg2rad(float degs){
+    return degs*0.01745329252f;
+}
+
 
 int my_LQR_control_main(int argc, char *argv[])
 {
