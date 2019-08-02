@@ -254,7 +254,7 @@ private:
 		Vector3f omg_filtered;
 		float angular_rates_cutoff_freqn = 50.0f;
 		math::LowPassFilter2pVector3f lp_filter_angular_rates{loop_update_freqn, angular_rates_cutoff_freqn};
-		bool filter_error = 0;
+		int filter_status = 0;
 		
 		Matrix<float,4,12> K_feedback_y_scaled;
 		Matrix<float,4,6> K_feedback_int_scaled; 
@@ -270,7 +270,9 @@ private:
 		Matrix<float,4,1> Del_c_lim; // limits on max Del_c for x,v,omg,eps
 
 		bool proj_theta = 0;
+		int proj_theta_status = 0;
 		bool proj_dpsi = 0;
+		int proj_dpsi_status = 0;
 
 		Matrix<float,3,3> E2B; // matrix to convert from euler to body frame
 		bool e2b;

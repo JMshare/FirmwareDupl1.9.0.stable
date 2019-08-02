@@ -442,7 +442,7 @@ PARAM_DEFINE_INT32(MY_LQR_BOOL_PDP, 1);
  * @unit bool
  * @group MY LQR Control
  */
-PARAM_DEFINE_INT32(MY_LQR_BOOL_E2B, 1);
+PARAM_DEFINE_INT32(MY_LQR_BOOL_E2B, 0);
 
 /**
  * Perturbation bool

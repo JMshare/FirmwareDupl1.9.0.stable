@@ -505,14 +505,24 @@ int My_LQR_control::control_fun(){
 
 int My_LQR_control::project_del_psi(){
 // If the heading error is more than 180 degree, it is faster to correct for it by turning the opposite way.
+    proj_dpsi_status = 0;
     if(proj_dpsi){
+        proj_dpsi_status = 1;
         if(Del_y_eps(2,0) >  MY_PI){
             Del_y_eps(2,0) = -2*MY_PI + Del_y_eps(2,0);
+            proj_dpsi_status = 10;
         }
-        if(Del_y_eps(2,0) < -MY_PI){
+        else if(Del_y_eps(2,0) < -MY_PI){
             Del_y_eps(2,0) =  2*MY_PI + Del_y_eps(2,0);
+            proj_dpsi_status = -10;
         }
     }
+/* not true
+// If pitch over 90deg, the yaw compensation must flip
+    if(proj_dpsi && fabsf(y(10,0)) > deg2rad(90.0f)){
+        Del_y_eps(2,0) = -Del_y_eps(2,0);
+    }
+*/
 
     return PX4_OK;
 }
@@ -673,14 +683,15 @@ int My_LQR_control::filter_rates(){
 
     if(angular_rates_cutoff_freqn <= 100.0f){
         omg_filtered = lp_filter_angular_rates.apply(omg);
+        filter_status = 0; // ok
         if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f)){ // safety check, if NAN this should come to false
             omg_filtered = omg;
-            filter_error = 1;
+            filter_status = 1; // whops
         }
-        filter_error = 0;
     }
     else{
         omg_filtered = omg;
+        filter_status = 2; // whops 2
     }
 
     return PX4_OK;
@@ -699,7 +710,9 @@ int My_LQR_control::convert_quaternions(){
 
 int My_LQR_control::project_theta(){
 // Extending the -90 to +90 deg range on theta to -110 to 110 deg
+    proj_theta_status = 0;
     if(proj_theta){
+        proj_theta_status = 1;
         Qdcm_proj = Qdcm; // predefine
         if(euler_angles.theta() > deg2rad(50.0f)){ // if > 50 deg
             // rotate the device by -90 deg
@@ -713,6 +726,7 @@ int My_LQR_control::project_theta(){
 
             euler_angles = Qdcm_proj; // get the corresponding euler angles
             euler_angles.theta() = euler_angles.theta() + deg2rad(90.0f); // bring back the unrotated theta
+            proj_theta_status = 10; // log status
         }
         else if(euler_angles.theta() < -deg2rad(50.0f)){ // if < -50 deg
             // rotate the device by 90 deg
@@ -726,6 +740,7 @@ int My_LQR_control::project_theta(){
 
             euler_angles = Qdcm_proj; // get the corresponding euler angles
             euler_angles.theta() = euler_angles.theta() - deg2rad(90.0f); // bring back the unrotated theta
+            proj_theta_status = -10; // log status
         }
     }
 
@@ -800,7 +815,7 @@ int My_LQR_control::printouts(){
 
         PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
 
-        if(filter_error == 1){
+        if(filter_status == 1){
             PX4_ERR("Filtering rates results in NANs!");
         }
 
@@ -840,9 +855,9 @@ int My_LQR_control::initialize_variables(){
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.00f; K_feedback_y(3,7) =   0.00f; K_feedback_y(3,8) =   0.00f; K_feedback_y(3,9) =   0.00f; K_feedback_y(3,10) =   0.00f; K_feedback_y(3,11) =   0.00f; 
     }
     else if(vehicle_id == 2){ // Custer
-        K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.70f; K_feedback_y(0,7) =   0.00f; K_feedback_y(0,8) =   0.00f; K_feedback_y(0,9) =   1.30f; K_feedback_y(0,10) =   0.00f; K_feedback_y(0,11) =   0.20f; 
+        K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.70f; K_feedback_y(0,7) =   0.00f; K_feedback_y(0,8) =  -0.20f; K_feedback_y(0,9) =   1.30f; K_feedback_y(0,10) =   0.00f; K_feedback_y(0,11) =   0.00f; 
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.00f; K_feedback_y(1,7) =   0.70f; K_feedback_y(1,8) =   0.00f; K_feedback_y(1,9) =   0.00f; K_feedback_y(1,10) =   1.30f; K_feedback_y(1,11) =   0.00f; 
-        K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.20f; K_feedback_y(2,7) =   0.00f; K_feedback_y(2,8) =   1.80f; K_feedback_y(2,9) =  -0.20f; K_feedback_y(2,10) =   0.00f; K_feedback_y(2,11) =   3.00f; 
+        K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.20f; K_feedback_y(2,7) =   0.00f; K_feedback_y(2,8) =   0.70f; K_feedback_y(2,9) =  -0.00f; K_feedback_y(2,10) =   0.00f; K_feedback_y(2,11) =   1.30f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.00f; K_feedback_y(3,7) =   0.00f; K_feedback_y(3,8) =   0.00f; K_feedback_y(3,9) =   0.00f; K_feedback_y(3,10) =   0.00f; K_feedback_y(3,11) =   0.00f; 
         pitch_setpoint = 0.3491; // 20 deg pitch setpoint (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
     }
