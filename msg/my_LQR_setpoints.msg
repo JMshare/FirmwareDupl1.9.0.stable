@@ -23,4 +23,9 @@ float32 c3
 
 float32 pitch_setpoint 
 
+int32 proj_dpsi_status 		# status of the dpsi projection (0 off, 1 on, 10 projected+, -10 projected-)
+float32 dpsi 				# the dpsi value after projection
+
+int32 proj_theta_status 	# status of the theta projection (0 off, 1 on, 10 projected+, -10 projected-)
+
 # TOPICS my_LQR_setpoints

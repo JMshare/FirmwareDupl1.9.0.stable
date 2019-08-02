@@ -10,4 +10,6 @@ float32 yawspeed		# filtered angular velocity about Z body axis in rad/s
 float32 loop_update_freqn # update rate param in LowPassFilter2pVector3f
 float32 cutoff_freqn # cutoff param in LowPassFilter2pVector3f
 
+int32 filter_status 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn)
+
 # TOPICS angular_rates_filtered

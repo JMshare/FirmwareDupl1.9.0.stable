@@ -276,6 +276,7 @@ int My_LQR_control::angular_rates_filtered_publish(){
     angular_rates_filtered.yawspeed = omg_filtered(2);
     angular_rates_filtered.loop_update_freqn = loop_update_freqn;
     angular_rates_filtered.cutoff_freqn = angular_rates_cutoff_freqn;
+    angular_rates_filtered.filter_status = filter_status;
     
     angular_rates_filtered.timestamp = hrt_absolute_time();
     angular_rates_filtered.timestamp_sample = vehicle_attitude.timestamp;
@@ -307,6 +308,10 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.c3 = c_setpoint(3,0);
 
     setpoints_struct.pitch_setpoint = pitch_setpoint;
+
+    setpoints_struct.proj_dpsi_status = proj_dpsi_status;
+    setpoints_struct.dpsi = Del_y_eps(2,0);
+    setpoints_struct.proj_theta_status = proj_theta_status;
 
     setpoints_struct.timestamp = hrt_absolute_time();
     setpoints_struct.timestamp_sample = vehicle_attitude.timestamp;
