@@ -617,9 +617,6 @@ void Logger::add_default_topics()
 	add_topic("actuator_controls_0", 100);
 	add_topic("actuator_controls_1", 100);
 	add_topic("actuator_outputs", 100);
-	add_topic("angular_rates_filtered");
-	add_topic("my_LQR_setpoints");
-	add_topic("actuator_controls_virtual_fw");
 	add_topic("airspeed", 200);
 	add_topic("battery_status", 500);
 	add_topic("camera_capture");
@@ -751,6 +748,9 @@ void Logger::add_system_identification_topics()
 	add_topic("actuator_controls_0");
 	add_topic("actuator_controls_1");
 	add_topic("sensor_combined");
+	add_topic("angular_rates_filtered"); // for comparison with not-filtered, need high freqn update here
+	add_topic("my_LQR_setpoints", 20); // for debug only
+	add_topic("actuator_controls_virtual_fw", 20); // for comparison only
 }
 
 int Logger::add_topics_from_file(const char *fname)
