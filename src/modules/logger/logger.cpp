@@ -1088,7 +1088,6 @@ void Logger::run()
 				}
 			}
 
-			bool data_written = false;
 
 			/* Check if parameters have changed */
 			if (!_should_stop_file_log) { // do not record param changes after disarming
@@ -1132,7 +1131,6 @@ void Logger::run()
 							total_bytes += msg_size;
 #endif /* DBGPRINT */
 
-							data_written = true;
 						}
 
 						// mission log
@@ -1143,9 +1141,7 @@ void Logger::run()
 									if (delta_time > 0) {
 										_mission_subscriptions[sub_idx].next_write_time = (loop_time / 100000) + delta_time / 100;
 									}
-									if (write_message(LogType::Mission, _msg_buffer, msg_size)) {
-										data_written = true;
-									}
+									write_message(LogType::Mission, _msg_buffer, msg_size);
 								}
 							}
 						}
@@ -1190,9 +1186,7 @@ void Logger::run()
 			_writer.unlock();
 
 			/* notify the writer thread if data is available */
-			if (data_written) {
-				_writer.notify();
-			}
+			_writer.notify();
 
 			/* subscription update */
 			if (next_subscribe_topic_index != -1) {
