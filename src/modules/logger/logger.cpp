@@ -325,7 +325,7 @@ Logger *Logger::instantiate(int argc, char *argv[])
 					s = 1;
 				}
 
-				log_buffer_size = 1024 * s * 4;
+				log_buffer_size = 1024 * s;
 			}
 			break;
 
