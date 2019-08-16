@@ -139,6 +139,8 @@ private:
         int read_setpoints();
         int read_y_setpoint();
         int read_c_setpoint();
+        int gains_schedule();
+        int gains_scale();
         int gains_tune();
         int setpoints_scale();
         int supporting_outputs();
@@ -262,6 +264,7 @@ private:
 		Matrix<float,4,12> K_feedback_y_scaled_tuned;
 		Matrix<float,4,6> K_feedback_int_scaled_tuned; 
 		Matrix<float,4,4> K_feedback_cf_scaled_tuned; 
+		Matrix<float,6,1> k_sc_vec; // x,v,omg,eps,yawr,cc
 
 		Matrix<float,4,1> Del_c_x; 
 		Matrix<float,4,1> Del_c_v; 
@@ -273,6 +276,8 @@ private:
 		int proj_theta_status = 0;
 		bool proj_dpsi = 0;
 		int proj_dpsi_status = 0;
+		bool schedule_K = 0;
+		int schedule_K_status = 0;
 
 		Matrix<float,3,3> E2B; // matrix to convert from euler to body frame
 		bool e2b;
@@ -282,6 +287,8 @@ private:
 		float motorons_p_scaling = 0.15f;
 		float motorons_r_scaling = 0.15f;
 
+
+		bool do_printouts = 0;
 
 		int pert_idx;
 		float pert_time;
@@ -339,6 +346,8 @@ private:
         (ParamFloat<px4::params::MY_LQR_TAILERONS>) tailerons_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSP>) motorons_p_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSR>) motorons_r_sc,
+        (ParamInt<px4::params::MY_LQR_BOOL_SCHD>) bool_K_sched,
+        (ParamInt<px4::params::MY_LQR_BOOL_PRNT>) bool_printouts,
         (ParamInt<px4::params::MY_LQR_BOOL_PTT>) bool_proj_tht,
         (ParamInt<px4::params::MY_LQR_BOOL_PDP>) bool_proj_dpsi,
         (ParamInt<px4::params::MY_LQR_BOOL_E2B>) bool_e2b

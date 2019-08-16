@@ -353,7 +353,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_TAILERONS, 0.3f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSP, 0.3f);
+PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSP, 0.0f);
 
 /**
  * Motorons yaw mixer scaling
@@ -417,6 +417,15 @@ PARAM_DEFINE_FLOAT(MY_LQR_PERT_T, 0.5f);
 PARAM_DEFINE_FLOAT(MY_LQR_PERT_M, 0.0f);
 
 /**
+ * gains schedule bool
+ * Schedule the feedback gains matrix K based on pitch angle theta
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_SCHD, 1);
+
+/**
  * PTT bool
  * Project the pitch theta to extend to -110 to +110 deg
  *
@@ -433,6 +442,15 @@ PARAM_DEFINE_INT32(MY_LQR_BOOL_PTT, 1);
  * @group MY LQR Control
  */
 PARAM_DEFINE_INT32(MY_LQR_BOOL_PDP, 1);
+
+/**
+ * Printouts bool
+ * Do I want to generate the custom printouts?
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_PRNT, 0);
 
 
 /**

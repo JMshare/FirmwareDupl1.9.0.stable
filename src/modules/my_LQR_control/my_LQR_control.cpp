@@ -324,6 +324,9 @@ int My_LQR_control::setpoints_publish(){
 }
 
 
+
+/*----------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------*/
 void My_LQR_control::run(){
     // subscribe to topics
     parameter_update_sub = orb_subscribe(ORB_ID(parameter_update));
@@ -371,18 +374,14 @@ void My_LQR_control::run(){
                 timer_clock();
                 
                 read_y_state();
-
-                angular_rates_filtered_publish();
                 
                 read_setpoints();
 
-                setpoints_publish();
-
+                gains_schedule();
+                gains_scale();
                 gains_tune();
 
-                flip();
-
-                setpoints_scale(); 
+                flip(); 
 
                 controller_mode();
                 
@@ -397,6 +396,8 @@ void My_LQR_control::run(){
                 rc_loss_failsafe();
                 
                 actuator_controls_publish();
+                angular_rates_filtered_publish();
+                setpoints_publish();
 
                 //printouts();
                 
@@ -423,6 +424,11 @@ void My_LQR_control::run(){
     orb_unadvertise(angular_rates_filtered_pub);
     orb_unadvertise(setpoints_pub);
 }
+/* -----------------------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------*/
+
+
+
 
 int My_LQR_control::timer_clock(){
     if(t_start < 0.0f){
@@ -444,219 +450,8 @@ int My_LQR_control::timer_clock(){
     return PX4_OK;
 }
 
-int My_LQR_control::rc_loss_failsafe(){
-    if(rc_channels.signal_lost == true){
-        dt_rcloss = dt_rcloss + dt;
-        if(dt_rcloss >= 2.0f){
-            uf.setAll(0.0f);
-            cf.setAll(0.0f);
 
-            uf(3,0) = math::min(0.0f, uf(3,0)); // not to kill the petrol engine if possible. should set PWM min to idle at 0 and PWM disarmed to kill
-            cf(0,0) = 0.0f; 
-            cf(1,0) = 0.0f; 
-        }
-        if(dt_rcloss >= 1000000.0f){ // not to get an overflow
-            dt_rcloss = 3.0f;
-        }
-    }
-    else{
-        dt_rcloss = 0.0f;
-    }
 
-    return PX4_OK;
-}
-
-int My_LQR_control::control_fun(){
-
-    Del_y  = y  - y_setpoint;
-    //Del_y(11,0) = math::constrain(Del_y(11,0), -0.26f, 0.26f); // limit the yaw error to +-15 deg (0.26rad) not to freak out when heading too off course
-
-    //Del_cf = cf - c_setpoint; // not used if not filter
-    Del_r  = r  - r_setpoint;
-
-    //Del_c = K_feedback_y*Del_y ... ; // not used if not filter
-
-    if(dt < 0.5f){ // ignore too large dt steps (probably some glitches, startup etc)
-        r  = r  + dt*Ci*Del_y;
-        //cf = cf + dt*Tf*(-Del_cf + Del_c); // not used if not filter
-    }
-    
-    Del_y_eps = Del_y.slice<3,1>(9,0);
-    project_del_psi();
-    del_epsilon_to_body_frame();
-
-    Del_c_x   = -K_feedback_y_scaled_tuned.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
-    Del_c_v   = -K_feedback_y_scaled_tuned.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
-    // Del_c_omg = -K_feedback_y_scaled_tuned.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
-    Del_c_omg = -K_feedback_y_scaled_tuned.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution
-    Del_c_omg(0,0) += y_setpoint(6,0); // p
-    Del_c_omg(1,0) += y_setpoint(7,0); // q
-    Del_c_omg(2,0) += y_setpoint(8,0); // r
-    Del_c_eps = -K_feedback_y_scaled_tuned.T().slice<3,4>(9,0).T()*Del_y_eps; // slice eps contribution
-    for(int i = 0; i < 4; i++){
-        Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0));
-        Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0));
-        Del_c_omg(i,0) = math::constrain(Del_c_omg(i,0), -Del_c_lim(2,0), Del_c_lim(2,0));
-        Del_c_eps(i,0) = math::constrain(Del_c_eps(i,0), -Del_c_lim(3,0), Del_c_lim(3,0));
-    }
-
-    Del_c = Del_c_eps + Del_c_omg;
-    cf = c_setpoint + Del_c;
-
-    bound_control_c();
-        
-    return PX4_OK;
-}
-
-int My_LQR_control::project_del_psi(){
-// If the heading error is more than 180 degree, it is faster to correct for it by turning the opposite way.
-    proj_dpsi_status = 0;
-    if(proj_dpsi){
-        proj_dpsi_status = 1;
-        if(Del_y_eps(2,0) >  MY_PI){
-            Del_y_eps(2,0) = -2*MY_PI + Del_y_eps(2,0);
-            proj_dpsi_status = 10;
-        }
-        else if(Del_y_eps(2,0) < -MY_PI){
-            Del_y_eps(2,0) =  2*MY_PI + Del_y_eps(2,0);
-            proj_dpsi_status = -10;
-        }
-    }
-/* not true
-// If pitch over 90deg, the yaw compensation must flip
-    if(proj_dpsi && fabsf(y(10,0)) > deg2rad(90.0f)){
-        Del_y_eps(2,0) = -Del_y_eps(2,0);
-    }
-*/
-
-    return PX4_OK;
-}
-
-int My_LQR_control::del_epsilon_to_body_frame(){
-// Non-linear transformation on the Del_epsilon     
-    if(e2b){
-        E2B(0,0) = 1.0f;
-        E2B(0,2) = -sin(y(10,0));
-        E2B(1,1) = cos(y(9,0));
-        E2B(1,2) = sin(y(9,0))*cos(y(10,0));
-        E2B(2,1) = -sin(y(9,0));
-        E2B(2,2) = cos(y(9,0))*cos(y(10,0));
-
-        Del_y_eps = E2B*Del_y.slice<3,1>(9,0);
-    }
-
-    return PX4_OK;
-}
-
-int My_LQR_control::gains_tune(){
-// Tune the gains using the radio knobs
-
-    K_feedback_y_scaled_tuned = K_feedback_y_scaled;
-
-    for(int i=0; i<4; i++){
-        for(int j=6; j<9; j++){
-            K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[11]);
-        }
-        for(int j=9; j<12; j++){
-            K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[10]);
-        }
-    }
-
-    return PX4_OK;
-}
-
-int My_LQR_control::setpoints_scale(){
-/*
-// Scale the setpoints such that at Del_eps=0 and omg=0 the y_setpoint results in RC pass through
-    
-    y_setpoint(6,0) /= K_feedback_y_scaled_tuned(0,6);
-    y_setpoint(7,0) /= K_feedback_y_scaled_tuned(1,7);
-    y_setpoint(8,0) /= K_feedback_y_scaled_tuned(2,8);
-commented out cos now this happens directly in control_fun to avoid division by zero here 
-*/
-
-// RC pass through scaled by RC_scale cos i.e. for multicopters we don't want such high rates
-    y_setpoint(6,0) *= RC_scale;
-    y_setpoint(7,0) *= RC_scale;
-    y_setpoint(8,0) *= RC_scale;
-
-    return PX4_OK;
-}
-
-int My_LQR_control::supporting_outputs(){
-// Outputs to the actuator_controls_1
-
-    uf.setAll(0.0f);
-
-    // front propeller thrust
-    uf(3,0) = math::constrain(c_nominal_control(3,0) + manual_control_setpoint.aux1/2.0f, 0.0f, 1.0f);
-
-    // roll support to the spilt elevators
-    if(rc_channels.channels[12] > -0.5f){
-        uf(0,0) = tailerons_scaling*cf(0,0);
-    }
-
-    // roll and yaw support to the wing motors
-    if(rc_channels.channels[12] > 0.5f){
-        uf(6,0) = motorons_p_scaling*cf(0,0);
-        // uf(7,0) = motorons_r_scaling*cf(2,0);
-    }
-    
-    return PX4_OK;
-}
-
-int My_LQR_control::controller_mode(){
-// Decide whether to use the LQR feedback or just RC passthrough
-
-    if(rc_channels.channels[13] < -0.5f){ // RC only
-        y(6,0)  = 0.0f;
-        y(7,0)  = 0.0f;
-        y(8,0)  = 0.0f;
-        y(9,0)  = y_setpoint(9,0);
-        y(10,0) = y_setpoint(10,0);
-        y(11,0) = y_setpoint(11,0);
-    }
-    
-
-// Decide whether to disable pitch or yaw stabilisation and damping
-    if(rc_channels.channels[14] < -0.5f){ // RC override pitch
-        y(7,0)  = 0.0f;
-        y(10,0) = y_setpoint(10,0);
-    }
-    else if(rc_channels.channels[14] < 0.5f){ // pitch rate compensation only
-        y(10,0) = y_setpoint(10,0);
-    }
-    
-    if(rc_channels.channels[5] < -0.5f){ // RC override yaw
-        y(8,0)  = 0.0f;
-        y(11,0) = y_setpoint(11,0);
-    }
-    else if(rc_channels.channels[5] < 0.5f){ // yaw rate compensation only
-        y(11,0) = y_setpoint(11,0);
-    }
-
-    return PX4_OK;
-}
-
-int My_LQR_control::px4_override(){
-    if(rc_channels.channels[13] > 0.5f){ // PX4 override
-        actuator_controls_virtual_poll();
-        for(int i=0; i<8; i++){
-            cf(i,0) = actuator_controls_virtual.control[i];
-        }
-    }
-    return PX4_OK;
-}
-
-int My_LQR_control::bound_control_c(){
-    
-    for(int i = 0; i < 3; i++){
-        cf(i,0) = math::constrain(cf(i,0), -1.0f, 1.0f);
-    }
-    cf(3,0) = math::constrain(cf(3,0), 0.0f, 1.0f); // thrust only positive
-
-    return PX4_OK;
-}
 
 int My_LQR_control::read_y_state(){
     orb_copy(ORB_ID(vehicle_attitude), vehicle_attitude_sub, &vehicle_attitude);
@@ -680,7 +475,6 @@ int My_LQR_control::read_y_state(){
 
     return PX4_OK;
 }
-
 int My_LQR_control::filter_rates(){
     omg(0) = vehicle_attitude.rollspeed;
     omg(1) = vehicle_attitude.pitchspeed;
@@ -701,7 +495,6 @@ int My_LQR_control::filter_rates(){
 
     return PX4_OK;
 }
-
 int My_LQR_control::convert_quaternions(){
     Qdcm = Quatf(vehicle_attitude.q);
     euler_angles = Qdcm; // this is how you convert the Dcm into Euler angles (readme.md in matrix lib)
@@ -712,7 +505,6 @@ int My_LQR_control::convert_quaternions(){
     attitude(2,0) = euler_angles.psi();
     return PX4_OK;
 }
-
 int My_LQR_control::project_theta(){
 // Extending the -90 to +90 deg range on theta to -110 to 110 deg
     proj_theta_status = 0;
@@ -752,11 +544,15 @@ int My_LQR_control::project_theta(){
     return PX4_OK;
 }
 
+
+
+
 int My_LQR_control::read_setpoints(){
     manual_control_setpoint_poll();
     rc_channels_poll();
     read_y_setpoint();
     read_c_setpoint();
+    setpoints_scale();
     return PX4_OK;
 }
 int My_LQR_control::read_c_setpoint(){
@@ -775,7 +571,6 @@ int My_LQR_control::read_c_setpoint(){
     
     return PX4_OK;
 }
-
 int My_LQR_control::read_y_setpoint(){
     y_setpoint.setAll(0.0f);
 
@@ -800,43 +595,339 @@ int My_LQR_control::read_y_setpoint(){
 
     return PX4_OK;
 }
+int My_LQR_control::setpoints_scale(){
+// RC pass through scaled by RC_scale cos i.e. for multicopters we don't want such high rates
+    y_setpoint(6,0) *= RC_scale;
+    y_setpoint(7,0) *= RC_scale;
+    y_setpoint(8,0) *= RC_scale;
 
-int My_LQR_control::printouts(){
-    dt_print = dt_print + dt;
-    if(dt_print > 3.0f){
-        PX4_INFO("dt:%2.5f", (double)dt);
-        
-        PX4_INFO("x:%2.2f, xd:%2.2f", (double)y(0,0), (double)y_setpoint(0,0));
-        
-        PX4_INFO("m1:%2.4f, m2:%2.4f, m3:%2.4f, m4:%2.4f\n", (double)uf(0,0), (double)uf(1,0), (double)uf(2,0), (double)uf(3,0));
+    return PX4_OK;
+}
 
-        PX4_INFO("m5:%2.4f, m6:%2.4f, m7:%2.4f, m8:%2.4f\n", (double)uf(4,0), (double)uf(5,0), (double)uf(6,0), (double)uf(7,0));
 
-        PX4_INFO("c1(roll):%2.4f, c2(pitch):%2.4f, c3(yaw):%2.4f, c4(thrust):%2.4f\n", (double)cf(0,0), (double)cf(1,0), (double)cf(2,0), (double)cf(3,0));
 
-        //PX4_INFO("Dcf1:%2.2f, Dcf2:%2.2f, Dcf3:%2.2f, Dcf4:%2.2f\n", (double)Del_cf(0,0), (double)Del_cf(1,0), (double)Del_cf(2,0), (double)Del_cf(3,0));
 
-        PX4_INFO("Dc1:%2.4f, Dc2:%2.4f, Dc3:%2.4f, Dc4:%2.4f\n", (double)Del_c(0,0), (double)Del_c(1,0), (double)Del_c(2,0), (double)Del_c(3,0));
-
-        PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
-
-        if(filter_status == 1){
-            PX4_ERR("Filtering rates results in NANs!");
+int My_LQR_control::gains_schedule(){
+    if(schedule_K == 1){
+        if(y(10,0) >= deg2rad(95)){
+            K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.6358f; K_feedback_y(0,7) =   0.0000f; K_feedback_y(0,8) =   0.0988f; K_feedback_y(0,9) =   0.9518f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.8722f; 
+            K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =   0.0000f; K_feedback_y(1,9) =   0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
+            K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =   0.0988f; K_feedback_y(2,7) =   0.0000f; K_feedback_y(2,8) =   2.8947f; K_feedback_y(2,9) =   0.8722f; K_feedback_y(2,10) =   0.0000f; K_feedback_y(2,11) =   0.9518f; 
+            K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
         }
+        else if(y(10,0) >= deg2rad(85)){
+            K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.6358f; K_feedback_y(0,7) =   0.0000f; K_feedback_y(0,8) =   0.0988f; K_feedback_y(0,9) =   0.9518f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.8722f; 
+            K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =   0.0000f; K_feedback_y(1,9) =   0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
+            K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =   0.0988f; K_feedback_y(2,7) =   0.0000f; K_feedback_y(2,8) =   2.8947f; K_feedback_y(2,9) =   0.8722f; K_feedback_y(2,10) =   0.0000f; K_feedback_y(2,11) =   0.9518f; 
+            K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
+        }
+        else if(y(10,0) >= deg2rad(70)){
+            K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.6464f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =   0.1294f; K_feedback_y(0,9) =   1.0033f; K_feedback_y(0,10) =   0.0000f; K_feedback_y(0,11) =  -0.8124f; 
+            K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =   0.0000f; K_feedback_y(1,9) =   0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
+            K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =   0.1294f; K_feedback_y(2,7) =   0.0000f; K_feedback_y(2,8) =   1.8643f; K_feedback_y(2,9) =   0.8124f; K_feedback_y(2,10) =   0.0000f; K_feedback_y(2,11) =   1.0033f; 
+            K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
+        }
+        else if(y(10,0) >= deg2rad(45)){
+            K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.6789f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =   0.1401f; K_feedback_y(0,9) =   1.1180f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.6455f; 
+            K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =   0.0000f; K_feedback_y(1,9) =   0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
+            K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =   0.1401f; K_feedback_y(2,7) =   0.0000f; K_feedback_y(2,8) =   1.1642f; K_feedback_y(2,9) =   0.6455f; K_feedback_y(2,10) =   0.0000f; K_feedback_y(2,11) =   1.1180f; 
+            K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
+        }
+        else if(y(10,0) >= deg2rad(30)){
+            K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.7145f; K_feedback_y(0,7) =   0.0000f; K_feedback_y(0,8) =   0.1055f; K_feedback_y(0,9) =   1.2207f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.4203f; 
+            K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =   0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
+            K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =   0.1055f; K_feedback_y(2,7) =   0.0000f; K_feedback_y(2,8) =   0.8793f; K_feedback_y(2,9) =   0.4203f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2207f; 
+            K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
+        }
+        else if(y(10,0) >= deg2rad(15)){
+            K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.7265f; K_feedback_y(0,7) =   0.0000f; K_feedback_y(0,8) =   0.0812f; K_feedback_y(0,9) =   1.2526f; K_feedback_y(0,10) =   0.0000f; K_feedback_y(0,11) =  -0.3123f; 
+            K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =   0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =   0.0000f; 
+            K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =   0.0812f; K_feedback_y(2,7) =   0.0000f; K_feedback_y(2,8) =   0.8128f; K_feedback_y(2,9) =   0.3123f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2526f; 
+            K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
+        }
+        else{
+            K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.7414f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =  -0.0000f; K_feedback_y(0,9) =   1.2910f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.0000f; 
+            K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =  -0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
+            K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.0000f; K_feedback_y(2,7) =  -0.0000f; K_feedback_y(2,8) =   0.7414f; K_feedback_y(2,9) =  -0.0000f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2910f; 
+            K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
+        }
+        schedule_K_status = 1;
+    }
+    else{
+        K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.7414f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =  -0.0000f; K_feedback_y(0,9) =   1.2910f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.0000f; 
+        K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =  -0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
+        K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.0000f; K_feedback_y(2,7) =  -0.0000f; K_feedback_y(2,8) =   0.7414f; K_feedback_y(2,9) =  -0.0000f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2910f; 
+        K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
+        schedule_K_status = 0;
+    }
 
-        //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
-        //Del_c_eps.print();
-        //(-K_feedback_y.T().slice<3,8>(9,0)).T().print();
+    return PX4_OK;
+}
+int My_LQR_control::gains_scale(){
+    K_feedback_y_scaled = K_feedback_y;
+    for(int i=0; i<4; i++){
+        for(int j=0; j<3; j++){
+            K_feedback_y_scaled(i,j) *= k_sc_vec(0,0);
+        }
+        for(int j=3; j<6; j++){
+            K_feedback_y_scaled(i,j) *= k_sc_vec(1,0);
+        }
+        for(int j=6; j<9; j++){
+            K_feedback_y_scaled(i,j) *= k_sc_vec(2,0);
+        }
+        for(int j=9; j<12; j++){
+            K_feedback_y_scaled(i,j) *= k_sc_vec(3,0);
+        }
+        K_feedback_y_scaled(i,8) *= k_sc_vec(4,0); // yaw
+    }
+    K_feedback_y_scaled(0,8) *= k_sc_vec(5,0); // cross-coupling
+    K_feedback_y_scaled(2,6) *= k_sc_vec(5,0);
+    K_feedback_y_scaled(0,11) *= k_sc_vec(5,0);
+    K_feedback_y_scaled(2,9) *= k_sc_vec(5,0);
 
-        //PX4_INFO("angular_rates_timestamp:%2.2f", (double)angular_rates_filtered.timestamp_sample);
-        //omg_filtered.print();
-        //omg.print();
+    return PX4_OK;
+}
+int My_LQR_control::gains_tune(){
+// Tune the gains using the radio knobs
+    K_feedback_y_scaled_tuned = K_feedback_y_scaled;
 
-        dt_print = 0.0f;
+    for(int i=0; i<4; i++){
+        for(int j=6; j<9; j++){
+            if(j != 7){
+                K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[11]);
+            }
+            else{
+                K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, -0.2f);
+            }
+        }
+        for(int j=9; j<12; j++){
+            if(j != 10){
+                K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[10]);
+            }
+            else{
+                K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, 0.0f);
+            }
+        }
+    }
+
+    return PX4_OK;
+}
+
+
+
+
+int My_LQR_control::controller_mode(){
+// Decide whether to use the LQR feedback or just RC passthrough
+    if(rc_channels.channels[13] < -0.5f){ // RC only
+        y(6,0)  = 0.0f;
+        y(7,0)  = 0.0f;
+        y(8,0)  = 0.0f;
+        y(9,0)  = y_setpoint(9,0);
+        y(10,0) = y_setpoint(10,0);
+        y(11,0) = y_setpoint(11,0);
+    }
+    
+// Decide whether to disable pitch or yaw stabilisation and damping
+    if(rc_channels.channels[14] < -0.5f){ // RC override pitch
+        y(7,0)  = 0.0f;
+        y(10,0) = y_setpoint(10,0);
+    }
+    else if(rc_channels.channels[14] < 0.5f){ // pitch rate compensation only
+        y(10,0) = y_setpoint(10,0);
+    }
+    
+    if(rc_channels.channels[5] < -0.5f){ // RC override yaw
+        y(8,0)  = 0.0f;
+        y(11,0) = y_setpoint(11,0);
+    }
+    else if(rc_channels.channels[5] < 0.5f){ // yaw rate compensation only
+        y(11,0) = y_setpoint(11,0);
+    }
+
+    return PX4_OK;
+}
+
+
+
+
+int My_LQR_control::control_fun(){
+// Main controller function
+    Del_y  = y  - y_setpoint;
+    //Del_y(11,0) = math::constrain(Del_y(11,0), -0.26f, 0.26f); // limit the yaw error to +-15 deg (0.26rad) not to freak out when heading too off course
+
+    //Del_cf = cf - c_setpoint; // not used if not filter
+    Del_r  = r  - r_setpoint;
+
+    //Del_c = K_feedback_y*Del_y ... ; // not used if not filter
+
+    if(dt < 0.5f){ // ignore too large dt steps (probably some glitches, startup etc)
+        r  = r  + dt*Ci*Del_y;
+        //cf = cf + dt*Tf*(-Del_cf + Del_c); // not used if not filter
+    }
+    
+    Del_y_eps = Del_y.slice<3,1>(9,0);
+    project_del_psi();
+    del_epsilon_to_body_frame();
+
+    //Del_c_x   = -K_feedback_y_scaled_tuned.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
+    //Del_c_v   = -K_feedback_y_scaled_tuned.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
+    // Del_c_omg = -K_feedback_y_scaled_tuned.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
+    Del_c_omg = -K_feedback_y_scaled_tuned.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution
+    Del_c_omg(0,0) += y_setpoint(6,0); // p
+    Del_c_omg(1,0) += y_setpoint(7,0); // q
+    Del_c_omg(2,0) += y_setpoint(8,0); // r
+    Del_c_eps = -K_feedback_y_scaled_tuned.T().slice<3,4>(9,0).T()*Del_y_eps; // slice eps contribution
+    for(int i = 0; i < 4; i++){
+        Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0));
+        Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0));
+        Del_c_omg(i,0) = math::constrain(Del_c_omg(i,0), -Del_c_lim(2,0), Del_c_lim(2,0));
+        Del_c_eps(i,0) = math::constrain(Del_c_eps(i,0), -Del_c_lim(3,0), Del_c_lim(3,0));
+    }
+
+    Del_c = Del_c_eps + Del_c_omg;
+    cf = c_setpoint + Del_c;
+
+    bound_control_c();
+        
+    return PX4_OK;
+}
+int My_LQR_control::project_del_psi(){
+// If the heading error is more than 180 degree, it is faster to correct for it by turning the opposite way.
+    proj_dpsi_status = 0;
+    if(proj_dpsi){
+        proj_dpsi_status = 1;
+        if(Del_y_eps(2,0) >  MY_PI){
+            Del_y_eps(2,0) = -2*MY_PI + Del_y_eps(2,0);
+            proj_dpsi_status = 10;
+        }
+        else if(Del_y_eps(2,0) < -MY_PI){
+            Del_y_eps(2,0) =  2*MY_PI + Del_y_eps(2,0);
+            proj_dpsi_status = -10;
+        }
+    }
+/* not true
+// If pitch over 90deg, the yaw compensation must flip
+    if(proj_dpsi && fabsf(y(10,0)) > deg2rad(90.0f)){
+        Del_y_eps(2,0) = -Del_y_eps(2,0);
+    }
+*/
+
+    return PX4_OK;
+}
+int My_LQR_control::bound_control_c(){
+    
+    for(int i = 0; i < 3; i++){
+        cf(i,0) = math::constrain(cf(i,0), -1.0f, 1.0f);
+    }
+    cf(3,0) = math::constrain(cf(3,0), 0.0f, 1.0f); // thrust only positive
+
+    return PX4_OK;
+}
+
+
+
+
+int My_LQR_control::px4_override(){
+    if(rc_channels.channels[13] > 0.5f){ // PX4 override
+        actuator_controls_virtual_poll();
+        for(int i=0; i<8; i++){
+            cf(i,0) = actuator_controls_virtual.control[i];
+        }
     }
     return PX4_OK;
 }
 
+int My_LQR_control::supporting_outputs(){
+// Outputs to the actuator_controls_1
+
+    uf.setAll(0.0f);
+
+    // front propeller thrust
+    uf(3,0) = math::constrain(c_nominal_control(3,0) + manual_control_setpoint.aux1/2.0f, 0.0f, 1.0f);
+
+    // roll support to the spilt elevators
+    if(rc_channels.channels[12] > -0.5f){
+        uf(0,0) = tailerons_scaling*cf(0,0);
+    }
+
+    // roll and yaw support to the wing motors
+    if(rc_channels.channels[12] > 0.5f){
+        uf(6,0) = motorons_p_scaling*cf(0,0);
+        uf(7,0) = motorons_r_scaling*cf(2,0);
+    }
+    
+    return PX4_OK;
+}
+
+int My_LQR_control::rc_loss_failsafe(){
+    if(rc_channels.signal_lost == true){
+        dt_rcloss = dt_rcloss + dt;
+        if(dt_rcloss >= 2.0f){
+            uf.setAll(0.0f);
+            cf.setAll(0.0f);
+
+            uf(3,0) = math::min(0.0f, uf(3,0)); // not to kill the petrol engine if possible. should set PWM min to idle at 0 and PWM disarmed to kill
+            cf(0,0) = 0.0f; 
+            cf(1,0) = 0.0f; 
+        }
+        if(dt_rcloss >= 1000000.0f){ // not to get an overflow
+            dt_rcloss = 3.0f;
+        }
+    }
+    else{
+        dt_rcloss = 0.0f;
+    }
+
+    return PX4_OK;
+}
+
+
+
+
+
+int My_LQR_control::printouts(){
+    if(do_printouts){
+        dt_print = dt_print + dt;
+        if(dt_print > 3.0f){
+            PX4_INFO("dt:%2.5f", (double)dt);
+            
+            PX4_INFO("x:%2.2f, xd:%2.2f", (double)y(0,0), (double)y_setpoint(0,0));
+            
+            PX4_INFO("m1:%2.4f, m2:%2.4f, m3:%2.4f, m4:%2.4f\n", (double)uf(0,0), (double)uf(1,0), (double)uf(2,0), (double)uf(3,0));
+
+            PX4_INFO("m5:%2.4f, m6:%2.4f, m7:%2.4f, m8:%2.4f\n", (double)uf(4,0), (double)uf(5,0), (double)uf(6,0), (double)uf(7,0));
+
+            PX4_INFO("c1(roll):%2.4f, c2(pitch):%2.4f, c3(yaw):%2.4f, c4(thrust):%2.4f\n", (double)cf(0,0), (double)cf(1,0), (double)cf(2,0), (double)cf(3,0));
+
+            //PX4_INFO("Dcf1:%2.2f, Dcf2:%2.2f, Dcf3:%2.2f, Dcf4:%2.2f\n", (double)Del_cf(0,0), (double)Del_cf(1,0), (double)Del_cf(2,0), (double)Del_cf(3,0));
+
+            PX4_INFO("Dc1:%2.4f, Dc2:%2.4f, Dc3:%2.4f, Dc4:%2.4f\n", (double)Del_c(0,0), (double)Del_c(1,0), (double)Del_c(2,0), (double)Del_c(3,0));
+
+            PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
+
+            if(filter_status == 1){
+                PX4_ERR("Filtering rates results in NANs!");
+            }
+
+            //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
+            //Del_c_eps.print();
+            //(-K_feedback_y.T().slice<3,8>(9,0)).T().print();
+
+            //PX4_INFO("angular_rates_timestamp:%2.2f", (double)angular_rates_filtered.timestamp_sample);
+            //omg_filtered.print();
+            //omg.print();
+
+            dt_print = 0.0f;
+        }
+    }
+    return PX4_OK;
+}
+
+
+
+
+/*--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------*/
 int My_LQR_control::initialize_variables(){
     y_setpoint.setAll(0.0f);
     c_setpoint.setAll(0.0f);
@@ -864,7 +955,7 @@ int My_LQR_control::initialize_variables(){
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.00f; K_feedback_y(1,7) =   0.70f; K_feedback_y(1,8) =   0.00f; K_feedback_y(1,9) =   0.00f; K_feedback_y(1,10) =   1.30f; K_feedback_y(1,11) =   0.00f; 
         K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.20f; K_feedback_y(2,7) =   0.00f; K_feedback_y(2,8) =   0.70f; K_feedback_y(2,9) =  -0.00f; K_feedback_y(2,10) =   0.00f; K_feedback_y(2,11) =   1.30f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.00f; K_feedback_y(3,7) =   0.00f; K_feedback_y(3,8) =   0.00f; K_feedback_y(3,9) =   0.00f; K_feedback_y(3,10) =   0.00f; K_feedback_y(3,11) =   0.00f; 
-        pitch_setpoint = 0.3491; // 20 deg pitch setpoint (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
+        pitch_setpoint = 0.3491; // 20 deg default pitch setpoint (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
     }
     else{ // Not specified
         PX4_WARN("No airframe specified, using unit gains K");
@@ -938,6 +1029,7 @@ int My_LQR_control::initialize_variables(){
 
     return PX4_OK;
 }
+
 int My_LQR_control::local_parameters_update(){
     y_max.setAll(0.0f);
     y_max(3,0) = param_max_u.get();
@@ -957,28 +1049,12 @@ int My_LQR_control::local_parameters_update(){
         Tf(i,i) = f_lag.get();
     }
 
-
-    K_feedback_y_scaled = K_feedback_y;
-    for(int i=0; i<4; i++){
-        for(int j=0; j<3; j++){
-            K_feedback_y_scaled(i,j) *= k_sc_x.get();
-        }
-        for(int j=3; j<6; j++){
-            K_feedback_y_scaled(i,j) *= k_sc_v.get();
-        }
-        for(int j=6; j<9; j++){
-            K_feedback_y_scaled(i,j) *= k_sc_omg.get();
-        }
-        for(int j=9; j<12; j++){
-            K_feedback_y_scaled(i,j) *= k_sc_eps.get();
-        }
-        K_feedback_y_scaled(i,8) *= k_sc_yawr.get();
-    }
-    K_feedback_y_scaled(0,8) *= k_sc_cc.get();
-    K_feedback_y_scaled(2,6) *= k_sc_cc.get();
-    K_feedback_y_scaled(0,11) *= k_sc_cc.get();
-    K_feedback_y_scaled(2,9) *= k_sc_cc.get();
-
+    k_sc_vec(0,0) = k_sc_x.get();
+    k_sc_vec(1,0) = k_sc_v.get();
+    k_sc_vec(2,0) = k_sc_omg.get();
+    k_sc_vec(3,0) = k_sc_eps.get();
+    k_sc_vec(4,0) = k_sc_yawr.get();
+    k_sc_vec(5,0) = k_sc_cc.get();
 
     K_feedback_cf_scaled = K_feedback_cf;
     for(int i=0; i<4; i++){
@@ -1015,9 +1091,13 @@ int My_LQR_control::local_parameters_update(){
 
     e2b = bool_e2b.get() == 1;
 
+    schedule_K = bool_K_sched.get() == 1;
+
     proj_theta = bool_proj_tht.get() == 1;
 
     proj_dpsi = bool_proj_dpsi.get() == 1;
+
+    do_printouts = bool_printouts.get() == 1;
 
     do_flip = bool_do_flip.get() == 1;
 
@@ -1036,7 +1116,15 @@ int My_LQR_control::update_parameters(bool force){
     return PX4_OK;
 }
 
+float My_LQR_control::deg2rad(float degs){
+    return degs*0.01745329252f;
+}
 
+
+
+
+/*--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------*/
 int My_LQR_control::flip(){
     if(do_flip){
         if(fabsf(manual_control_setpoint.y) >= 0.98f){ // if the roll stick input == 1 or -1 (with some tolerance)
@@ -1081,11 +1169,25 @@ int My_LQR_control::perturb_control(){
     return PX4_OK;
 }
 
-float My_LQR_control::deg2rad(float degs){
-    return degs*0.01745329252f;
+int My_LQR_control::del_epsilon_to_body_frame(){
+// Non-linear transformation on the Del_epsilon     
+    if(e2b){
+        E2B(0,0) = 1.0f;
+        E2B(0,2) = -sin(y(10,0));
+        E2B(1,1) = cos(y(9,0));
+        E2B(1,2) = sin(y(9,0))*cos(y(10,0));
+        E2B(2,1) = -sin(y(9,0));
+        E2B(2,2) = cos(y(9,0))*cos(y(10,0));
+
+        Del_y_eps = E2B*Del_y.slice<3,1>(9,0);
+    }
+
+    return PX4_OK;
 }
 
 
+/*--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------*/
 int my_LQR_control_main(int argc, char *argv[])
 {
     return My_LQR_control::main(argc, argv);
