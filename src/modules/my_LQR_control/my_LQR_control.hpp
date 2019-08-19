@@ -278,7 +278,7 @@ private:
 		Matrix<float,4,12> K_feedback_y_scaled_tuned;
 		Matrix<float,4,6> K_feedback_int_scaled_tuned; 
 		Matrix<float,4,4> K_feedback_cf_scaled_tuned; 
-		Matrix<float,8,1> k_sc_vec; // x,v,omg,eps,yawr,cc,cf,r
+		Matrix<float,11,1> k_sc_vec; // x,v, p,q,r,phi,theta,psi, cc, cf,ri
 
 		Matrix<float,4,1> Del_c_x; 
 		Matrix<float,4,1> Del_c_v; 
@@ -342,12 +342,15 @@ private:
         (ParamFloat<px4::params::MY_LQR_F_LAG>) f_lag,
         (ParamFloat<px4::params::MY_LQR_K_SC_X>) k_sc_x,
         (ParamFloat<px4::params::MY_LQR_K_SC_V>) k_sc_v,
-        (ParamFloat<px4::params::MY_LQR_K_SC_OMG>) k_sc_omg,
-        (ParamFloat<px4::params::MY_LQR_K_SC_EPS>) k_sc_eps,
-        (ParamFloat<px4::params::MY_LQR_K_SC_YAWR>) k_sc_yawr, // ok this is not consistent but may be useful to be able to tweak it
+        (ParamFloat<px4::params::MY_LQR_K_SC_P>) k_sc_p,
+        (ParamFloat<px4::params::MY_LQR_K_SC_Q>) k_sc_q,
+        (ParamFloat<px4::params::MY_LQR_K_SC_R>) k_sc_r, 
+        (ParamFloat<px4::params::MY_LQR_K_SC_PHI>) k_sc_phi, 
+        (ParamFloat<px4::params::MY_LQR_K_SC_THT>) k_sc_tht, 
+        (ParamFloat<px4::params::MY_LQR_K_SC_PSI>) k_sc_psi, 
         (ParamFloat<px4::params::MY_LQR_K_SC_CC>) k_sc_cc, // ok this is not consistent but may be useful to be able to tweak it
         (ParamFloat<px4::params::MY_LQR_K_SC_CF>) k_sc_cf,
-        (ParamFloat<px4::params::MY_LQR_K_SC_R>) k_sc_r,
+        (ParamFloat<px4::params::MY_LQR_K_SC_RI>) k_sc_ri,
         (ParamFloat<px4::params::MY_LQR_DX_LIM>) dx_lim,
         (ParamFloat<px4::params::MY_LQR_DV_LIM>) dv_lim,
         (ParamFloat<px4::params::MY_LQR_DOMG_LIM>) domg_lim,

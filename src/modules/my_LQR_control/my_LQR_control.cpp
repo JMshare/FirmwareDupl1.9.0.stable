@@ -613,12 +613,15 @@ int My_LQR_control::setpoints_scale(){
 int My_LQR_control::gains_scale(){
     k_sc_vec(0,0) = k_sc_x.get();
     k_sc_vec(1,0) = k_sc_v.get();
-    k_sc_vec(2,0) = k_sc_omg.get();
-    k_sc_vec(3,0) = k_sc_eps.get();
-    k_sc_vec(4,0) = k_sc_yawr.get();
-    k_sc_vec(5,0) = k_sc_cc.get();
-    k_sc_vec(6,0) = k_sc_cf.get();
-    k_sc_vec(7,0) = k_sc_r.get();
+    k_sc_vec(2,0) = k_sc_p.get();
+    k_sc_vec(3,0) = k_sc_q.get();
+    k_sc_vec(4,0) = k_sc_r.get();
+    k_sc_vec(5,0) = k_sc_phi.get();
+    k_sc_vec(6,0) = k_sc_tht.get();
+    k_sc_vec(7,0) = k_sc_psi.get();
+    k_sc_vec(8,0) = k_sc_cc.get();
+    k_sc_vec(9,0) = k_sc_cf.get();
+    k_sc_vec(10,0) = k_sc_ri.get();
 
     K_feedback_y_scaled = K_feedback_y;
     for(int i=0; i<4; i++){
@@ -628,47 +631,48 @@ int My_LQR_control::gains_scale(){
         for(int j=3; j<6; j++){
             K_feedback_y_scaled(i,j) *= k_sc_vec(1,0); // v
         }
-        for(int j=6; j<9; j++){
-            K_feedback_y_scaled(i,j) *= k_sc_vec(2,0); // omg
-        }
-        for(int j=9; j<12; j++){
-            K_feedback_y_scaled(i,j) *= k_sc_vec(3,0); // eps
-        }
-        K_feedback_y_scaled(i,8) *= k_sc_vec(4,0); // yaw damping
+        K_feedback_y_scaled(i,6) *= k_sc_vec(2,0); // p
+        K_feedback_y_scaled(i,7) *= k_sc_vec(3,0); // q
+        K_feedback_y_scaled(i,8) *= k_sc_vec(4,0); // r
+        K_feedback_y_scaled(i,9) *= k_sc_vec(5,0); // phi
+        K_feedback_y_scaled(i,10) *= k_sc_vec(6,0); // tht
+        K_feedback_y_scaled(i,11) *= k_sc_vec(7,0); // psi
     }
-    K_feedback_y_scaled(0,8) *= k_sc_vec(5,0); // cross-coupling
-    K_feedback_y_scaled(2,6) *= k_sc_vec(5,0);
-    K_feedback_y_scaled(0,11) *= k_sc_vec(5,0);
-    K_feedback_y_scaled(2,9) *= k_sc_vec(5,0);
+    K_feedback_y_scaled(0,8) *= k_sc_vec(8,0); // cross-coupling
+    K_feedback_y_scaled(2,6) *= k_sc_vec(8,0);
+    K_feedback_y_scaled(0,11) *= k_sc_vec(8,0);
+    K_feedback_y_scaled(2,9) *= k_sc_vec(8,0);
 
 
     K_feedback_cf_scaled = K_feedback_cf;
     for(int i=0; i<4; i++){
         for(int j=0; j<4; j++){
-            K_feedback_cf_scaled *= k_sc_vec(6,0);
+            K_feedback_cf_scaled *= k_sc_vec(9,0);
         }
     }
 
     K_feedback_int_scaled = K_feedback_int;
     for(int i=0; i<4; i++){
         for(int j=0; j<6; j++){
-            K_feedback_int_scaled *= k_sc_vec(7,0);
+            K_feedback_int_scaled *= k_sc_vec(10,0);
         }
     }
 
 
     k_scheds_sc = k_scheds;
     for(int j=0; j<8; j++){ // for all thetas
-        for(int i=0; i<4; i++){
-            k_scheds_sc(i,j) *= k_sc_vec(2,0); // omg
-        }
-        for(int i=4; i<8; i++){
-            k_scheds_sc(i,j) *= k_sc_vec(3,0); // eps
-        }
-        k_scheds_sc(1,j) *= k_sc_vec(5,0); // cross-coupling [pp, pr, rp, rr, ...]
-        k_scheds_sc(2,j) *= k_sc_vec(5,0); 
-        k_scheds_sc(5,j) *= k_sc_vec(5,0); 
-        k_scheds_sc(6,j) *= k_sc_vec(5,0); 
+        k_scheds_sc(0,j) *= k_sc_vec(2,0); // p
+        k_scheds_sc(1,j) *= k_sc_vec(2,0); // pr
+        k_scheds_sc(2,j) *= k_sc_vec(4,0); // rp
+        k_scheds_sc(3,j) *= k_sc_vec(4,0); // r
+        k_scheds_sc(4,j) *= k_sc_vec(5,0); // phi
+        k_scheds_sc(5,j) *= k_sc_vec(5,0); // phipsi
+        k_scheds_sc(6,j) *= k_sc_vec(7,0); // psiphi
+        k_scheds_sc(7,j) *= k_sc_vec(7,0); // psi
+        k_scheds_sc(1,j) *= k_sc_vec(8,0); // cross-coupling [pp, pr, rp, rr, ...]
+        k_scheds_sc(2,j) *= k_sc_vec(8,0); 
+        k_scheds_sc(5,j) *= k_sc_vec(8,0); 
+        k_scheds_sc(6,j) *= k_sc_vec(8,0); 
     }
 
     rc_sc_eps_last = 0.0f; // to wake up the tuner as well
