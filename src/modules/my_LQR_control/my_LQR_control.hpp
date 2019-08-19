@@ -258,6 +258,21 @@ private:
 		math::LowPassFilter2pVector3f lp_filter_angular_rates{loop_update_freqn, angular_rates_cutoff_freqn};
 		int filter_status = 0;
 		
+		Matrix<float,4,12> K_fy_n90;
+		Matrix<float,4,12> K_fy_n20;
+		Matrix<float,4,12> K_fy_0;
+		Matrix<float,4,12> K_fy_20;
+		Matrix<float,4,12> K_fy_40;
+		Matrix<float,4,12> K_fy_60;
+		Matrix<float,4,12> K_fy_80;
+		Matrix<float,4,12> K_fy_90;
+		int case_int = 2;
+		float f_int = 0.0f;
+		int n_int = 7;
+		Matrix<float,8,1> tht_ints;
+		Matrix<float,4,12> K_fy_int;
+
+
 		Matrix<float,4,12> K_feedback_y_scaled;
 		Matrix<float,4,6> K_feedback_int_scaled; 
 		Matrix<float,4,4> K_feedback_cf_scaled; 
@@ -272,6 +287,7 @@ private:
 		Matrix<float,4,1> Del_c_eps; 
 		Matrix<float,4,1> Del_c_lim; // limits on max Del_c for x,v,omg,eps
 
+		float theta0 = 0.0f;
 		bool proj_theta = 0;
 		int proj_theta_status = 0;
 		bool proj_dpsi = 0;

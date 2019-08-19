@@ -508,6 +508,7 @@ int My_LQR_control::convert_quaternions(){
 int My_LQR_control::project_theta(){
 // Extending the -90 to +90 deg range on theta to -110 to 110 deg
     proj_theta_status = 0;
+    theta0 = euler_angles.theta();
     if(proj_theta){
         proj_theta_status = 1;
         Qdcm_proj = Qdcm; // predefine
@@ -608,6 +609,49 @@ int My_LQR_control::setpoints_scale(){
 
 
 int My_LQR_control::gains_schedule(){
+    
+    if(schedule_K == 1){
+        // Interpolation approach
+        for(int i = 0; i < n_int-1; i++){ 
+            f_int = (theta0 - tht_ints(i,0))/(tht_ints(i+1,0) - tht_ints(i,0));
+            if(f_int >= 0.0f && f_int <= 1.0f){
+                case_int = i;
+                break;
+            }
+        }
+        switch(case_int){
+            case 0:
+                K_fy_int = (1.0f-f_int)*K_fy_n90 + f_int*K_fy_n20;
+                break;
+            case 1:
+                K_fy_int = (1.0f-f_int)*K_fy_n20 + f_int*K_fy_0;
+                break;
+            case 2:
+                K_fy_int = (1.0f-f_int)*K_fy_0 + f_int*K_fy_20;
+                break;
+            case 3:
+                K_fy_int = (1.0f-f_int)*K_fy_20 + f_int*K_fy_40;
+                break;
+            case 4:
+                K_fy_int = (1.0f-f_int)*K_fy_40 + f_int*K_fy_60;
+                break;
+            case 5:
+                K_fy_int = (1.0f-f_int)*K_fy_60 + f_int*K_fy_80;
+                break;
+            case 6:
+                K_fy_int = (1.0f-f_int)*K_fy_80 + f_int*K_fy_90;
+                break;
+
+            default:
+                K_fy_int = K_fy_0; 
+        }
+        schedule_K_status = 1;
+    }
+    else{
+        K_fy_int = K_fy_0;
+        schedule_K_status = 0;
+    }
+        
     if(schedule_K == 1){
         if(y(10,0) >= deg2rad(95)){
             K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.6358f; K_feedback_y(0,7) =   0.0000f; K_feedback_y(0,8) =   0.0988f; K_feedback_y(0,9) =   0.9518f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.8722f; 
