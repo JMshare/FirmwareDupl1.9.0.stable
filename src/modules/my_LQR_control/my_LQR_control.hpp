@@ -258,20 +258,19 @@ private:
 		math::LowPassFilter2pVector3f lp_filter_angular_rates{loop_update_freqn, angular_rates_cutoff_freqn};
 		int filter_status = 0;
 		
-		Matrix<float,4,12> K_fy_n90;
-		Matrix<float,4,12> K_fy_n20;
-		Matrix<float,4,12> K_fy_0;
-		Matrix<float,4,12> K_fy_20;
-		Matrix<float,4,12> K_fy_40;
-		Matrix<float,4,12> K_fy_60;
-		Matrix<float,4,12> K_fy_80;
-		Matrix<float,4,12> K_fy_90;
-		int case_int = 2;
+		int case_int = 1;
+		int case_int_last = 1;
 		float f_int = 0.0f;
 		int n_int = 7;
 		Matrix<float,8,1> tht_ints;
-		Matrix<float,4,12> K_fy_int;
-
+		Matrix<float,8,8> k_scheds;
+		Matrix<float,8,8> k_scheds_sc;
+		Matrix<float,8,8> k_scheds_sc_tun;
+		Matrix<float,8,1> k_scheds_sc_tun_int;
+		Matrix<float,4,12> K_feedback_y_sc_tun_sched;
+		float rc_sc_omg_last = 0;
+		float rc_sc_eps_last = 0;
+		int tuner_status = 0;
 
 		Matrix<float,4,12> K_feedback_y_scaled;
 		Matrix<float,4,6> K_feedback_int_scaled; 
@@ -279,7 +278,7 @@ private:
 		Matrix<float,4,12> K_feedback_y_scaled_tuned;
 		Matrix<float,4,6> K_feedback_int_scaled_tuned; 
 		Matrix<float,4,4> K_feedback_cf_scaled_tuned; 
-		Matrix<float,6,1> k_sc_vec; // x,v,omg,eps,yawr,cc
+		Matrix<float,8,1> k_sc_vec; // x,v,omg,eps,yawr,cc,cf,r
 
 		Matrix<float,4,1> Del_c_x; 
 		Matrix<float,4,1> Del_c_v; 
