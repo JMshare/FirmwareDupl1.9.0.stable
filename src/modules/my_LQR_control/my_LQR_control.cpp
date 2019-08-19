@@ -962,6 +962,8 @@ int My_LQR_control::printouts(){
 
             PX4_INFO("Scheduler interval: %d", case_int);
 
+            (K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
+
             //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
             //Del_c_eps.print();
             //(-K_feedback_y.T().slice<3,8>(9,0)).T().print();
