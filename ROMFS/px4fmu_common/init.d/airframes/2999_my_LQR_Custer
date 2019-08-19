@@ -32,20 +32,20 @@ then
 	param set PWM_MAIN_MIN2 1000
 	param set PWM_MAIN_MAX2 2000
 
-	param set PWM_MAIN_DIS3 1300
-	param set PWM_MAIN_FAIL3 1300
+	param set PWM_MAIN_DIS3 1100
+	param set PWM_MAIN_FAIL3 1100
 	param set PWM_MAIN_MIN3 1300
 	param set PWM_MAIN_MAX3 1850
 
 	param set PWM_MAIN_DIS4 1500
-	param set PWM_MAIN_FAIL4 1400
-	param set PWM_MAIN_MIN4 1100
-	param set PWM_MAIN_MAX4 1900
+	param set PWM_MAIN_FAIL4 1500
+	param set PWM_MAIN_MIN4 1050
+	param set PWM_MAIN_MAX4 1950
 
 	param set PWM_MAIN_DIS5 1500
-	param set PWM_MAIN_FAIL5 1600
-	param set PWM_MAIN_MIN5 1100
-	param set PWM_MAIN_MAX5 1900
+	param set PWM_MAIN_FAIL5 1500
+	param set PWM_MAIN_MIN5 1050
+	param set PWM_MAIN_MAX5 1950
 
 	param set PWM_MAIN_DIS6 1500
 	param set PWM_MAIN_FAIL6 1500
