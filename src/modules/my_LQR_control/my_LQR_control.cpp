@@ -326,6 +326,20 @@ int My_LQR_control::setpoints_publish(){
     return PX4_OK;
 }
 
+int My_LQR_control::debug_publish(){
+    dbg_val.ind = 0;
+    dbg_val.value = tuner_status;
+    
+    dbg_val.timestamp = hrt_absolute_time();
+
+    if(orb_publish(ORB_ID(debug_value), dbg_val_pub, &dbg_val) != PX4_OK){
+        PX4_WARN("Unable to publish debug value!");
+    }
+    
+    return PX4_OK;
+}
+
+
 
 
 /*----------------------------------------------------------------------------------------------------------------------------------
@@ -346,6 +360,7 @@ void My_LQR_control::run(){
     actuator_controls_1_pub = orb_advertise(ORB_ID(actuator_controls_1), &actuator_controls_1);
     angular_rates_filtered_pub = orb_advertise(ORB_ID(angular_rates_filtered), &angular_rates_filtered);
     setpoints_pub = orb_advertise(ORB_ID(my_LQR_setpoints), &setpoints_struct);
+    dbg_val_pub = orb_advertise(ORB_ID(debug_value), &dbg_val);
     
     // initialize parameters
     initialize_variables();
@@ -400,6 +415,7 @@ void My_LQR_control::run(){
                 actuator_controls_publish();
                 angular_rates_filtered_publish();
                 setpoints_publish();
+                debug_publish();
 
                 //printouts();
                 
@@ -425,6 +441,7 @@ void My_LQR_control::run(){
     orb_unadvertise(actuator_controls_1_pub);
     orb_unadvertise(angular_rates_filtered_pub);
     orb_unadvertise(setpoints_pub);
+    orb_unadvertise(dbg_val_pub);
 }
 /* -----------------------------------------------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------*/

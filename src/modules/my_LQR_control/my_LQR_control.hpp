@@ -73,6 +73,7 @@
 #include <uORB/topics/home_position.h>
 #include <uORB/topics/angular_rates_filtered.h>
 #include <uORB/topics/my_LQR_setpoints.h>
+#include <uORB/topics/debug_value.h>
 
 using matrix::Matrix;
 using matrix::Vector3f;
@@ -128,6 +129,7 @@ private:
 		int actuator_controls_publish();
 		int angular_rates_filtered_publish();
 		int setpoints_publish();
+		int debug_publish();
 		int timer_clock();
 		int update_parameters(bool force = false);
 		int initialize_variables();
@@ -160,7 +162,7 @@ private:
 		
 
 		/**
-        * My subscriptions topics structures
+        * My subscription/publication topics structures
 		*/
         struct parameter_update_s parameter_update{};
         struct vehicle_attitude_s vehicle_attitude{};
@@ -174,9 +176,10 @@ private:
 		struct home_position_s home_position{};		
 		struct angular_rates_filtered_s angular_rates_filtered{};
 		struct my_LQR_setpoints_s setpoints_struct{};
+		struct debug_value_s dbg_val{};
 
         /**
-        * My subscription topics subsribtors
+        * My subscription topics subsriptors
         */
         int parameter_update_sub = -1;
         int vehicle_attitude_sub = -1;
@@ -194,6 +197,7 @@ private:
 		orb_advert_t actuator_controls_1_pub = nullptr;
 		orb_advert_t angular_rates_filtered_pub = nullptr;
 		orb_advert_t setpoints_pub = nullptr;
+		orb_advert_t dbg_val_pub = nullptr;
 
 		/**
 		* My ORB IDs
