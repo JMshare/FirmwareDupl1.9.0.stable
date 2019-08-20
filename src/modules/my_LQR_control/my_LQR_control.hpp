@@ -155,6 +155,7 @@ private:
 		int perturb_control();
 		int flip();
 		float deg2rad(float);
+		float rad2deg(float);
 		
 		
 

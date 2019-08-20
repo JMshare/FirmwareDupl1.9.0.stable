@@ -21,14 +21,14 @@ float32 c1
 float32 c2
 float32 c3		
 
-float32 pitch_setpoint 
+float32 pitch_setpoint 		# [deg]
 
 int32 proj_dpsi_status 		# status of the dpsi projection (0 off, 1 on, 10 projected+, -10 projected-)
-float32 dpsi 				# the dpsi value after projection
+float32 dpsi 				# the dpsi value after projection [deg]
 
 int32 proj_theta_status 	# status of the theta projection (0 off, 1 on, 10 projected+, -10 projected-)
 
 int32 tuner_status 
-int32 case_int
+int32 case_int				# scheduler interval case
 
 # TOPICS my_LQR_setpoints

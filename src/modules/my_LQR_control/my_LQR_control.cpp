@@ -307,10 +307,10 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.c2 = c_setpoint(2,0);
     setpoints_struct.c3 = c_setpoint(3,0);
 
-    setpoints_struct.pitch_setpoint = pitch_setpoint;
+    setpoints_struct.pitch_setpoint = rad2deg(pitch_setpoint);
 
     setpoints_struct.proj_dpsi_status = proj_dpsi_status;
-    setpoints_struct.dpsi = Del_y_eps(2,0);
+    setpoints_struct.dpsi = rad2deg(Del_y_eps(2,0));
     setpoints_struct.proj_theta_status = proj_theta_status;
 
     setpoints_struct.tuner_status = tuner_status;
@@ -1159,6 +1159,10 @@ int My_LQR_control::update_parameters(bool force){
 
 float My_LQR_control::deg2rad(float degs){
     return degs*0.01745329252f;
+}
+
+float My_LQR_control::rad2deg(float rads){
+    return rads/0.01745329252f;
 }
 
 
