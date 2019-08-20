@@ -44,7 +44,6 @@
 #include "mavlink_command_sender.h"
 #include "mavlink_simple_analyzer.h"
 #include "mavlink_high_latency2.h"
-#include <v2.0/my_custom_message/mavlink.h>
 
 #include <commander/px4_custom_mode.h>
 #include <drivers/drv_pwm_output.h>
@@ -107,7 +106,6 @@
 #include <uORB/topics/vehicle_air_data.h>
 #include <uORB/topics/vehicle_magnetometer.h>
 #include <uORB/uORB.h>
-#include <uORB/topics/my_LQR_setpoints.h>
 
 using matrix::wrap_2pi;
 
@@ -4837,87 +4835,6 @@ protected:
 	}
 };
 
-class MavlinkStreamMY_CUSTOM_MESSAGE : public MavlinkStream
-{
-public:
-    const char *get_name() const
-    {
-        return MavlinkStreamMY_CUSTOM_MESSAGE::get_name_static();
-    }
-    static const char *get_name_static()
-    {
-        return "MY_CUSTOM_MESSAGE";
-    }
-    uint16_t get_id_static()
-    {
-        return MAVLINK_MSG_ID_MY_CUSTOM_MESSAGE;
-    }
-    uint16_t get_id()
-    {
-        return get_id_static();
-    }
-    static MavlinkStream *new_instance(Mavlink *mavlink)
-    {
-        return new MavlinkStreamMY_CUSTOM_MESSAGE(mavlink);
-    }
-    unsigned get_size()
-    {
-        return MAVLINK_MSG_ID_MY_CUSTOM_MESSAGE_LEN + MAVLINK_NUM_NON_PAYLOAD_BYTES;
-    }
-
-private:
-    MavlinkOrbSubscription *_sub;
-    uint64_t _ca_traj_time;
-
-    /* do not allow top copying this class */
-    MavlinkStreamMY_CUSTOM_MESSAGE(MavlinkStreamMY_CUSTOM_MESSAGE &);
-    MavlinkStreamMY_CUSTOM_MESSAGE& operator = (const MavlinkStreamMY_CUSTOM_MESSAGE &);
-
-protected:
-    explicit MavlinkStreamMY_CUSTOM_MESSAGE(Mavlink *mavlink) : MavlinkStream(mavlink),
-        _sub(_mavlink->add_orb_subscription(ORB_ID(my_LQR_setpoints))),  // make sure you enter the name of your uORB topic here
-        _ca_traj_time(0)
-    {}
-
-    bool send(const hrt_abstime t)
-    {
-        struct my_LQR_setpoints_s setpoints_struct;
-           //make sure ca_traj_struct_s is the definition of your uORB topic
-
-        if (_sub->update(&_ca_traj_time, &setpoints_struct)) {
-            mavlink_MY_CUSTOM_MESSAGE_t _my_custom_message;  //make sure mavlink_ca_trajectory_t is the definition of your custom MAVLink message
-
-            _my_custom_message.vehicle_timestamp = setpoints_struct.timestamp;
-            _my_custom_message.y0 = setpoints_struct.y0;
-            _my_custom_message.y1 = setpoints_struct.y1;
-            _my_custom_message.y2 = setpoints_struct.y2;
-            _my_custom_message.y3 = setpoints_struct.y3;
-            _my_custom_message.y4 = setpoints_struct.y4;
-            _my_custom_message.y5 = setpoints_struct.y5;
-            _my_custom_message.y6 = setpoints_struct.y6;
-            _my_custom_message.y7 = setpoints_struct.y7;
-            _my_custom_message.y8 = setpoints_struct.y8;
-            _my_custom_message.y9 = setpoints_struct.y9;
-            _my_custom_message.y10 = setpoints_struct.y10;
-            _my_custom_message.y11 = setpoints_struct.y11;
-            _my_custom_message.c0 = setpoints_struct.c0;
-            _my_custom_message.c1 = setpoints_struct.c1;
-            _my_custom_message.c2 = setpoints_struct.c2;
-            _my_custom_message.c3 = setpoints_struct.c3;
-            _my_custom_message.pitch_setpoint = setpoints_struct.pitch_setpoint;
-            _my_custom_message.proj_dpsi_status = setpoints_struct.proj_dpsi_status;
-            _my_custom_message.dpsi = setpoints_struct.dpsi;
-            _my_custom_message.proj_theta_status = setpoints_struct.proj_theta_status;
-            _my_custom_message.tuner_status = setpoints_struct.tuner_status;
-            _my_custom_message.case_int = setpoints_struct.case_int;
-
-            mavlink_msg_MY_CUSTOM_MESSAGE_send_struct(_mavlink->get_channel(), &_my_custom_message)
-        }
-
-        return true;
-    }
-};
-
 static const StreamListItem streams_list[] = {
 	StreamListItem(&MavlinkStreamHeartbeat::new_instance, &MavlinkStreamHeartbeat::get_name_static, &MavlinkStreamHeartbeat::get_id_static),
 	StreamListItem(&MavlinkStreamStatustext::new_instance, &MavlinkStreamStatustext::get_name_static, &MavlinkStreamStatustext::get_id_static),
@@ -4975,8 +4892,7 @@ static const StreamListItem streams_list[] = {
 	StreamListItem(&MavlinkStreamHighLatency2::new_instance, &MavlinkStreamHighLatency2::get_name_static, &MavlinkStreamHighLatency2::get_id_static),
 	StreamListItem(&MavlinkStreamGroundTruth::new_instance, &MavlinkStreamGroundTruth::get_name_static, &MavlinkStreamGroundTruth::get_id_static),
 	StreamListItem(&MavlinkStreamPing::new_instance, &MavlinkStreamPing::get_name_static, &MavlinkStreamPing::get_id_static),
-	StreamListItem(&MavlinkStreamOrbitStatus::new_instance, &MavlinkStreamOrbitStatus::get_name_static, &MavlinkStreamOrbitStatus::get_id_static),
-	StreamListItem(&MavlinkStreamOrbitStatus::new_instance, &MavlinkStreamMY_CUSTOM_MESSAGE::get_name_static, &MavlinkStreamMY_CUSTOM_MESSAGE::get_id_static)
+	StreamListItem(&MavlinkStreamOrbitStatus::new_instance, &MavlinkStreamOrbitStatus::get_name_static, &MavlinkStreamOrbitStatus::get_id_static)
 };
 
 const char *get_stream_name(const uint16_t msg_id)
