@@ -268,7 +268,7 @@ private:
 		float f_int = 0.0f;
 		int n_int = 7;
 		Matrix<float,8,1> tht_ints;
-		Matrix<float,8,8> k_scheds;
+		Matrix<float,8,8> k_scheds; // [pp, pr, rp, rr, ...]
 		Matrix<float,8,8> k_scheds_sc;
 		Matrix<float,8,8> k_scheds_sc_tun;
 		Matrix<float,8,1> k_scheds_sc_tun_int;

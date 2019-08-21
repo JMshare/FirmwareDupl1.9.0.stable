@@ -1016,6 +1016,8 @@ int My_LQR_control::initialize_variables(){
     K_feedback_cf.setAll(0.0f);
     c_nominal_control.setAll(0.0f);
 
+    k_scheds.setAll(0.0f);
+
     if(vehicle_id == 1){ // S500 quad
         K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.11f; K_feedback_y(0,7) =   0.00f; K_feedback_y(0,8) =   0.00f; K_feedback_y(0,9) =   0.50f; K_feedback_y(0,10) =   0.00f; K_feedback_y(0,11) =   0.00f; 
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.00f; K_feedback_y(1,7) =   0.11f; K_feedback_y(1,8) =   0.00f; K_feedback_y(1,9) =   0.00f; K_feedback_y(1,10) =   0.50f; K_feedback_y(1,11) =   0.00f; 
@@ -1027,6 +1029,14 @@ int My_LQR_control::initialize_variables(){
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =   0.00f; K_feedback_y(1,7) =   0.70f; K_feedback_y(1,8) =   0.00f; K_feedback_y(1,9) =   0.00f; K_feedback_y(1,10) =   1.30f; K_feedback_y(1,11) =   0.00f; 
         K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.20f; K_feedback_y(2,7) =   0.00f; K_feedback_y(2,8) =   0.70f; K_feedback_y(2,9) =  -0.00f; K_feedback_y(2,10) =   0.00f; K_feedback_y(2,11) =   1.30f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.00f; K_feedback_y(3,7) =   0.00f; K_feedback_y(3,8) =   0.00f; K_feedback_y(3,9) =   0.00f; K_feedback_y(3,10) =   0.00f; K_feedback_y(3,11) =   0.00f; 
+        k_scheds(0,0) =   0.6317f; k_scheds(0,1) =   0.7337f; k_scheds(0,2) =   0.7414f; k_scheds(0,3) =   0.7337f; k_scheds(0,4) =   0.7117f; k_scheds(0,5) =   0.6789f; k_scheds(0,6) =   0.6432f; k_scheds(0,7) =   0.6317f; 
+        k_scheds(1,0) =  -0.0510f; k_scheds(1,1) =  -0.0594f; k_scheds(1,2) =  -0.0000f; k_scheds(1,3) =   0.0594f; k_scheds(1,4) =   0.1099f; k_scheds(1,5) =   0.1401f; k_scheds(1,6) =   0.1235f; k_scheds(1,7) =   0.0510f; 
+        k_scheds(2,0) =  -0.0510f; k_scheds(2,1) =  -0.0594f; k_scheds(2,2) =  -0.0000f; k_scheds(2,3) =   0.0594f; k_scheds(2,4) =   0.1099f; k_scheds(2,5) =   0.1401f; k_scheds(2,6) =   0.1235f; k_scheds(2,7) =   0.0510f; 
+        k_scheds(3,0) =   6.4708f; k_scheds(3,1) =   0.7769f; k_scheds(3,2) =   0.7414f; k_scheds(3,3) =   0.7769f; k_scheds(3,4) =   0.8961f; k_scheds(3,5) =   1.1642f; k_scheds(3,6) =   2.0442f; k_scheds(3,7) =   6.4708f; 
+        k_scheds(4,0) =   0.9208f; k_scheds(4,1) =   1.2714f; k_scheds(4,2) =   1.2910f; k_scheds(4,3) =   1.2714f; k_scheds(4,4) =   1.2131f; k_scheds(4,5) =   1.1180f; k_scheds(4,6) =   0.9890f; k_scheds(4,7) =   0.9208f; 
+        k_scheds(5,0) =   0.9049f; k_scheds(5,1) =   0.2242f; k_scheds(5,2) =  -0.0000f; k_scheds(5,3) =  -0.2242f; k_scheds(5,4) =  -0.4415f; k_scheds(5,5) =  -0.6455f; k_scheds(5,6) =  -0.8298f; k_scheds(5,7) =  -0.9049f; 
+        k_scheds(6,0) =  -0.9049f; k_scheds(6,1) =  -0.2242f; k_scheds(6,2) =  -0.0000f; k_scheds(6,3) =   0.2242f; k_scheds(6,4) =   0.4415f; k_scheds(6,5) =   0.6455f; k_scheds(6,6) =   0.8298f; k_scheds(6,7) =   0.9049f; 
+        k_scheds(7,0) =   0.9208f; k_scheds(7,1) =   1.2714f; k_scheds(7,2) =   1.2910f; k_scheds(7,3) =   1.2714f; k_scheds(7,4) =   1.2131f; k_scheds(7,5) =   1.1180f; k_scheds(7,6) =   0.9890f; k_scheds(7,7) =   0.9208f; 
         pitch_setpoint = 0.3491; // 20 deg default pitch setpoint (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
     }
     else{ // Not specified
