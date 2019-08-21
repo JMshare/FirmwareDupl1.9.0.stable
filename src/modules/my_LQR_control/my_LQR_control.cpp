@@ -69,7 +69,7 @@ $ my_LQR_control start -p 2
         PRINT_MODULE_USAGE_NAME("my_LQR_control", "controller");
         PRINT_MODULE_USAGE_COMMAND("start");
         PRINT_MODULE_USAGE_PARAM_FLAG('f', "Optional flag", true);
-        PRINT_MODULE_USAGE_PARAM_INT('p', 0, 0, 1000, "Vehicle ID.\nQuadS500: 1\nCuster: 2", true);
+        PRINT_MODULE_USAGE_PARAM_INT('p', 0, 0, 1000, "Vehicle ID.\n\t\tQuadS500: 1\n\t\tCuster: 2", true);
         PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 
         return 0;
@@ -77,7 +77,7 @@ $ my_LQR_control start -p 2
 
 int My_LQR_control::print_status()
 {
-        PX4_INFO("Running");
+        PX4_INFO("Running in mode %d", vehicle_id);
         // TODO: print additional runtime information about the state of the module
 
         return 0;
@@ -417,7 +417,7 @@ void My_LQR_control::run(){
                 setpoints_publish();
                 debug_publish();
 
-                //printouts();
+                printouts();
                 
             }
             perf_end(_loop_perf);
