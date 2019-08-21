@@ -276,6 +276,7 @@ private:
 		float rc_sc_omg_last = 0;
 		float rc_sc_eps_last = 0;
 		int tuner_status = 0;
+		float tune_expo = 10.0f;
 
 		Matrix<float,4,12> K_feedback_y_scaled;
 		Matrix<float,4,6> K_feedback_int_scaled; 
@@ -356,6 +357,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_K_SC_CC>) k_sc_cc, // ok this is not consistent but may be useful to be able to tweak it
         (ParamFloat<px4::params::MY_LQR_K_SC_CF>) k_sc_cf,
         (ParamFloat<px4::params::MY_LQR_K_SC_RI>) k_sc_ri,
+        (ParamFloat<px4::params::MY_LQR_TUNE_EX>) tune_ex,
         (ParamFloat<px4::params::MY_LQR_DX_LIM>) dx_lim,
         (ParamFloat<px4::params::MY_LQR_DV_LIM>) dv_lim,
         (ParamFloat<px4::params::MY_LQR_DOMG_LIM>) domg_lim,

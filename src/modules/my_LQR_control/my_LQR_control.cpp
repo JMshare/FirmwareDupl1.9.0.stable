@@ -711,30 +711,20 @@ int My_LQR_control::gains_tune(){
         K_feedback_y_scaled_tuned = K_feedback_y_scaled;
         for(int i=0; i<4; i++){
             for(int j=6; j<9; j++){
-                if(j != 7){
-                    K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[11]);
-                }
-                else{
-                    K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, -0.2f);
-                }
+                K_feedback_y_scaled_tuned(i,j) *= powf(tune_expo, rc_channels.channels[11]);
             }
             for(int j=9; j<12; j++){
-                if(j != 10){
-                    K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, rc_channels.channels[10]);
-                }
-                else{
-                    K_feedback_y_scaled_tuned(i,j) *= powf(20.0f, 0.0f);
-                }
+                K_feedback_y_scaled_tuned(i,j) *= powf(tune_expo, rc_channels.channels[10]);
             }
         }
 
         k_scheds_sc_tun = k_scheds_sc;
         for(int j=0; j<8; j++){
             for(int i=0; i<4; i++){
-                k_scheds_sc_tun(i,j) *= powf(20.0f, rc_channels.channels[11]); // omg
+                k_scheds_sc_tun(i,j) *= powf(tune_expo, rc_channels.channels[11]); // omg
             }
             for(int i=4; i<8; i++){
-                k_scheds_sc_tun(i,j) *= powf(20.0f, rc_channels.channels[10]); // eps
+                k_scheds_sc_tun(i,j) *= powf(tune_expo, rc_channels.channels[10]); // eps
             }
         }
 
@@ -1170,6 +1160,8 @@ int My_LQR_control::local_parameters_update(){
     do_flip = bool_do_flip.get() == 1;
 
     do_perturb_control = bool_perturb_control.get() == 1;
+
+    tune_expo = tune_ex.get();
     
     return PX4_OK;
 }
