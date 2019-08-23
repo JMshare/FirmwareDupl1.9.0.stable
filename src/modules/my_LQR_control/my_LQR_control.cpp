@@ -586,8 +586,8 @@ int My_LQR_control::read_c_setpoint(){
     thrust_setpoint = manual_control_setpoint.z - 0.5f; 
     c_setpoint(3,0) = math::constrain(c_nominal_control(3,0) + thrust_setpoint, 0.0f, 1.0f);
 
-    //pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(60f); // 0 to 60 deg based on RS stick input
-    pitch_setpoint = rc_channels.channels[9]*deg2rad(90.0f); // -90 to 90 deg based on RS stick input just for test
+    pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to 60 deg based on RS stick input
+    //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
     
     return PX4_OK;
 }
@@ -636,9 +636,10 @@ int My_LQR_control::gains_scale(){
     k_sc_vec(5,0) = k_sc_phi.get();
     k_sc_vec(6,0) = k_sc_tht.get();
     k_sc_vec(7,0) = k_sc_psi.get();
-    k_sc_vec(8,0) = k_sc_cc.get();
-    k_sc_vec(9,0) = k_sc_cf.get();
-    k_sc_vec(10,0) = k_sc_ri.get();
+    k_sc_vec(8,0) = k_sc_ccd.get();
+    k_sc_vec(9,0) = k_sc_ccp.get();
+    k_sc_vec(10,0) = k_sc_cf.get();
+    k_sc_vec(11,0) = k_sc_ri.get();
 
     K_feedback_y_scaled = K_feedback_y;
     for(int i=0; i<4; i++){
@@ -655,23 +656,23 @@ int My_LQR_control::gains_scale(){
         K_feedback_y_scaled(i,10) *= k_sc_vec(6,0); // tht
         K_feedback_y_scaled(i,11) *= k_sc_vec(7,0); // psi
     }
-    K_feedback_y_scaled(0,8) *= k_sc_vec(8,0); // cross-coupling
+    K_feedback_y_scaled(0,8) *= k_sc_vec(8,0); // cross-coupling d
     K_feedback_y_scaled(2,6) *= k_sc_vec(8,0);
-    K_feedback_y_scaled(0,11) *= k_sc_vec(8,0);
-    K_feedback_y_scaled(2,9) *= k_sc_vec(8,0);
+    K_feedback_y_scaled(0,11) *= k_sc_vec(9,0); // cross-coupling p
+    K_feedback_y_scaled(2,9) *= k_sc_vec(9,0);
 
 
     K_feedback_cf_scaled = K_feedback_cf;
     for(int i=0; i<4; i++){
         for(int j=0; j<4; j++){
-            K_feedback_cf_scaled *= k_sc_vec(9,0);
+            K_feedback_cf_scaled *= k_sc_vec(10,0);
         }
     }
 
     K_feedback_int_scaled = K_feedback_int;
     for(int i=0; i<4; i++){
         for(int j=0; j<6; j++){
-            K_feedback_int_scaled *= k_sc_vec(10,0);
+            K_feedback_int_scaled *= k_sc_vec(11,0);
         }
     }
 
@@ -686,10 +687,10 @@ int My_LQR_control::gains_scale(){
         k_scheds_sc(5,j) *= k_sc_vec(5,0); // phipsi
         k_scheds_sc(6,j) *= k_sc_vec(7,0); // psiphi
         k_scheds_sc(7,j) *= k_sc_vec(7,0); // psi
-        k_scheds_sc(1,j) *= k_sc_vec(8,0); // cross-coupling [pp, pr, rp, rr, ...]
+        k_scheds_sc(1,j) *= k_sc_vec(8,0); // cross-coupling [pr, rp]
         k_scheds_sc(2,j) *= k_sc_vec(8,0); 
-        k_scheds_sc(5,j) *= k_sc_vec(8,0); 
-        k_scheds_sc(6,j) *= k_sc_vec(8,0); 
+        k_scheds_sc(5,j) *= k_sc_vec(9,0); // cross-coupling [phipsi, psiphi]
+        k_scheds_sc(6,j) *= k_sc_vec(9,0); 
     }
 
     rc_sc_eps_last = 0.0f; // to wake up the tuner as well
@@ -745,8 +746,9 @@ int My_LQR_control::gains_schedule(){
                 break;
             }
         }
+        case_int_last = 100;
         if(case_int_last != case_int){ // interpolate
-            f_int = 0.0f; // zero order interpolation now
+            // f_int = 0.0f; // zero order interpolation now
             case_int_last = case_int;
             for(int i=0; i<8; i++){
                 k_scheds_sc_tun_int(i,0) = (1.0f-f_int)*k_scheds_sc_tun(i,case_int) + f_int*k_scheds_sc_tun(i,case_int+1);
@@ -967,7 +969,7 @@ int My_LQR_control::printouts(){
                 PX4_ERR("Filtering rates results in NANs!");
             }
 
-            PX4_INFO("Scheduler interval: %d", case_int);
+            PX4_INFO("Scheduler interval: %d, f_int: %2.4f", case_int, (double)f_int);
 
             (K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
 
@@ -1019,19 +1021,19 @@ int My_LQR_control::initialize_variables(){
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.00f; K_feedback_y(3,7) =   0.00f; K_feedback_y(3,8) =   0.00f; K_feedback_y(3,9) =   0.00f; K_feedback_y(3,10) =   0.00f; K_feedback_y(3,11) =   0.00f; 
     }
     else if(vehicle_id == 2){ // Custer
-        K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.7414f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =  -0.0000f; K_feedback_y(0,9) =   1.2910f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.0000f; 
+        K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.7414f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =  -0.2000f; K_feedback_y(0,9) =   1.2910f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =  -0.0000f; 
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =  -0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
-        K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.0000f; K_feedback_y(2,7) =  -0.0000f; K_feedback_y(2,8) =   0.7414f; K_feedback_y(2,9) =  -0.0000f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2910f; 
+        K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.2000f; K_feedback_y(2,7) =  -0.0000f; K_feedback_y(2,8) =   0.7414f; K_feedback_y(2,9) =  -0.0000f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2910f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
-        k_scheds(0,0) =   0.6317f; k_scheds(0,1) =   0.7337f; k_scheds(0,2) =   0.7414f; k_scheds(0,3) =   0.7337f; k_scheds(0,4) =   0.7117f; k_scheds(0,5) =   0.6789f; k_scheds(0,6) =   0.6432f; k_scheds(0,7) =   0.6317f; 
-        k_scheds(1,0) =  -0.0510f; k_scheds(1,1) =  -0.0594f; k_scheds(1,2) =  -0.0000f; k_scheds(1,3) =   0.0594f; k_scheds(1,4) =   0.1099f; k_scheds(1,5) =   0.1401f; k_scheds(1,6) =   0.1235f; k_scheds(1,7) =   0.0510f; 
-        k_scheds(2,0) =  -0.0510f; k_scheds(2,1) =  -0.0594f; k_scheds(2,2) =  -0.0000f; k_scheds(2,3) =   0.0594f; k_scheds(2,4) =   0.1099f; k_scheds(2,5) =   0.1401f; k_scheds(2,6) =   0.1235f; k_scheds(2,7) =   0.0510f; 
-        k_scheds(3,0) =   6.4708f; k_scheds(3,1) =   0.7769f; k_scheds(3,2) =   0.7414f; k_scheds(3,3) =   0.7769f; k_scheds(3,4) =   0.8961f; k_scheds(3,5) =   1.1642f; k_scheds(3,6) =   2.0442f; k_scheds(3,7) =   6.4708f; 
-        k_scheds(4,0) =   0.9208f; k_scheds(4,1) =   1.2714f; k_scheds(4,2) =   1.2910f; k_scheds(4,3) =   1.2714f; k_scheds(4,4) =   1.2131f; k_scheds(4,5) =   1.1180f; k_scheds(4,6) =   0.9890f; k_scheds(4,7) =   0.9208f; 
-        k_scheds(5,0) =   0.9049f; k_scheds(5,1) =   0.2242f; k_scheds(5,2) =  -0.0000f; k_scheds(5,3) =  -0.2242f; k_scheds(5,4) =  -0.4415f; k_scheds(5,5) =  -0.6455f; k_scheds(5,6) =  -0.8298f; k_scheds(5,7) =  -0.9049f; 
-        k_scheds(6,0) =  -0.9049f; k_scheds(6,1) =  -0.2242f; k_scheds(6,2) =  -0.0000f; k_scheds(6,3) =   0.2242f; k_scheds(6,4) =   0.4415f; k_scheds(6,5) =   0.6455f; k_scheds(6,6) =   0.8298f; k_scheds(6,7) =   0.9049f; 
-        k_scheds(7,0) =   0.9208f; k_scheds(7,1) =   1.2714f; k_scheds(7,2) =   1.2910f; k_scheds(7,3) =   1.2714f; k_scheds(7,4) =   1.2131f; k_scheds(7,5) =   1.1180f; k_scheds(7,6) =   0.9890f; k_scheds(7,7) =   0.9208f; 
-        tht_ints(0,0) =  -1.5533f; tht_ints(0,1) =  -0.3491f; tht_ints(0,2) =   0.0000f; tht_ints(0,3) =   0.3491f; tht_ints(0,4) =   0.6981f; tht_ints(0,5) =   1.0472f; tht_ints(0,6) =   1.3963f; tht_ints(0,7) =   1.5533f; 
+        k_scheds(0,0) =   1.1159f; k_scheds(0,1) =   1.4290f; k_scheds(0,2) =   1.3816f; k_scheds(0,3) =   1.3151f; k_scheds(0,4) =   1.2621f; k_scheds(0,5) =   1.2289f; k_scheds(0,6) =   1.2061f; k_scheds(0,7) =   1.1720f; 
+k_scheds(1,0) =   2.8275f; k_scheds(1,1) =  -0.7744f; k_scheds(1,2) =  -0.6986f; k_scheds(1,3) =  -0.5865f; k_scheds(1,4) =  -0.4625f; k_scheds(1,5) =  -0.2934f; k_scheds(1,6) =   0.1995f; k_scheds(1,7) =   2.8137f; 
+k_scheds(2,0) =  -1.1804f; k_scheds(2,1) =  -1.1425f; k_scheds(2,2) =  -0.9749f; k_scheds(2,3) =  -0.8812f; k_scheds(2,4) =  -0.8553f; k_scheds(2,5) =  -0.8916f; k_scheds(2,6) =  -1.0025f; k_scheds(2,7) =  -1.1061f; 
+k_scheds(3,0) =   4.9006f; k_scheds(3,1) =   1.5113f; k_scheds(3,2) =   1.3816f; k_scheds(3,3) =   1.3468f; k_scheds(3,4) =   1.4025f; k_scheds(3,5) =   1.5814f; k_scheds(3,6) =   2.1670f; k_scheds(3,7) =   4.8575f; 
+k_scheds(4,0) =   0.0117f; k_scheds(4,1) =   1.2117f; k_scheds(4,2) =   1.2846f; k_scheds(4,3) =   1.2899f; k_scheds(4,4) =   1.2836f; k_scheds(4,5) =   1.2826f; k_scheds(4,6) =   1.2888f; k_scheds(4,7) =   1.2910f; 
+k_scheds(5,0) =   1.2909f; k_scheds(5,1) =   0.4454f; k_scheds(5,2) =   0.1285f; k_scheds(5,3) =  -0.0536f; k_scheds(5,4) =  -0.1380f; k_scheds(5,5) =  -0.1467f; k_scheds(5,6) =  -0.0755f; k_scheds(5,7) =  -0.0091f; 
+k_scheds(6,0) =  -1.2909f; k_scheds(6,1) =  -0.4454f; k_scheds(6,2) =  -0.1285f; k_scheds(6,3) =   0.0536f; k_scheds(6,4) =   0.1380f; k_scheds(6,5) =   0.1467f; k_scheds(6,6) =   0.0755f; k_scheds(6,7) =   0.0091f; 
+k_scheds(7,0) =   0.0117f; k_scheds(7,1) =   1.2117f; k_scheds(7,2) =   1.2846f; k_scheds(7,3) =   1.2899f; k_scheds(7,4) =   1.2836f; k_scheds(7,5) =   1.2826f; k_scheds(7,6) =   1.2888f; k_scheds(7,7) =   1.2910f; 
+tht_ints(0,0) =  -1.5533f; tht_ints(0,1) =  -0.3491f; tht_ints(0,2) =   0.0000f; tht_ints(0,3) =   0.3491f; tht_ints(0,4) =   0.6981f; tht_ints(0,5) =   1.0472f; tht_ints(0,6) =   1.3963f; tht_ints(0,7) =   1.5533f; 
         pitch_setpoint = 0.3491; // 20 deg default pitch setpoint (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
     }
     else{ // Not specified
@@ -1167,6 +1169,8 @@ int My_LQR_control::local_parameters_update(){
     do_perturb_control = bool_perturb_control.get() == 1;
 
     tune_expo = tune_ex.get();
+
+    pitch_sp_max = tht_sp_m.get();
     
     return PX4_OK;
 }

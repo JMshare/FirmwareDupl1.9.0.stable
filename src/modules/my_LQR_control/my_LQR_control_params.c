@@ -292,7 +292,20 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_PSI, 1.0f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CC, 1.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCP, 1.0f);
+
+/**
+ * Feedback matrix scaling, cross coupling term
+ * The feedback matrix will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCD, 1.0f);
 
 /**
  * Feedback matrix scaling
@@ -321,8 +334,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CF, 0.0f);
 PARAM_DEFINE_FLOAT(MY_LQR_K_SC_RI, 0.0f);
 
 /**
- * Feedback matrix scaling
- * The feedback matrix will be scaled by this
+ * Tuner exponential base
  *
  * @unit []
  * @min 0
@@ -332,6 +344,18 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_RI, 0.0f);
  * @group MY LQR Control
  */
 PARAM_DEFINE_FLOAT(MY_LQR_TUNE_EX, 10.0f);
+
+/**
+ * Pitch setpoint max
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_THT_SP_M, 60.0f);
 
 /**
  * Limit on max Del_c from Del_y_omg contribution

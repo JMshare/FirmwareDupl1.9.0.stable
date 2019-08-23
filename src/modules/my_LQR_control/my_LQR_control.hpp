@@ -255,6 +255,7 @@ private:
 
 		float thrust_setpoint = 0.0f;
 		float pitch_setpoint = 0.0f;
+		float pitch_sp_max = 60.0f;
 		float yaw_setpoint = 0.0f;
 
 		Vector3f omg;
@@ -284,7 +285,7 @@ private:
 		Matrix<float,4,12> K_feedback_y_scaled_tuned;
 		Matrix<float,4,6> K_feedback_int_scaled_tuned; 
 		Matrix<float,4,4> K_feedback_cf_scaled_tuned; 
-		Matrix<float,11,1> k_sc_vec; // x,v, p,q,r,phi,theta,psi, cc, cf,ri
+		Matrix<float,12,1> k_sc_vec; // x,v, p,q,r,phi,theta,psi, ccp, ccd, cf,ri
 
 		Matrix<float,4,1> Del_c_x; 
 		Matrix<float,4,1> Del_c_v; 
@@ -354,10 +355,12 @@ private:
         (ParamFloat<px4::params::MY_LQR_K_SC_PHI>) k_sc_phi, 
         (ParamFloat<px4::params::MY_LQR_K_SC_THT>) k_sc_tht, 
         (ParamFloat<px4::params::MY_LQR_K_SC_PSI>) k_sc_psi, 
-        (ParamFloat<px4::params::MY_LQR_K_SC_CC>) k_sc_cc, // ok this is not consistent but may be useful to be able to tweak it
+        (ParamFloat<px4::params::MY_LQR_K_SC_CCP>) k_sc_ccp, // ok this is not consistent but may be useful to be able to tweak it
+        (ParamFloat<px4::params::MY_LQR_K_SC_CCD>) k_sc_ccd,
         (ParamFloat<px4::params::MY_LQR_K_SC_CF>) k_sc_cf,
         (ParamFloat<px4::params::MY_LQR_K_SC_RI>) k_sc_ri,
         (ParamFloat<px4::params::MY_LQR_TUNE_EX>) tune_ex,
+        (ParamFloat<px4::params::MY_LQR_THT_SP_M>) tht_sp_m,
         (ParamFloat<px4::params::MY_LQR_DX_LIM>) dx_lim,
         (ParamFloat<px4::params::MY_LQR_DV_LIM>) dv_lim,
         (ParamFloat<px4::params::MY_LQR_DOMG_LIM>) domg_lim,
