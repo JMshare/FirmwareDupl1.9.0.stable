@@ -267,12 +267,12 @@ private:
 		int case_int = 1;
 		int case_int_last = 1;
 		float f_int = 0.0f;
-		int n_int = 7;
-		Matrix<float,1,8> tht_ints;
-		Matrix<float,8,8> k_scheds; // [pp, pr, rp, rr, ...]
-		Matrix<float,8,8> k_scheds_sc;
-		Matrix<float,8,8> k_scheds_sc_tun;
-		Matrix<float,8,1> k_scheds_sc_tun_int;
+		const static int n_int = 5;
+		Matrix<float,1,n_int+1> tht_ints;
+		Matrix<float,10,n_int+1> k_scheds; // [pp, pr, rp, rr, ..., q, tht]
+		Matrix<float,10,n_int+1> k_scheds_sc;
+		Matrix<float,10,n_int+1> k_scheds_sc_tun;
+		Matrix<float,10,1> k_scheds_sc_tun_int;
 		Matrix<float,4,12> K_feedback_y_sc_tun_sched;
 		float rc_sc_omg_last = 0;
 		float rc_sc_eps_last = 0;
