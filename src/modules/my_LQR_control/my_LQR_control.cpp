@@ -314,7 +314,9 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.proj_theta_status = proj_theta_status;
 
     setpoints_struct.tuner_status = tuner_status;
-    setpoints_struct.case_int = case_int;
+    setpoints_struct.gain_scale_p = tune_p;
+    setpoints_struct.gain_scale_d = tune_d;
+    setpoints_struct.case_int_f_int = 1.0f*case_int + f_int;
 
     setpoints_struct.timestamp = hrt_absolute_time();
     setpoints_struct.timestamp_sample = vehicle_attitude.timestamp;
@@ -714,10 +716,12 @@ int My_LQR_control::gains_tune(){
         K_feedback_y_scaled_tuned = K_feedback_y_scaled;
         for(int i=0; i<4; i++){
             for(int j=6; j<9; j++){
-                K_feedback_y_scaled_tuned(i,j) *= powf(tune_expo, rc_channels.channels[11]);
+                tune_d = powf(tune_expo, rc_channels.channels[11]);;
+                K_feedback_y_scaled_tuned(i,j) *= tune_d;
             }
             for(int j=9; j<12; j++){
-                K_feedback_y_scaled_tuned(i,j) *= powf(tune_expo, rc_channels.channels[10]);
+                tune_p = powf(tune_expo, rc_channels.channels[10]);
+                K_feedback_y_scaled_tuned(i,j) *= tune_p;
             }
         }
 
@@ -773,6 +777,7 @@ int My_LQR_control::gains_schedule(){
     else{
         schedule_K_status = 0;
         case_int = -1;
+        f_int = 0.0f;
     }
 
     return PX4_OK;

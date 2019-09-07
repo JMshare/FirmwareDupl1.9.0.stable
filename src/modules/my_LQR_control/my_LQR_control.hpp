@@ -278,6 +278,8 @@ private:
 		float rc_sc_eps_last = 0;
 		int tuner_status = 0;
 		float tune_expo = 10.0f;
+		float tune_p = 1.0f;
+		float tune_d = 1.0f;
 
 		Matrix<float,4,12> K_feedback_y_scaled;
 		Matrix<float,4,6> K_feedback_int_scaled; 

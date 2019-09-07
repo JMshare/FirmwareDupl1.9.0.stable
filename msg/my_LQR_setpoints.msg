@@ -29,6 +29,8 @@ float32 dpsi 				# the dpsi value after projection [deg]
 int32 proj_theta_status 	# status of the theta projection (0 off, 1 on, 10 projected+, -10 projected-)
 
 int32 tuner_status 
-int32 case_int				# scheduler interval case
+float32 gain_scale_p
+float32 gain_scale_d
+float32 case_int_f_int		# scheduler interval case + f_int
 
 # TOPICS my_LQR_setpoints
