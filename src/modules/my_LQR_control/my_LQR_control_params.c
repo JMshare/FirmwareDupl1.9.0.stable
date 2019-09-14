@@ -454,7 +454,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSR, 0.3f);
  * @increment 0.1
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF, 8.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF, 5.0f);
 
 /**
  * Perturbation control index for syst-id manouvers
