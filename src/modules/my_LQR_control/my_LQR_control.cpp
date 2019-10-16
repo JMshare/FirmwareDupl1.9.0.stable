@@ -703,7 +703,7 @@ int My_LQR_control::gains_scale(){
     }
 
     rc_sc_eps_last = 0.0f; // to wake up the tuner as well
-    rc_sc_eps_last = 0.0f;
+    rc_sc_omg_last = 0.0f;
     K_feedback_y_scaled_tuned = K_feedback_y_scaled;
     K_feedback_y_sc_tun_sched = K_feedback_y_scaled_tuned;
     k_scheds_sc_tun = k_scheds_sc;
