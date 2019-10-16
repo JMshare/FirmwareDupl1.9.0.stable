@@ -505,7 +505,7 @@ int My_LQR_control::filter_rates(){
         omg_filtered = lp_filter_angular_rates.apply(omg);
         filter_status = 0; // ok
         if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f)){ // safety check, if NAN this should come to false
-            omg_filtered = omg/10.0f; // tone it down to prevent feeding vibrations to servos
+            omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status = 1; // whops
         }
     }
