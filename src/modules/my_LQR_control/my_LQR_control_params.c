@@ -45,7 +45,196 @@
  */
 
 /**
+ * Cutoff frequency for angular rates filter
+ *
+ * @unit [Hz]
+ * @min 0
+ * @max 250
+ * @decimal 1
+ * @increment 0.1
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF, 5.0f);
+
+/**
+ * Pitch setpoint max
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_THT_SP_M, 40.0f);
+
+/**
+ * Feedback matrix scaling
+ * The feedback on p will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_P, 1.0f);
+
+/**
+ * Feedback matrix scaling
+ * The feedback on q will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_Q, 1.0f);
+
+/**
+ * Feedback matrix scaling
+ * The feedback on r will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_R, 1.0f);
+
+/**
+ * Feedback matrix scaling
+ * The feedback on phi will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_PHI, 1.0f);
+
+/**
+ * Feedback matrix scaling
+ * The feedback on theta will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_THT, 1.0f);
+
+/**
+ * Feedback matrix scaling
+ * The feedback on psi will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_PSI, 1.0f);
+
+/**
+ * Feedback matrix scaling, cross coupling P term
+ * The feedback matrix will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCP, 1.0f);
+
+/**
+ * Feedback matrix scaling, cross coupling D term
+ * The feedback matrix will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCD, 1.0f);
+
+/**
+ * Motorons roll mixer scaling
+ * The supporting outputs on motorons in the mixer will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSP, 0.0f);
+
+/**
+ * Motorons yaw mixer scaling
+ * The supporting outputs on motorons in the mixer will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSR, 0.3f);
+
+/**
+ * Tailerons mixer scaling
+ * The supporting outputs on tailerons in the mixer will be scaled by this
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_TAILERONS, 0.3f);
+
+/**
+ * Tuner exponential base
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_TUNE_EX, 10.0f);
+
+/**
+ * gains schedule bool
+ * Schedule the feedback gains matrix K based on pitch angle theta
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_SCHD, 1);
+
+/**
  * RC setpoint scaling
+ * Scale to change the responsivness of the plane
  *
  * @unit []
  * @min 0
@@ -55,6 +244,123 @@
  * @group MY LQR Control
  */
 PARAM_DEFINE_FLOAT(MY_LQR_RC_SCALE, 1.0f);
+
+
+/**
+ * PTT bool
+ * Project the pitch theta to extend to -110 to +110 deg
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_PTT, 1);
+
+/**
+ * PDP bool
+ * Project the heading psi error to 180 deg
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_PDP, 1);
+
+/**
+ * Printouts bool
+ * Do I want to generate the custom printouts?
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_PRNT, 1);
+
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------
+// Active but don't use, don't change
+/**
+ * Limit on max Del_c from Del_y_omg contribution
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_DX_LIM, 1.0f);
+
+/**
+ * Limit on max Del_c from Del_y_omg contribution
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_DV_LIM, 1.0f);
+
+/**
+ * Limit on max Del_c from Del_y_omg contribution
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 1.0f);
+
+/**
+ * Limit on max Del_c from Del_y_eps contribution
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_DEPS_LIM, 1.0f);
+
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------
+// Depreciated parameters, not used at the moment
+/**
+ * E2B bool
+ * Use the nonlinear transformation on epsilon to get it to body frame
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_E2B, 0);
+
+/**
+ * Perturbation bool
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_DO_PERT, 0);
+
+/**
+ * Flip bool
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_DO_FLIP, 0);
 
 /**
  * Maximum velocity in body x direction
@@ -214,110 +520,6 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_V, 1.0f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_P, 1.0f);
-
-/**
- * Feedback matrix scaling
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_Q, 1.0f);
-
-/**
- * Feedback matrix scaling
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_R, 1.0f);
-
-/**
- * Feedback matrix scaling
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_PHI, 1.0f);
-
-/**
- * Feedback matrix scaling
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_THT, 1.0f);
-
-/**
- * Feedback matrix scaling
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_PSI, 1.0f);
-
-/**
- * Feedback matrix scaling, cross coupling term
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCP, 1.0f);
-
-/**
- * Feedback matrix scaling, cross coupling term
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCD, 1.0f);
-
-/**
- * Feedback matrix scaling
- * The feedback matrix will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
 PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CF, 0.0f);
 
 /**
@@ -332,129 +534,6 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CF, 0.0f);
  * @group MY LQR Control
  */
 PARAM_DEFINE_FLOAT(MY_LQR_K_SC_RI, 0.0f);
-
-/**
- * Tuner exponential base
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_TUNE_EX, 10.0f);
-
-/**
- * Pitch setpoint max
- *
- * @unit []
- * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_THT_SP_M, 60.0f);
-
-/**
- * Limit on max Del_c from Del_y_omg contribution
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_DX_LIM, 1.0f);
-
-/**
- * Limit on max Del_c from Del_y_omg contribution
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_DV_LIM, 1.0f);
-
-/**
- * Limit on max Del_c from Del_y_omg contribution
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 1.0f);
-
-/**
- * Limit on max Del_c from Del_y_eps contribution
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_DEPS_LIM, 1.0f);
-
-/**
- * Tailerons mixer scaling
- * The supporting outputs on tailerons in the mixer will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_TAILERONS, 0.3f);
-
-/**
- * Motorons roll mixer scaling
- * The supporting outputs on motorons in the mixer will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSP, 0.0f);
-
-/**
- * Motorons yaw mixer scaling
- * The supporting outputs on motorons in the mixer will be scaled by this
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_MOTORONSR, 0.3f);
-
-/**
- * Cutoff frequency for angular rates filter
- *
- * @unit [Hz]
- * @min 0
- * @max 250
- * @decimal 1
- * @increment 0.1
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF, 5.0f);
 
 /**
  * Perturbation control index for syst-id manouvers
@@ -491,66 +570,3 @@ PARAM_DEFINE_FLOAT(MY_LQR_PERT_T, 0.5f);
  * @group MY LQR Control
  */
 PARAM_DEFINE_FLOAT(MY_LQR_PERT_M, 0.0f);
-
-/**
- * gains schedule bool
- * Schedule the feedback gains matrix K based on pitch angle theta
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_BOOL_SCHD, 1);
-
-/**
- * PTT bool
- * Project the pitch theta to extend to -110 to +110 deg
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_BOOL_PTT, 1);
-
-/**
- * PDP bool
- * Project the heading psi error to 180 deg
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_BOOL_PDP, 1);
-
-/**
- * Printouts bool
- * Do I want to generate the custom printouts?
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_BOOL_PRNT, 0);
-
-
-/**
- * E2B bool
- * Use the nonlinear transformation on epsilon to get it to body frame
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_BOOL_E2B, 0);
-
-/**
- * Perturbation bool
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_DO_PERT, 0);
-
-/**
- * Flip bool
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_DO_FLIP, 0);
-
