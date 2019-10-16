@@ -832,23 +832,23 @@ int My_LQR_control::control_fun(){
     //Del_y(11,0) = math::constrain(Del_y(11,0), -0.26f, 0.26f); // limit the yaw error to +-15 deg (0.26rad) not to freak out when heading too off course
 
     //Del_cf = cf - c_setpoint; // not used if not filter
-    Del_r  = r  - r_setpoint;
+    //Del_r  = r  - r_setpoint; // not used if no integral compensation
 
     //Del_c = K_feedback_y*Del_y ... ; // not used if not filter
 
     if(dt < 0.5f){ // ignore too large dt steps (probably some glitches, startup etc)
-        r  = r  + dt*Ci*Del_y;
+        //r  = r  + dt*Ci*Del_y; // not used if no integral compensation
         //cf = cf + dt*Tf*(-Del_cf + Del_c); // not used if not filter
     }
     
     Del_y_eps = Del_y.slice<3,1>(9,0);
     project_del_psi();
-    del_epsilon_to_body_frame();
+    del_epsilon_to_body_frame(); // depreciated
 
     //Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
     //Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
     // Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
-    Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution
+    Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution, this way RC input indep of K
     Del_c_omg(0,0) += y_setpoint(6,0); // p
     Del_c_omg(1,0) += y_setpoint(7,0); // q
     Del_c_omg(2,0) += y_setpoint(8,0); // r
