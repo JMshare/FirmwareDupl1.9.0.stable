@@ -718,14 +718,15 @@ int My_LQR_control::gains_tune(){
         rc_sc_omg_last = rc_channels.channels[11];
         rc_sc_eps_last = rc_channels.channels[10];
 
+        tune_d = powf(tune_expo, rc_channels.channels[11]);
+        tune_p = powf(tune_expo, rc_channels.channels[10]);
+
         K_feedback_y_scaled_tuned = K_feedback_y_scaled;
         for(int i=0; i<4; i++){
             for(int j=6; j<9; j++){
-                tune_d = powf(tune_expo, rc_channels.channels[11]);;
                 K_feedback_y_scaled_tuned(i,j) *= tune_d;
             }
             for(int j=9; j<12; j++){
-                tune_p = powf(tune_expo, rc_channels.channels[10]);
                 K_feedback_y_scaled_tuned(i,j) *= tune_p;
             }
         }
@@ -733,13 +734,13 @@ int My_LQR_control::gains_tune(){
         k_scheds_sc_tun = k_scheds_sc;
         for(int j=0; j<n_int+1; j++){
             for(int i=0; i<4; i++){
-                k_scheds_sc_tun(i,j) *= powf(tune_expo, rc_channels.channels[11]); // omg
+                k_scheds_sc_tun(i,j) *= tune_d; // omg
             }
-            k_scheds_sc_tun(8,j) *= powf(tune_expo, rc_channels.channels[11]); // p
+            k_scheds_sc_tun(8,j) *= tune_d; // p
             for(int i=4; i<8; i++){
-                k_scheds_sc_tun(i,j) *= powf(tune_expo, rc_channels.channels[10]); // eps
+                k_scheds_sc_tun(i,j) *= tune_p; // eps
             }
-            k_scheds_sc_tun(9,j) *= powf(tune_expo, rc_channels.channels[10]); // tht
+            k_scheds_sc_tun(9,j) *= tune_p; // tht
         }
 
         // trigger the scheduler as well if tuning changed
