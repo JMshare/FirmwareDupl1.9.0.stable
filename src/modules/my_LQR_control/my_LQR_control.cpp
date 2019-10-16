@@ -399,26 +399,26 @@ void My_LQR_control::run(){
         else {
             perf_begin(_loop_perf);
             if (fds[0].revents & POLLIN) {
-                timer_clock();
+                timer_clock(); // manages time to have a reliable dt variable
                 
                 read_y_state();
                 
                 read_setpoints();
 
-                gains_tune();
-                gains_schedule();
+                gains_tune(); // gains tune based on RC knobs
+                gains_schedule(); // gains schedule based on pitch angle
 
                 flip(); 
 
-                controller_mode();
+                controller_mode(); // decides whether to use manual or full feedback or pitch and yaw on/off/damping based on RC switches
                 
-                control_fun();
+                control_fun(); // computes the actuator controls
                 
                 perturb_control(); 
 
-                px4_override();
+                px4_override(); // overrides the controls by the PX4 controller based on RC switches
 
-                supporting_outputs();
+                supporting_outputs(); // front engine and tailerons and differential thrust to mixer based on RC switches
 
                 rc_loss_failsafe();
                 
