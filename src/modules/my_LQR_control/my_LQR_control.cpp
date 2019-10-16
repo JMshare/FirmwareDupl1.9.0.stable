@@ -341,6 +341,14 @@ int My_LQR_control::debug_publish(){
     return PX4_OK;
 }
 
+int My_LQR_control::publish_topics(){
+    actuator_controls_publish();
+    angular_rates_filtered_publish();
+    setpoints_publish();
+    debug_publish();
+    return PX4_OK;
+}
+
 
 
 
@@ -414,10 +422,7 @@ void My_LQR_control::run(){
 
                 rc_loss_failsafe();
                 
-                actuator_controls_publish();
-                angular_rates_filtered_publish();
-                setpoints_publish();
-                debug_publish();
+                publish_topics();
 
                 printouts();
                 

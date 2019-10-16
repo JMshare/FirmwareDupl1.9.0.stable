@@ -130,6 +130,7 @@ private:
 		int angular_rates_filtered_publish();
 		int setpoints_publish();
 		int debug_publish();
+		int publish_topics();
 		int timer_clock();
 		int update_parameters(bool force = false);
 		int initialize_variables();
