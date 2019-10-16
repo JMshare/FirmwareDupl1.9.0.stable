@@ -759,7 +759,7 @@ int My_LQR_control::gains_schedule(){
                 break;
             }
         }
-        case_int_last = 100;
+        case_int_last = 100; // comment if you just want a step function
         if(case_int_last != case_int){ // interpolate
             // f_int = 0.0f; // zero order interpolation now
             case_int_last = case_int;
