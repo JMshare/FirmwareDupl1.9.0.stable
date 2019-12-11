@@ -593,7 +593,7 @@ int My_LQR_control::read_c_setpoint(){
     thrust_setpoint = manual_control_setpoint.z - 0.5f; 
     c_setpoint(3,0) = math::constrain(c_nominal_control(3,0) + thrust_setpoint, 0.0f, 1.0f);
 
-    pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to 60 deg based on RS stick input
+    pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
     //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
     
     return PX4_OK;
@@ -762,7 +762,7 @@ int My_LQR_control::gains_schedule(){
         }
         case_int_last = 100; // comment if you just want a step function
         if(case_int_last != case_int){ // interpolate
-            // f_int = 0.0f; // zero order interpolation now
+            // f_int = 0.0f; // zero order interpolation
             case_int_last = case_int;
             for(int i=0; i<10; i++){
                 k_scheds_sc_tun_int(i,0) = (1.0f-f_int)*k_scheds_sc_tun(i,case_int) + f_int*k_scheds_sc_tun(i,case_int+1);
@@ -853,7 +853,7 @@ int My_LQR_control::control_fun(){
     Del_c_omg(0,0) += y_setpoint(6,0); // p
     Del_c_omg(1,0) += y_setpoint(7,0); // q
     Del_c_omg(2,0) += y_setpoint(8,0); // r
-    Del_c_eps = -K_feedback_y_sc_tun_sched.T().slice<3,4>(9,0).T()*Del_y_eps; // slice eps contribution
+    Del_c_eps = -K_feedback_y_sc_tun_sched.T().slice<3,4>(9,0).T()*Del_y_eps; // sliced eps contribution
     for(int i = 0; i < 4; i++){
         Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0));
         Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0));
@@ -1019,6 +1019,7 @@ int My_LQR_control::initialize_variables(){
     y_setpoint.setAll(0.0f);
     c_setpoint.setAll(0.0f);
     r_setpoint.setAll(0.0f);
+    pitch_setpoint = 0.0f;
     attitude.setAll(0.0f);
 
     y.setAll(0.0f);
@@ -1055,7 +1056,7 @@ k_scheds(7,0) =   1.2910f; k_scheds(7,1) =   1.2910f; k_scheds(7,2) =   1.2910f;
 k_scheds(8,0) =   0.04f; k_scheds(8,1) =   0.04f; k_scheds(8,2) =   0.07f; k_scheds(8,3) =   0.12f; k_scheds(8,4) =   0.19f; k_scheds(8,5) =   0.19f; 
 k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f; k_scheds(9,3) =   1.2910f; k_scheds(9,4) =   1.2910f; k_scheds(9,5) =   1.2910f; 
         tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.5236f; tht_ints(0,3) =   0.7854f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.5708f; 
-        pitch_setpoint = 0.3491; // 20 deg default pitch setpoint (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
+        // pitch angles (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
     }
     else{ // Not specified
         PX4_WARN("No airframe specified, using unit gains K");
