@@ -63,6 +63,8 @@ To load S500 quadcopter gains:
 $ my_LQR_control start -p 1
 To load Custer gains:
 $ my_LQR_control start -p 2
+To load Custer HITL gains:
+$ my_LQR_control start -p 3
 
 )DESCR_STR");
 

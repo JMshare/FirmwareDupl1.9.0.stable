@@ -104,5 +104,5 @@ set MIXER my_LQR_Custer_HIL
 
 param set SYS_HITL 1
 
-my_LQR_control start -p 2
+my_LQR_control start -p 3
 
