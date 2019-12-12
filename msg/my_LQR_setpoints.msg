@@ -19,7 +19,27 @@ float32 y11
 float32 c0
 float32 c1
 float32 c2
-float32 c3		
+float32 c3
+
+float32 k_omg_pp
+float32 k_omg_pr
+float32 k_omg_rp
+float32 k_omg_rr
+float32 k_omg_qq
+
+float32 k_eps_phiphi
+float32 k_eps_phipsi
+float32 k_eps_psiphi
+float32 k_eps_psipsi
+float32 k_eps_thttht
+
+float32 del_c_omg_p
+float32 del_c_omg_q
+float32 del_c_omg_r
+float32 del_c_eps_phi
+float32 del_c_eps_tht
+float32 del_c_eps_psi
+
 
 float32 pitch_setpoint 		# [deg]
 

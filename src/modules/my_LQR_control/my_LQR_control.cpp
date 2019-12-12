@@ -309,6 +309,25 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.c2 = c_setpoint(2,0);
     setpoints_struct.c3 = c_setpoint(3,0);
 
+    setpoints_struct.k_omg_pp = K_feedback_y_sc_tun_sched(0,6);
+    setpoints_struct.k_omg_pr = K_feedback_y_sc_tun_sched(0,8);
+    setpoints_struct.k_omg_rp = K_feedback_y_sc_tun_sched(2,6);
+    setpoints_struct.k_omg_rr = K_feedback_y_sc_tun_sched(2,8);
+    setpoints_struct.k_omg_qq = K_feedback_y_sc_tun_sched(1,7);
+
+    setpoints_struct.k_eps_phiphi = K_feedback_y_sc_tun_sched(0,9);
+    setpoints_struct.k_eps_phipsi = K_feedback_y_sc_tun_sched(0,11);
+    setpoints_struct.k_eps_psiphi = K_feedback_y_sc_tun_sched(2,9);
+    setpoints_struct.k_eps_psipsi = K_feedback_y_sc_tun_sched(2,11);
+    setpoints_struct.k_eps_thttht = K_feedback_y_sc_tun_sched(1,10);
+
+    setpoints_struct.del_c_omg_p = Del_c_omg(0,0);
+    setpoints_struct.del_c_omg_q = Del_c_omg(1,0);
+    setpoints_struct.del_c_omg_r = Del_c_omg(2,0);
+    setpoints_struct.del_c_eps_phi = Del_c_eps(0,0);
+    setpoints_struct.del_c_eps_tht = Del_c_eps(1,0);
+    setpoints_struct.del_c_eps_psi = Del_c_eps(2,0);
+
     setpoints_struct.pitch_setpoint = rad2deg(pitch_setpoint);
 
     setpoints_struct.proj_dpsi_status = proj_dpsi_status;
