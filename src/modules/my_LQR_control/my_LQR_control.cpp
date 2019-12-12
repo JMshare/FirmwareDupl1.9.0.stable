@@ -646,6 +646,14 @@ int My_LQR_control::read_y_setpoint(){
 int My_LQR_control::setpoints_scale(){
 // RC pass through scaled by RC_scale cos i.e. for multicopters we don't want such high rates
 // also p,q,r can react differently to cp,cq,cr in fixed-wing plane
+
+    RC_scale = RC_scale_base;
+    for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane
+        if(K_feedback_y_sc_tun_sched(i,9+i) > 1.0f){
+            RC_scale(i,0) *= K_feedback_y_sc_tun_sched(i,9+i);
+        }
+    }
+
     y_setpoint(6,0) *= RC_scale(0,0);
     y_setpoint(7,0) *= RC_scale(1,0);
     y_setpoint(8,0) *= RC_scale(2,0);
@@ -876,7 +884,7 @@ int My_LQR_control::control_fun(){
     Del_c_omg(1,0) += y_setpoint(7,0); // q
     Del_c_omg(2,0) += y_setpoint(8,0); // r
     Del_c_eps = -K_feedback_y_sc_tun_sched.T().slice<3,4>(9,0).T()*Del_y_eps; // sliced eps contribution
-    for(int i = 0; i < 4; i++){
+    for(int i = 0; i < 4; i++){ // not necessarily (-1,1), just a sanity check against NaNs
         Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0));
         Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0));
         Del_c_omg(i,0) = math::constrain(Del_c_omg(i,0), -Del_c_lim(2,0), Del_c_lim(2,0));
@@ -1189,9 +1197,9 @@ int My_LQR_control::local_parameters_update(){
     y_max(10,0) = param_max_theta.get();
     y_max(11,0) = param_max_psi.get();
 
-    RC_scale(0,0) = rc_scale_p.get();
-    RC_scale(1,0) = rc_scale_q.get();
-    RC_scale(2,0) = rc_scale_r.get();
+    RC_scale_base(0,0) = rc_scale_p.get();
+    RC_scale_base(1,0) = rc_scale_q.get();
+    RC_scale_base(2,0) = rc_scale_r.get();
     
     Tf.setAll(0.0f);
     for(int i = 0; i < 4; i++){

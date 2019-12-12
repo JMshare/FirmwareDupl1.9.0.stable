@@ -341,7 +341,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DV_LIM, 1.0f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 1.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 10.0f);
 
 /**
  * Limit on max Del_c from Del_y_eps contribution
@@ -353,7 +353,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 1.0f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_DEPS_LIM, 1.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_DEPS_LIM, 10.0f);
 
 
 
