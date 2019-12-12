@@ -645,9 +645,10 @@ int My_LQR_control::read_y_setpoint(){
 }
 int My_LQR_control::setpoints_scale(){
 // RC pass through scaled by RC_scale cos i.e. for multicopters we don't want such high rates
-    y_setpoint(6,0) *= RC_scale;
-    y_setpoint(7,0) *= RC_scale;
-    y_setpoint(8,0) *= RC_scale;
+// also p,q,r can react differently to cp,cq,cr in fixed-wing plane
+    y_setpoint(6,0) *= RC_scale(0,0);
+    y_setpoint(7,0) *= RC_scale(1,0);
+    y_setpoint(8,0) *= RC_scale(2,0);
 
     return PX4_OK;
 }
@@ -1188,7 +1189,9 @@ int My_LQR_control::local_parameters_update(){
     y_max(10,0) = param_max_theta.get();
     y_max(11,0) = param_max_psi.get();
 
-    RC_scale = rc_scale.get();
+    RC_scale(0,0) = rc_scale_p.get();
+    RC_scale(1,0) = rc_scale_q.get();
+    RC_scale(2,0) = rc_scale_r.get();
     
     Tf.setAll(0.0f);
     for(int i = 0; i < 4; i++){

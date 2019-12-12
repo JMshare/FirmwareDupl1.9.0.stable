@@ -247,7 +247,7 @@ private:
 		Matrix<float,4,1> c_nominal_control;
 
 		Matrix<float,12,1> y_max;
-		float RC_scale = 1.0f;
+		Matrix<float,3,1> RC_scale; // base scale for cp,cq,cr inputs. ct unlikely different than 1 cos this is set up on radio
 		
 		Matrix<float,3,1> attitude;
 		Eulerf euler_angles;
@@ -339,7 +339,9 @@ private:
 
 
 	DEFINE_PARAMETERS(
-		(ParamFloat<px4::params::MY_LQR_RC_SCALE>) rc_scale, 
+		(ParamFloat<px4::params::MY_LQR_RC_SC_P>) rc_scale_p,
+		(ParamFloat<px4::params::MY_LQR_RC_SC_Q>) rc_scale_q,
+		(ParamFloat<px4::params::MY_LQR_RC_SC_R>) rc_scale_r, 
 		(ParamFloat<px4::params::MY_LQR_MAX_U>) param_max_u,   
 		(ParamFloat<px4::params::MY_LQR_MAX_V>) param_max_v,
 		(ParamFloat<px4::params::MY_LQR_MAX_W>) param_max_w,
@@ -358,7 +360,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_K_SC_PHI>) k_sc_phi, 
         (ParamFloat<px4::params::MY_LQR_K_SC_THT>) k_sc_tht, 
         (ParamFloat<px4::params::MY_LQR_K_SC_PSI>) k_sc_psi, 
-        (ParamFloat<px4::params::MY_LQR_K_SC_CCP>) k_sc_ccp, // ok this is not consistent but may be useful to be able to tweak it
+        (ParamFloat<px4::params::MY_LQR_K_SC_CCP>) k_sc_ccp, 
         (ParamFloat<px4::params::MY_LQR_K_SC_CCD>) k_sc_ccd,
         (ParamFloat<px4::params::MY_LQR_K_SC_CF>) k_sc_cf,
         (ParamFloat<px4::params::MY_LQR_K_SC_RI>) k_sc_ri,

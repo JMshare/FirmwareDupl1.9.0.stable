@@ -233,7 +233,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_TUNE_EX, 10.0f);
 PARAM_DEFINE_INT32(MY_LQR_BOOL_SCHD, 1);
 
 /**
- * RC setpoint scaling
+ * RC setpoint scaling on P
  * Scale to change the responsivness of the plane
  *
  * @unit []
@@ -243,7 +243,33 @@ PARAM_DEFINE_INT32(MY_LQR_BOOL_SCHD, 1);
  * @increment 0.05
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_RC_SCALE, 1.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_RC_SC_P, 1.0f);
+
+/**
+ * RC setpoint scaling on Q
+ * Scale to change the responsivness of the plane
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 2
+ * @increment 0.05
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_RC_SC_Q, 1.0f);
+
+/**
+ * RC setpoint scaling on R
+ * Scale to change the responsivness of the plane
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 2
+ * @increment 0.05
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_RC_SC_R, 1.0f);
 
 
 /**
