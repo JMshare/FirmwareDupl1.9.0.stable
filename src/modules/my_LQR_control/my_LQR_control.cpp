@@ -614,13 +614,13 @@ int My_LQR_control::read_c_setpoint(){
     thrust_setpoint = manual_control_setpoint.z - 0.5f; 
     c_setpoint(3,0) = math::constrain(c_nominal_control(3,0) + thrust_setpoint, 0.0f, 1.0f);
 
-    pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
-    //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
-    
     return PX4_OK;
 }
 int My_LQR_control::read_y_setpoint(){
     y_setpoint.setAll(0.0f);
+
+    pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
+    //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
 
     /* 
     // Position/ velocity control
