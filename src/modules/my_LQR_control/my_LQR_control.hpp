@@ -247,8 +247,10 @@ private:
 		Matrix<float,4,1> c_nominal_control;
 
 		Matrix<float,12,1> y_max;
-		Matrix<float,3,1> RC_scale_base; // base scale for cp,cq,cr inputs. ct unlikely different than 1 cos this is set up on radio
+		Matrix<float,3,1> RC_scale_base; // base scale for cp,cq,cr inputs. 
 		Matrix<float,3,1> RC_scale;
+		float f_scale = 1.0f;
+		float p_scale = 1.0f;
 
 		Matrix<float,3,1> attitude;
 		Eulerf euler_angles;

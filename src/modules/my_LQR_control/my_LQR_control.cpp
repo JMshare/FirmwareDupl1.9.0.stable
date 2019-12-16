@@ -647,9 +647,12 @@ int My_LQR_control::setpoints_scale(){
 
     RC_scale = RC_scale_base;
     for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
-        if(K_feedback_y_sc_tun_sched(i,9+i) > 1.0f){ // 
-            RC_scale(i,0) *= K_feedback_y_sc_tun_sched(i,9+i);
+        f_scale = K_feedback_y_sc_tun_sched(i,9+i);
+        p_scale = fabsf(y(9+i,0))/RC_scale_base(i,0);
+        if(p_scale < 1.0f){
+            f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale;
         }
+        RC_scale(i,0) *= f_scale;
     }
 
     y_setpoint(6,0) *= RC_scale(0,0);
@@ -959,7 +962,7 @@ int My_LQR_control::supporting_outputs(){
 int My_LQR_control::rc_loss_failsafe(){
     if(rc_channels.signal_lost == true){
         dt_rcloss = dt_rcloss + dt;
-        if(dt_rcloss >= 2.0f){
+        if(dt_rcloss >= 4.0f){
             uf.setAll(0.0f);
             cf.setAll(0.0f);
         }
