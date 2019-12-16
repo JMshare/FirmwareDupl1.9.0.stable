@@ -312,7 +312,7 @@ PARAM_DEFINE_INT32(MY_LQR_BOOL_PRNT, 1);
  *
  * @unit []
  * @min 0
- * @max 1
+ * @max 100
  * @decimal 2
  * @increment 0.01
  * @group MY LQR Control
@@ -324,7 +324,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DX_LIM, 1.0f);
  *
  * @unit []
  * @min 0
- * @max 1
+ * @max 100
  * @decimal 2
  * @increment 0.01
  * @group MY LQR Control
@@ -336,7 +336,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DV_LIM, 1.0f);
  *
  * @unit []
  * @min 0
- * @max 1
+ * @max 100
  * @decimal 2
  * @increment 0.01
  * @group MY LQR Control
@@ -348,7 +348,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 10.0f);
  *
  * @unit []
  * @min 0
- * @max 1
+ * @max 100
  * @decimal 2
  * @increment 0.01
  * @group MY LQR Control
