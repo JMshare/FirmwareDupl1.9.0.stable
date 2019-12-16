@@ -594,7 +594,7 @@ int My_LQR_control::project_theta(){
 
 
 int My_LQR_control::read_setpoints(){
-    manual_control_setpoint_poll();
+    // manual_control_setpoint_poll();
     rc_channels_poll();
     read_y_setpoint();
     read_c_setpoint();
@@ -609,7 +609,7 @@ int My_LQR_control::read_c_setpoint(){
 
     // Attitude control
     /* we control thrust directly by rc */
-    thrust_setpoint = manual_control_setpoint.z - 0.5f; 
+    thrust_setpoint = rc_channels.channels[3] - 0.5f; 
     c_setpoint(3,0) = math::constrain(c_nominal_control(3,0) + thrust_setpoint, 0.0f, 1.0f);
 
     return PX4_OK;
@@ -629,9 +629,9 @@ int My_LQR_control::read_y_setpoint(){
     */
 
     // Attitude control
-    y_setpoint(6,0) = manual_control_setpoint.y;
-    y_setpoint(7,0) = -manual_control_setpoint.x;
-    y_setpoint(8,0) = manual_control_setpoint.r;
+    y_setpoint(6,0) =  rc_channels.channels[0];
+    y_setpoint(7,0) = -rc_channels.channels[1];
+    y_setpoint(8,0) =  rc_channels.channels[2];
     y_setpoint(9,0) = 0.0f;
     y_setpoint(10,0) = pitch_setpoint;
     y_setpoint(11,0) = yaw_setpoint;
@@ -902,10 +902,10 @@ int My_LQR_control::stabilisation_mode(){
 
 int My_LQR_control::manual_override(){
     cm.setAll(0.0f);
-    cm(0,0) =  manual_control_setpoint.y * RC_scale_base(0,0);
-    cm(1,0) = -manual_control_setpoint.x * RC_scale_base(1,0);
-    cm(2,0) =  manual_control_setpoint.r * RC_scale_base(2,0);
-    cm(3,0) = c_setpoint(3,0);
+    cm(0,0) =  rc_channels.channels[0] * RC_scale_base(0,0);
+    cm(1,0) = -rc_channels.channels[1] * RC_scale_base(1,0);
+    cm(2,0) =  rc_channels.channels[2] * RC_scale_base(2,0);
+    cm(3,0) =  rc_channels.channels[3];
     
     if(rc_channels.channels[14] < -0.5f){ // manual override pitch
         cf(1,0) = cm(1,0);
@@ -940,7 +940,7 @@ int My_LQR_control::supporting_outputs(){
     uf.setAll(0.0f);
 
     // front propeller thrust
-    uf(3,0) = math::constrain(c_nominal_control(3,0) + manual_control_setpoint.aux1/2.0f, 0.0f, 1.0f);
+    uf(3,0) = math::constrain(c_nominal_control(3,0) + rc_channels.channels[8]/2.0f, 0.0f, 1.0f);
 
     // roll support to the spilt elevators
     if(rc_channels.channels[12] > -0.5f){
