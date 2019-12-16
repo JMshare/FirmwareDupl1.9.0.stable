@@ -147,10 +147,10 @@ private:
         int gains_tune();
         int setpoints_scale();
         int supporting_outputs();
-		int bound_control_c();
+		int bound_controls();
 		int rc_loss_failsafe();
 		int printouts();
-		int controller_mode();
+		int stabilisation_mode();
 		int manual_override();
 		int px4_override();
 		int project_theta();
@@ -228,6 +228,7 @@ private:
         Matrix<float,4,1> cf; // filtered control
         Matrix<float,6,1> r; // integral of the error in states 
         Matrix<float,8,1> uf; // filtered control surfaces
+        Matrix<float,4,1> cm; // manual control
 
         Matrix<float,12,1> y_setpoint; 
         Matrix<float,4,1> c_setpoint;
@@ -297,6 +298,7 @@ private:
 		Matrix<float,4,1> Del_c_omg; 
 		Matrix<float,4,1> Del_c_eps; 
 		Matrix<float,4,1> Del_c_lim; // limits on max Del_c for x,v,omg,eps
+		Matrix<float,4,1> c_eps_bool; // stabilisation mode, will be zeros or ones based on RC switch
 
 		float theta0 = 0.0f;
 		bool proj_theta = 0;

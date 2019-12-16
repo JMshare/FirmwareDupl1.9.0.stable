@@ -245,6 +245,8 @@ int My_LQR_control::home_position_poll(){
 }
 
 int My_LQR_control::actuator_controls_publish(){
+    bound_controls(); // bounds pqr control to (-1,1) and thrust to (0,1)
+
     for(int i=0; i < 4; i++){
         actuator_controls_0.control[i] = cf(i,0);
     }
@@ -430,8 +432,6 @@ void My_LQR_control::run(){
                 gains_schedule(); // gains schedule based on pitch angle
 
                 flip(); 
-
-                controller_mode(); // decides whether to use full feedback or pitch and yaw on/off/damping based on RC switches
                 
                 control_fun(); // computes the actuator controls
                 
@@ -825,30 +825,6 @@ int My_LQR_control::gains_schedule(){
 
 
 
-int My_LQR_control::controller_mode(){
-// Decide whether to disable pitch or yaw stabilisation and damping
-    if(rc_channels.channels[14] < -0.5f){ // RC override pitch
-        y(7,0)  = 0.0f;
-        y(10,0) = y_setpoint(10,0);
-    }
-    else if(rc_channels.channels[14] < 0.5f){ // pitch rate compensation only
-        y(10,0) = y_setpoint(10,0);
-    }
-    
-    if(rc_channels.channels[5] < -0.5f){ // RC override yaw
-        y(8,0)  = 0.0f;
-        y(11,0) = y_setpoint(11,0);
-    }
-    else if(rc_channels.channels[5] < 0.5f){ // yaw rate compensation only
-        y(11,0) = y_setpoint(11,0);
-    }
-
-    return PX4_OK;
-}
-
-
-
-
 int My_LQR_control::control_fun(){
 // Main controller function
     Del_y  = y  - y_setpoint;
@@ -883,10 +859,9 @@ int My_LQR_control::control_fun(){
         Del_c_eps(i,0) = math::constrain(Del_c_eps(i,0), -Del_c_lim(3,0), Del_c_lim(3,0));
     }
 
-    Del_c = Del_c_eps + Del_c_omg;
+    stabilisation_mode();
+    Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg;
     cf = c_setpoint + Del_c;
-
-    bound_control_c();
         
     return PX4_OK;
 }
@@ -913,27 +888,43 @@ int My_LQR_control::project_del_psi(){
 
     return PX4_OK;
 }
-int My_LQR_control::bound_control_c(){
-    
-    for(int i = 0; i < 3; i++){
-        cf(i,0) = math::constrain(cf(i,0), -1.0f, 1.0f);
+int My_LQR_control::stabilisation_mode(){
+// Decide whether to disable pitch or yaw compensation
+    c_eps_bool.setAll(1.0f);
+    if(rc_channels.channels[14] < 0.5f){ // pitch rate compensation only
+        c_eps_bool(1,0) = 0.0f;
     }
-    cf(3,0) = math::constrain(cf(3,0), 0.0f, 1.0f); // thrust only positive
+    if(rc_channels.channels[5] < 0.5f){ // yaw rate compensation only
+        c_eps_bool(2,0) = 0.0f;
+    }
 
     return PX4_OK;
 }
 
 
 
+
 int My_LQR_control::manual_override(){
-    if(rc_channels.channels[13] < -0.5f){ // manual override
-        cf.setAll(0.0f);
-        cf(0,0) =  manual_control_setpoint.y * RC_scale_base(0,0);
-        cf(1,0) = -manual_control_setpoint.x * RC_scale_base(1,0);
-        cf(2,0) =  manual_control_setpoint.r * RC_scale_base(2,0);
-        cf(3,0) = c_setpoint(3,0);
-        bound_control_c();
+    cm.setAll(0.0f);
+    cm(0,0) =  manual_control_setpoint.y * RC_scale_base(0,0);
+    cm(1,0) = -manual_control_setpoint.x * RC_scale_base(1,0);
+    cm(2,0) =  manual_control_setpoint.r * RC_scale_base(2,0);
+    cm(3,0) = c_setpoint(3,0);
+    
+    if(rc_channels.channels[14] < -0.5f){ // manual override pitch
+        cf(1,0) = cm(1,0);
     }
+    if(rc_channels.channels[5] < -0.5f){ // manual override yaw
+        cf(2,0) = cm(2,0);
+    }
+    if(rc_channels.channels[13] < -0.5f){ // manual override all
+        cf.setAll(0.0f);
+        cf(0,0) = cm(0,0);
+        cf(1,0) = cm(1,0);
+        cf(2,0) = cm(2,0);
+        cf(3,0) = cm(3,0);
+    }
+
     return PX4_OK;
 }
 
@@ -975,10 +966,6 @@ int My_LQR_control::rc_loss_failsafe(){
         if(dt_rcloss >= 2.0f){
             uf.setAll(0.0f);
             cf.setAll(0.0f);
-
-            uf(3,0) = math::min(0.0f, uf(3,0)); // not to kill the petrol engine if possible. should set PWM min to idle at 0 and PWM disarmed to kill
-            cf(0,0) = 0.0f; 
-            cf(1,0) = 0.0f; 
         }
         if(dt_rcloss >= 1000000.0f){ // not to get an overflow
             dt_rcloss = 3.0f;
@@ -986,6 +973,24 @@ int My_LQR_control::rc_loss_failsafe(){
     }
     else{
         dt_rcloss = 0.0f;
+    }
+
+    return PX4_OK;
+}
+
+int My_LQR_control::bound_controls(){
+    
+    for(int i = 0; i < 3; i++){
+        cf(i,0) = math::constrain(cf(i,0), -1.0f, 1.0f);
+    }
+    cf(3,0) = math::constrain(cf(3,0), 0.0f, 1.0f); // thrust only positive
+
+    for(int i = 0; i < 3; i++){
+        uf(i,0) = math::constrain(uf(i,0), -1.0f, 1.0f);
+    }
+    uf(3,0) = math::constrain(uf(3,0), 0.0f, 1.0f); // thrust only positive
+    for(int i = 4; i < 8; i++){
+        uf(i,0) = math::constrain(uf(i,0), -1.0f, 1.0f);
     }
 
     return PX4_OK;
