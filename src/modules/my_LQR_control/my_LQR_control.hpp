@@ -151,6 +151,7 @@ private:
 		int rc_loss_failsafe();
 		int printouts();
 		int controller_mode();
+		int manual_override();
 		int px4_override();
 		int project_theta();
 		int project_del_psi();

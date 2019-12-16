@@ -431,11 +431,13 @@ void My_LQR_control::run(){
 
                 flip(); 
 
-                controller_mode(); // decides whether to use manual or full feedback or pitch and yaw on/off/damping based on RC switches
+                controller_mode(); // decides whether to use full feedback or pitch and yaw on/off/damping based on RC switches
                 
                 control_fun(); // computes the actuator controls
                 
                 perturb_control(); 
+
+                manual_override(); // overrides the controls by manual RC input based on RC switches
 
                 px4_override(); // overrides the controls by the PX4 controller based on RC switches
 
@@ -648,8 +650,8 @@ int My_LQR_control::setpoints_scale(){
 // also p,q,r can react differently to cp,cq,cr in fixed-wing plane
 
     RC_scale = RC_scale_base;
-    for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane
-        if(K_feedback_y_sc_tun_sched(i,9+i) > 1.0f){
+    for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
+        if(K_feedback_y_sc_tun_sched(i,9+i) > 1.0f){ // 
             RC_scale(i,0) *= K_feedback_y_sc_tun_sched(i,9+i);
         }
     }
@@ -824,16 +826,6 @@ int My_LQR_control::gains_schedule(){
 
 
 int My_LQR_control::controller_mode(){
-// Decide whether to use the LQR feedback or just RC passthrough
-    if(rc_channels.channels[13] < -0.5f){ // RC only
-        y(6,0)  = 0.0f;
-        y(7,0)  = 0.0f;
-        y(8,0)  = 0.0f;
-        y(9,0)  = y_setpoint(9,0);
-        y(10,0) = y_setpoint(10,0);
-        y(11,0) = y_setpoint(11,0);
-    }
-    
 // Decide whether to disable pitch or yaw stabilisation and damping
     if(rc_channels.channels[14] < -0.5f){ // RC override pitch
         y(7,0)  = 0.0f;
@@ -933,6 +925,17 @@ int My_LQR_control::bound_control_c(){
 
 
 
+int My_LQR_control::manual_override(){
+    if(rc_channels.channels[13] < -0.5f){ // manual override
+        cf.setAll(0.0f);
+        cf(0,0) =  manual_control_setpoint.y * RC_scale_base(0,0);
+        cf(1,0) = -manual_control_setpoint.x * RC_scale_base(1,0);
+        cf(2,0) =  manual_control_setpoint.r * RC_scale_base(2,0);
+        cf(3,0) = c_setpoint(3,0);
+        bound_control_c();
+    }
+    return PX4_OK;
+}
 
 int My_LQR_control::px4_override(){
     if(rc_channels.channels[13] > 0.5f){ // PX4 override
