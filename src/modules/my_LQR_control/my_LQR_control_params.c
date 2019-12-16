@@ -373,22 +373,6 @@ PARAM_DEFINE_FLOAT(MY_LQR_DEPS_LIM, 10.0f);
 PARAM_DEFINE_INT32(MY_LQR_BOOL_E2B, 0);
 
 /**
- * Perturbation bool
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_DO_PERT, 0);
-
-/**
- * Flip bool
- *
- * @unit bool
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_DO_FLIP, 0);
-
-/**
  * Maximum velocity in body x direction
  *
  * @unit m/s
@@ -561,38 +545,3 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CF, 0.0f);
  */
 PARAM_DEFINE_FLOAT(MY_LQR_K_SC_RI, 0.0f);
 
-/**
- * Perturbation control index for syst-id manouvers
- *
- * @unit []
- * @min 0
- * @max 8
- * @decimal 0
- * @increment 1
- * @group MY LQR Control
- */
-PARAM_DEFINE_INT32(MY_LQR_PERT_I, 0);
-
-/**
- * Perturbation time for syst-id manouvers
- *
- * @unit [s]
- * @min 0
- * @max 5
- * @decimal 1
- * @increment 0.1
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_PERT_T, 0.5f);
-
-/**
- * Perturbation magnitude for syst-id manouvers
- *
- * @unit []
- * @min 0
- * @max 1
- * @decimal 2
- * @increment 0.01
- * @group MY LQR Control
- */
-PARAM_DEFINE_FLOAT(MY_LQR_PERT_M, 0.0f);

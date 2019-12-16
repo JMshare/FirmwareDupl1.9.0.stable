@@ -430,12 +430,8 @@ void My_LQR_control::run(){
 
                 gains_tune(); // gains tune based on RC knobs
                 gains_schedule(); // gains schedule based on pitch angle
-
-                flip(); 
                 
                 control_fun(); // computes the actuator controls
-                
-                perturb_control(); 
 
                 manual_override(); // overrides the controls by manual RC input based on RC switches
 
@@ -1230,9 +1226,6 @@ int My_LQR_control::local_parameters_update(){
     motorons_p_scaling = motorons_p_sc.get();
     motorons_r_scaling = motorons_r_sc.get();
 
-    pert_idx = param_pert_idx.get();
-    pert_time = param_pert_time.get();
-    pert_magnitude = param_pert_magnitude.get();
 
     e2b = bool_e2b.get() == 1;
 
@@ -1243,10 +1236,6 @@ int My_LQR_control::local_parameters_update(){
     proj_dpsi = bool_proj_dpsi.get() == 1;
 
     do_printouts = bool_printouts.get() == 1;
-
-    do_flip = bool_do_flip.get() == 1;
-
-    do_perturb_control = bool_perturb_control.get() == 1;
 
     tune_expo = tune_ex.get();
 
@@ -1278,50 +1267,6 @@ float My_LQR_control::rad2deg(float rads){
 
 /*--------------------------------------------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------------------------------------------*/
-int My_LQR_control::flip(){
-    if(do_flip){
-        if(fabsf(manual_control_setpoint.y) >= 0.98f){ // if the roll stick input == 1 or -1 (with some tolerance)
-            in_flip = true;
-            flip_sign = manual_control_setpoint.y/fabsf(manual_control_setpoint.y);
-        }
-        
-        if(in_flip){
-            Del_c_lim(2,0) = 1.0f; // to allow for larger Del_c_omg when flipping
-            y_setpoint(6,0) = flip_sign*1.0f; // flip in the roll direction
-            y_setpoint(9,0) = y(9,0); // annulate the eps compensation basically
-            if((flip_sign > 0) && (y(9,0) > -1.57f)){
-                in_flip = false;
-                local_parameters_update(); // to reset the Del_c_lim
-            }
-            if((flip_sign < 0) && (y(9,0) < 1.57f)){
-                in_flip = false;
-                local_parameters_update(); // to reset the Del_c_lim
-            }
-        }
-    }
-
-    return PX4_OK;
-}
-
-int My_LQR_control::perturb_control(){
-    if(do_perturb_control){
-        dt_perturb = dt_perturb + dt;
-
-        if(dt_perturb <= pert_time){
-            uf(pert_idx,0) = uf(pert_idx,0) + pert_magnitude;
-        }
-        else if(dt_perturb <= 2.0f*pert_time){
-            uf(pert_idx,0) = uf(pert_idx,0) - pert_magnitude;
-        }
-
-        if(dt_perturb >= 10.0f*pert_time){
-            dt_perturb = 0.0f;
-        }
-    }
-    
-    return PX4_OK;
-}
-
 int My_LQR_control::del_epsilon_to_body_frame(){
 // Non-linear transformation on the Del_epsilon     
     if(e2b){

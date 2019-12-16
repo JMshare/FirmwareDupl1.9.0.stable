@@ -156,8 +156,6 @@ private:
 		int project_theta();
 		int project_del_psi();
 		int del_epsilon_to_body_frame();
-		int perturb_control();
-		int flip();
 		float deg2rad(float);
 		float rad2deg(float);
 		
@@ -316,17 +314,7 @@ private:
 		float motorons_p_scaling = 0.15f;
 		float motorons_r_scaling = 0.15f;
 
-
 		bool do_printouts = 0;
-
-		int pert_idx;
-		float pert_time;
-		float pert_magnitude;
-		bool do_perturb_control = 0;
-
-		float flip_sign;
-		bool in_flip = false;
-		bool do_flip = 0;
 
 		/**
         * My global decision variables
@@ -374,11 +362,6 @@ private:
         (ParamFloat<px4::params::MY_LQR_DV_LIM>) dv_lim,
         (ParamFloat<px4::params::MY_LQR_DOMG_LIM>) domg_lim,
         (ParamFloat<px4::params::MY_LQR_DEPS_LIM>) deps_lim,
-        (ParamInt<px4::params::MY_LQR_PERT_I>) param_pert_idx,
-        (ParamFloat<px4::params::MY_LQR_PERT_T>) param_pert_time,
-        (ParamFloat<px4::params::MY_LQR_PERT_M>) param_pert_magnitude,
-        (ParamInt<px4::params::MY_LQR_DO_FLIP>) bool_do_flip,
-        (ParamInt<px4::params::MY_LQR_DO_PERT>) bool_perturb_control,
         (ParamFloat<px4::params::MY_LQR_RTS_CTF>) angular_rates_cutoff_fn,
         (ParamFloat<px4::params::MY_LQR_TAILERONS>) tailerons_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSP>) motorons_p_sc,
