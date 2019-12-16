@@ -967,7 +967,7 @@ int My_LQR_control::rc_loss_failsafe(){
             cf.setAll(0.0f);
         }
         if(dt_rcloss >= 1000000.0f){ // not to get an overflow
-            dt_rcloss = 3.0f;
+            dt_rcloss = 5.0f;
         }
     }
     else{
