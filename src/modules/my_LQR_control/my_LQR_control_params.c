@@ -233,6 +233,15 @@ PARAM_DEFINE_FLOAT(MY_LQR_TUNE_EX, 10.0f);
 PARAM_DEFINE_INT32(MY_LQR_BOOL_SCHD, 1);
 
 /**
+ * RC adaptive scaling bool
+ * adaptive RC scaling based on current attitude
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_RCSC, 1);
+
+/**
  * RC setpoint scaling on P
  * Scale to change the responsivness of the plane
  *

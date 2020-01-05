@@ -251,6 +251,7 @@ private:
 		Matrix<float,3,1> RC_scale;
 		float f_scale = 1.0f;
 		float p_scale = 1.0f;
+		bool do_rc_scale;
 
 		Matrix<float,3,1> attitude;
 		Eulerf euler_angles;
@@ -369,6 +370,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_MOTORONSP>) motorons_p_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSR>) motorons_r_sc,
         (ParamInt<px4::params::MY_LQR_BOOL_SCHD>) bool_K_sched,
+        (ParamInt<px4::params::MY_LQR_BOOL_RCSC>) bool_rc_sc,
         (ParamInt<px4::params::MY_LQR_BOOL_PRNT>) bool_printouts,
         (ParamInt<px4::params::MY_LQR_BOOL_PTT>) bool_proj_tht,
         (ParamInt<px4::params::MY_LQR_BOOL_PDP>) bool_proj_dpsi,

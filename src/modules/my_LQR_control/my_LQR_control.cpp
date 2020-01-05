@@ -646,13 +646,15 @@ int My_LQR_control::setpoints_scale(){
 // also p,q,r can react differently to cp,cq,cr in fixed-wing plane
 
     RC_scale = RC_scale_base;
-    for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
-        f_scale = K_feedback_y_sc_tun_sched(i,9+i);
-        p_scale = fabsf(y(9+i,0))/RC_scale_base(i,0);
-        if(p_scale < 1.0f){
-            f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale;
+    if(do_rc_scale){
+        for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
+            f_scale = K_feedback_y_sc_tun_sched(i,9+i);
+            p_scale = fabsf(y(9+i,0))/RC_scale_base(i,0);
+            if(p_scale < 1.0f){
+                f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale;
+            }
+            RC_scale(i,0) *= f_scale;
         }
-        RC_scale(i,0) *= f_scale;
     }
 
     y_setpoint(6,0) *= RC_scale(0,0);
@@ -1233,6 +1235,8 @@ int My_LQR_control::local_parameters_update(){
     e2b = bool_e2b.get() == 1;
 
     schedule_K = bool_K_sched.get() == 1;
+
+    do_rc_scale = bool_rc_sc.get() == 1;
 
     proj_theta = bool_proj_tht.get() == 1;
 
