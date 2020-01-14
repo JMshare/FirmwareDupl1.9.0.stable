@@ -233,6 +233,68 @@ PARAM_DEFINE_FLOAT(MY_LQR_TUNE_EX, 10.0f);
 PARAM_DEFINE_INT32(MY_LQR_BOOL_SCHD, 1);
 
 /**
+ * adaptive control bool
+ * Scale the feedback control
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_ADP, 1);
+
+/**
+ * p adaptive control bool
+ * Scale the feedback control
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_ADPP, 0);
+
+/**
+ * q adaptive control bool
+ * Scale the feedback control
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_ADPQ, 0);
+
+/**
+ * r adaptive control bool
+ * Scale the feedback control
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_ADPR, 0);
+
+/**
+ * Gamma learning rate 
+ * Learning rate of the adaptive controller
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 3
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_GAMMA_A, 1.0f);
+
+/**
+ * System eqn factor
+ * 
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 3
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_P_A, 1.0f);
+
+/**
  * RC adaptive scaling bool
  * adaptive RC scaling based on current attitude
  *

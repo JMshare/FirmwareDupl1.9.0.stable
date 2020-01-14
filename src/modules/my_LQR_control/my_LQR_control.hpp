@@ -156,6 +156,7 @@ private:
 		int project_theta();
 		int project_del_psi();
 		int del_epsilon_to_body_frame();
+		int adaptive_control();
 		float deg2rad(float);
 		float rad2deg(float);
 		
@@ -323,6 +324,25 @@ private:
         * My global decision variables
         */
 		int vehicle_id = 0;
+
+
+		bool do_adaptive = 1; 
+		Matrix<int,3,1> adapt_A; // adapt p/q/r
+		Matrix<float,3,1> alpha_A; // adaptation gain
+		float gamma_A = 0.1f; // learning rate
+		Matrix<float,3,1> error_A; // prediction error
+		Matrix<float,3,1> I_error_A; // integral prediction error
+		Matrix<float,3,1> Omg_A; // current state
+		Matrix<float,3,1> Domg_A; // acceleration
+		Matrix<float,3,1> Domg_pred_A; // acceleration
+		Matrix<float,3,1> Omg_prev_A; // previous state
+		Matrix<float,3,1> C_prev_A; // previous control
+		Matrix<float,3,3> A_A; // A system matrix
+		Matrix<float,3,3> B_A; // B system matrix
+		float p_A = 1.0f; // model system scale
+
+
+
 		
 		
 
@@ -374,6 +394,12 @@ private:
         (ParamInt<px4::params::MY_LQR_BOOL_PRNT>) bool_printouts,
         (ParamInt<px4::params::MY_LQR_BOOL_PTT>) bool_proj_tht,
         (ParamInt<px4::params::MY_LQR_BOOL_PDP>) bool_proj_dpsi,
+        (ParamInt<px4::params::MY_LQR_BOOL_ADP>) bool_adaptive,
+        (ParamInt<px4::params::MY_LQR_BOOL_ADPP>) bool_adaptive_p,
+        (ParamInt<px4::params::MY_LQR_BOOL_ADPQ>) bool_adaptive_q,
+        (ParamInt<px4::params::MY_LQR_BOOL_ADPR>) bool_adaptive_r,
+        (ParamFloat<px4::params::MY_LQR_GAMMA_A>) gamma_adaptive,
+        (ParamFloat<px4::params::MY_LQR_P_A>) p_adaptive,
         (ParamInt<px4::params::MY_LQR_BOOL_E2B>) bool_e2b
         )// Just the handles, need to .get() them
 };

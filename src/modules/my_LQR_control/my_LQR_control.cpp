@@ -341,6 +341,28 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.gain_scale_d = tune_d;
     setpoints_struct.case_int_f_int = 1.0f*case_int + f_int;
 
+    setpoints_struct.do_adaptive = do_adaptive;
+    setpoints_struct.do_adapt_p = adapt_A(0,0);
+    setpoints_struct.do_adapt_q = adapt_A(1,0);
+    setpoints_struct.do_adapt_r = adapt_A(2,0);
+    setpoints_struct.alpha_p = alpha_A(0,0);
+    setpoints_struct.alpha_q = alpha_A(1,0);
+    setpoints_struct.alpha_r = alpha_A(2,0);
+    setpoints_struct.i_error_p = I_error_A(0,0);
+    setpoints_struct.i_error_q = I_error_A(1,0);
+    setpoints_struct.i_error_r = I_error_A(2,0);
+    setpoints_struct.error_p = error_A(0,0);
+    setpoints_struct.error_q = error_A(1,0);
+    setpoints_struct.error_r = error_A(2,0);
+    setpoints_struct.domg_p = Domg_A(0,0);
+    setpoints_struct.domg_q = Domg_A(1,0);
+    setpoints_struct.domg_r = Domg_A(2,0);
+    setpoints_struct.domg_pred_p = Domg_pred_A(0,0);
+    setpoints_struct.domg_pred_q = Domg_pred_A(1,0);
+    setpoints_struct.domg_pred_r = Domg_pred_A(2,0); 
+
+
+
     setpoints_struct.timestamp = hrt_absolute_time();
     setpoints_struct.timestamp_sample = vehicle_attitude.timestamp;
 
@@ -354,6 +376,7 @@ int My_LQR_control::setpoints_publish(){
 int My_LQR_control::debug_publish(){
     dbg_val.ind = 0;
     dbg_val.value = y(6,0); // roll rate to see filtered vibrations
+    dbg_val.value = alpha_A(0,0); // adaptive factor
     
     dbg_val.timestamp = hrt_absolute_time();
 
@@ -430,6 +453,8 @@ void My_LQR_control::run(){
 
                 gains_tune(); // gains tune based on RC knobs
                 gains_schedule(); // gains schedule based on pitch angle
+
+                adaptive_control(); // compute adaptive control factor
                 
                 control_fun(); // computes the actuator controls
 
@@ -822,6 +847,39 @@ int My_LQR_control::gains_schedule(){
     return PX4_OK;
 }
 
+int My_LQR_control::adaptive_control(){
+    if(do_adaptive){
+        Omg_A(0,0) = y(6,0);
+        Omg_A(1,0) = y(7,0);
+        Omg_A(2,0) = y(8,0);
+        C_prev_A(0,0) = cf(0,0);
+        C_prev_A(1,0) = cf(1,0);
+        C_prev_A(2,0) = cf(2,0);
+
+        Domg_A = (Omg_A - Omg_prev_A)/dt;
+        Domg_pred_A = p_A*(A_A*Omg_prev_A + B_A*C_prev_A);
+
+        error_A = Domg_pred_A - Domg_A;
+        for(int i=0; i<3; i++){
+            if(fabsf(Domg_A(i,0)) > 60.0f || fabsf(error_A(i,0)) > 30.0f || dt > 0.3f || fabsf(Omg_A(i,0)) < 0.1f){
+                error_A(i,0) = 0.0f;
+            }
+            I_error_A(i,0) = I_error_A(i,0) + gamma_A*copysignf(error_A(i,0), Domg_pred_A(i,0));
+            I_error_A(i,0) = math::constrain(I_error_A(i,0), -3.0f, 3.0f);
+            alpha_A(i,0) = powf(2.0f, I_error_A(i,0)*adapt_A(i,0));
+            alpha_A(i,0) = math::constrain(alpha_A(i,0), 0.25f, 4.0f);
+        }
+
+        Omg_prev_A = Omg_A;
+    }
+
+    else{
+        alpha_A.setAll(1.0f);
+        I_error_A.setAll(0.0f);
+    }
+
+    return PX4_OK;
+}
 
 
 
@@ -862,6 +920,9 @@ int My_LQR_control::control_fun(){
 
     stabilisation_mode();
     Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg;
+    for(int i=0; i<3; i++){
+        Del_c(i,0) *= alpha_A(i,0);
+    }
     cf = c_setpoint + Del_c;
         
     return PX4_OK;
@@ -1035,6 +1096,8 @@ int My_LQR_control::printouts(){
 
             (K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
 
+            PX4_INFO("alpha %2.2f, Ierr %2.2f, err %2.2f, Domgpred %2.6f, Domg %2.6f, Cprev %1.2f, Omgprev %2.2f.", (double)alpha_A(0,0), (double)I_error_A(0,0), (double)error_A(0,0), (double)Domg_pred_A(0,0), (double)Domg_A(0,0), (double)C_prev_A(0,0), (double)Omg_prev_A(0,0));
+
             //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
             //Del_c_eps.print();
             //(-K_feedback_y.T().slice<3,8>(9,0)).T().print();
@@ -1189,6 +1252,19 @@ k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f;
     E2B(1,1) = 1.0f;
     E2B(2,2) = 1.0f;
 
+    alpha_A.setAll(1.0f);
+    I_error_A.setAll(0.0f);
+    Omg_prev_A.setAll(0.0f);
+    Omg_A.setAll(0.0f);
+    A_A.setAll(0.0f);
+    B_A.setAll(0.0f);
+    A_A(0,0) = -8.0f;
+    A_A(1,0) = -8.0f;
+    A_A(2,0) = -8.0f;
+    B_A(0,0) = 24.0f;
+    B_A(1,0) = 24.0f;
+    B_A(2,0) = 24.0f;
+
     update_parameters(true);
 
     return PX4_OK;
@@ -1247,6 +1323,14 @@ int My_LQR_control::local_parameters_update(){
     tune_expo = tune_ex.get();
 
     pitch_sp_max = tht_sp_m.get();
+
+    do_adaptive = bool_adaptive.get() == 1;
+    adapt_A(0,0) = bool_adaptive_p.get();
+    adapt_A(1,0) = bool_adaptive_q.get();
+    adapt_A(2,0) = bool_adaptive_r.get();
+    gamma_A = gamma_adaptive.get();
+    p_A = p_adaptive.get();
+
     
     return PX4_OK;
 }
