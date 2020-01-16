@@ -72,5 +72,8 @@ float32 domg_r
 float32 domg_pred_p
 float32 domg_pred_q
 float32 domg_pred_r
+float32 p_a
+float32 gamma
+float32 dt
 
 # TOPICS my_LQR_setpoints

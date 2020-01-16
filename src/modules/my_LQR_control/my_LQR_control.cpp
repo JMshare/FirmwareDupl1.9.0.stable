@@ -360,6 +360,9 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.domg_pred_p = Domg_pred_A(0,0);
     setpoints_struct.domg_pred_q = Domg_pred_A(1,0);
     setpoints_struct.domg_pred_r = Domg_pred_A(2,0); 
+    setpoints_struct.p_a = p_A;
+    setpoints_struct.gamma = gamma_A;
+    setpoints_struct.dt = dt;
 
 
 
@@ -453,8 +456,6 @@ void My_LQR_control::run(){
 
                 gains_tune(); // gains tune based on RC knobs
                 gains_schedule(); // gains schedule based on pitch angle
-
-                adaptive_control(); // compute adaptive control factor
                 
                 control_fun(); // computes the actuator controls
 
@@ -502,10 +503,10 @@ void My_LQR_control::run(){
 
 int My_LQR_control::timer_clock(){
     if(t_start < 0.0f){
-        t_start = hrt_absolute_time();
+        t_start = vehicle_attitude.timestamp;
     }
-    dt = (hrt_absolute_time() - time_last_run)/1000000.0f;
-    time_last_run = hrt_absolute_time();
+    dt = (vehicle_attitude.timestamp - time_last_run)/1000000.0f;
+    time_last_run = vehicle_attitude.timestamp;
     
     loop_counter = loop_counter + 1.0f;
     dt_loop = dt_loop + dt;
@@ -849,25 +850,23 @@ int My_LQR_control::gains_schedule(){
 
 int My_LQR_control::adaptive_control(){
     if(do_adaptive){
-        Omg_A(0,0) = y(6,0);
-        Omg_A(1,0) = y(7,0);
-        Omg_A(2,0) = y(8,0);
-        C_prev_A(0,0) = cf(0,0);
-        C_prev_A(1,0) = cf(1,0);
-        C_prev_A(2,0) = cf(2,0);
+        Omg_A = omg_filtered;
 
         Domg_A = (Omg_A - Omg_prev_A)/dt;
         Domg_pred_A = p_A*(A_A*Omg_prev_A + B_A*C_prev_A);
-
         error_A = Domg_pred_A - Domg_A;
+
         for(int i=0; i<3; i++){
-            if(fabsf(Domg_A(i,0)) > 60.0f || fabsf(error_A(i,0)) > 30.0f || dt > 0.3f || fabsf(Omg_A(i,0)) < 0.1f){
+            if(fabsf(Domg_A(i,0)) > 60.0f || fabsf(error_A(i,0)) > p_A*30.0f || dt > 0.3f || dt < 0.002f|| fabsf(Omg_A(i,0)) < 0.1f){
                 error_A(i,0) = 0.0f;
             }
-            I_error_A(i,0) = I_error_A(i,0) + gamma_A*copysignf(error_A(i,0), Domg_pred_A(i,0));
+            I_error_A(i,0) = I_error_A(i,0) + gamma_A*error_A(i,0)*copysignf(1.0f, Domg_pred_A(i,0));
             I_error_A(i,0) = math::constrain(I_error_A(i,0), -3.0f, 3.0f);
             alpha_A(i,0) = powf(2.0f, I_error_A(i,0)*adapt_A(i,0));
             alpha_A(i,0) = math::constrain(alpha_A(i,0), 0.25f, 4.0f);
+
+            C_prev_A(i,0) = Del_c(i,0);
+            Del_c(i,0) *= alpha_A(i,0);
         }
 
         Omg_prev_A = Omg_A;
@@ -876,6 +875,7 @@ int My_LQR_control::adaptive_control(){
     else{
         alpha_A.setAll(1.0f);
         I_error_A.setAll(0.0f);
+        C_prev_A.setAll(0.0f);
     }
 
     return PX4_OK;
@@ -920,9 +920,7 @@ int My_LQR_control::control_fun(){
 
     stabilisation_mode();
     Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg;
-    for(int i=0; i<3; i++){
-        Del_c(i,0) *= alpha_A(i,0);
-    }
+    adaptive_control();
     cf = c_setpoint + Del_c;
         
     return PX4_OK;

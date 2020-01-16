@@ -220,7 +220,7 @@ private:
 		float dt_rcloss = 0.0f;
 		float dt_loop = 0.0f;
 		float loop_counter = 0.0f;
-		float t_start = -1.0f;
+		uint64_t t_start = -1;
 		float loop_update_freqn = 250.0f;
 
         Matrix<float,12,1> y; // state vector
