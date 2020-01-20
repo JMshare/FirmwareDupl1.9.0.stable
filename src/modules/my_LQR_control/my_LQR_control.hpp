@@ -157,6 +157,7 @@ private:
 		int project_del_psi();
 		int del_epsilon_to_body_frame();
 		int adaptive_control();
+		int recursiveLS();
 		float deg2rad(float);
 		float rad2deg(float);
 		
@@ -340,7 +341,21 @@ private:
 		Matrix<float,3,3> A_A; // A system matrix
 		Matrix<float,3,3> B_A; // B system matrix
 		float p_A = 1.0f; // model system scale
+		Matrix<float,4,1> Del_c_adapt;
 
+		bool do_recursiveLS = 1;
+		Matrix<float,1,2> M_RLS;
+		Matrix<float,1,1> Y_RLS;
+		Matrix<float,1,1> E_RLS;
+		Matrix<float,2,2> P_RLS;
+		Matrix<float,2,1> X_RLS;
+		Matrix<float,1,1> p_prev_RLS;
+		float lambda_RLS = 0.97; // forgetting factor
+		Matrix<float,2,2> P0_RLS;
+		Matrix<float,2,1> X0_RLS;
+		Matrix<float,1,1> fract_RLS; 
+
+		Matrix<float,4,12> K_feedback_y_sc_tun_sched_adapt;
 
 
 		
@@ -399,6 +414,8 @@ private:
         (ParamInt<px4::params::MY_LQR_BOOL_ADPQ>) bool_adaptive_q,
         (ParamInt<px4::params::MY_LQR_BOOL_ADPR>) bool_adaptive_r,
         (ParamFloat<px4::params::MY_LQR_GAMMA_A>) gamma_adaptive,
+        (ParamInt<px4::params::MY_LQR_BOOL_RLS>) bool_recursiveLS,
+        (ParamFloat<px4::params::MY_LQR_LMBD_RLS>) lambda_rls,
         (ParamFloat<px4::params::MY_LQR_P_A>) p_adaptive,
         (ParamInt<px4::params::MY_LQR_BOOL_E2B>) bool_e2b
         )// Just the handles, need to .get() them

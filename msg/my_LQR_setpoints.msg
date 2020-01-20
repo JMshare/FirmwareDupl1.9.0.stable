@@ -76,4 +76,9 @@ float32 p_a
 float32 gamma
 float32 dt
 
+float32 x_rls1
+float32 x_rls2
+float32 kp_rls
+float32 kphi_rls
+
 # TOPICS my_LQR_setpoints

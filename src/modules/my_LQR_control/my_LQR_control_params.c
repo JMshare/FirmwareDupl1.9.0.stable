@@ -295,6 +295,28 @@ PARAM_DEFINE_FLOAT(MY_LQR_GAMMA_A, 1.0f);
 PARAM_DEFINE_FLOAT(MY_LQR_P_A, 1.0f);
 
 /**
+ * recursive LS 
+ * system identification
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_RLS, 1);
+
+/**
+ * 
+ * forgetting factor for the RLS
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 3
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_LMBD_RLS, 1.0f);
+
+/**
  * RC adaptive scaling bool
  * adaptive RC scaling based on current attitude
  *
