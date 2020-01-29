@@ -120,6 +120,7 @@ private:
         * My functions
         */
         int parameter_update_poll();
+        int vehicle_attitude_poll();
         int vehicle_local_position_poll();
         int vehicle_local_position_setpoint_poll();
         int manual_control_setpoint_poll();

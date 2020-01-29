@@ -184,6 +184,11 @@ int My_LQR_control::parameter_update_poll()
     return PX4_ERROR;
 }
 
+int My_LQR_control::vehicle_attitude_poll(){
+    orb_copy(ORB_ID(vehicle_attitude), vehicle_attitude_sub, &vehicle_attitude);
+    return PX4_OK;
+}
+
 int My_LQR_control::vehicle_local_position_poll(){
     bool vehicle_local_position_updated;
     orb_check(vehicle_local_position_sub, &vehicle_local_position_updated);
@@ -513,9 +518,8 @@ int My_LQR_control::timer_clock(){
 
 
 int My_LQR_control::read_y_state(){
-    orb_copy(ORB_ID(vehicle_attitude), vehicle_attitude_sub, &vehicle_attitude);
+    vehicle_attitude_poll();
     vehicle_local_position_poll();
-    //vehicle_local_position_setpoint_poll();
     convert_quaternions();
     filter_rates();
         
@@ -528,9 +532,9 @@ int My_LQR_control::read_y_state(){
     y( 6,0) = 1.0f*omg_filtered(0);
     y( 7,0) = 1.0f*omg_filtered(1);
     y( 8,0) = 1.0f*omg_filtered(2);
-    y( 9,0) = 1.0f*attitude(0,0);
-    y(10,0) = 1.0f*attitude(1,0);
-    y(11,0) = 1.0f*attitude(2,0);
+    y( 9,0) = 1.0f*eps(0,0);
+    y(10,0) = 1.0f*eps(1,0);
+    y(11,0) = 1.0f*eps(2,0);
 
     return PX4_OK;
 }
@@ -559,9 +563,9 @@ int My_LQR_control::convert_quaternions(){
     euler_angles = Qdcm; // this is how you convert the Dcm into Euler angles (readme.md in matrix lib)
     project_theta();
 
-    attitude(0,0) = euler_angles.phi();
-    attitude(1,0) = euler_angles.theta();
-    attitude(2,0) = euler_angles.psi();
+    eps(0,0) = euler_angles.phi();
+    eps(1,0) = euler_angles.theta();
+    eps(2,0) = euler_angles.psi();
     return PX4_OK;
 }
 int My_LQR_control::project_theta(){
@@ -609,6 +613,7 @@ int My_LQR_control::project_theta(){
 
 int My_LQR_control::read_setpoints(){
     // manual_control_setpoint_poll();
+    // vehicle_local_position_setpoint_poll();
     rc_channels_poll();
     read_y_setpoint();
     read_c_setpoint();
@@ -1108,7 +1113,6 @@ int My_LQR_control::initialize_variables(){
     c_setpoint.setAll(0.0f);
     r_setpoint.setAll(0.0f);
     pitch_setpoint = 0.0f;
-    attitude.setAll(0.0f);
 
     y.setAll(0.0f);
     r.setAll(0.0f);
@@ -1230,6 +1234,7 @@ k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f;
     angular_rates_filtered.yawspeed = 0.0f;
     angular_rates_filtered.loop_update_freqn = loop_update_freqn;
     angular_rates_filtered.cutoff_freqn = angular_rates_cutoff_freqn;
+    eps.setAll(0.0f);
 
     Del_c_lim.setAll(1.0f);
 
