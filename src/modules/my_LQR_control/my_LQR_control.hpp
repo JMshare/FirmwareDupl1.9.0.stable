@@ -139,7 +139,8 @@ private:
 		int control_fun();
         int read_y_state();
         int convert_quaternions();
-        int filter_rates();
+        int filter_omg();
+        int filter_eps();
         int read_setpoints();
         int read_y_setpoint();
         int read_c_setpoint();
@@ -256,10 +257,14 @@ private:
 		float p_scale = 1.0f;
 		bool do_rc_scale;
 
-		Matrix<float,3,1> eps;
+		Vector3f eps;
 		Eulerf euler_angles;
 		Dcmf Qdcm;
 		Dcmf Qdcm_proj;
+		Vector3f eps_filtered;
+		float cutoff_freqn_eps = 5.0f;
+		math::LowPassFilter2pVector3f lp_filter_eps{loop_update_freqn, cutoff_freqn_eps};
+		int filter_status_eps = 0;
 
 		float thrust_setpoint = 0.0f;
 		float pitch_setpoint = 0.0f;
@@ -268,9 +273,9 @@ private:
 
 		Vector3f omg;
 		Vector3f omg_filtered;
-		float angular_rates_cutoff_freqn = 50.0f;
-		math::LowPassFilter2pVector3f lp_filter_angular_rates{loop_update_freqn, angular_rates_cutoff_freqn};
-		int filter_status = 0;
+		float cutoff_freqn_omg = 5.0f;
+		math::LowPassFilter2pVector3f lp_filter_omg{loop_update_freqn, cutoff_freqn_omg};
+		int filter_status_omg = 0;
 		
 		int case_int = 1;
 		int case_int_last = 1;
@@ -391,7 +396,8 @@ private:
         (ParamFloat<px4::params::MY_LQR_DV_LIM>) dv_lim,
         (ParamFloat<px4::params::MY_LQR_DOMG_LIM>) domg_lim,
         (ParamFloat<px4::params::MY_LQR_DEPS_LIM>) deps_lim,
-        (ParamFloat<px4::params::MY_LQR_RTS_CTF>) angular_rates_cutoff_fn,
+        (ParamFloat<px4::params::MY_LQR_RTS_CTF_O>) cutoff_fn_omg,
+        (ParamFloat<px4::params::MY_LQR_RTS_CTF_E>) cutoff_fn_eps,
         (ParamFloat<px4::params::MY_LQR_TAILERONS>) tailerons_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSP>) motorons_p_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSR>) motorons_r_sc,

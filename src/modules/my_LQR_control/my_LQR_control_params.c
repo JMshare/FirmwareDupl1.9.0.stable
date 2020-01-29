@@ -54,7 +54,19 @@
  * @increment 0.1
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF, 5.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_O, 5.0f);
+
+/**
+ * Cutoff frequency for angles filter
+ *
+ * @unit [Hz]
+ * @min 0
+ * @max 250
+ * @decimal 1
+ * @increment 0.1
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_E, 5.0f);
 
 /**
  * Pitch setpoint max

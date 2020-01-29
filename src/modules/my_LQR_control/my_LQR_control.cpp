@@ -283,9 +283,14 @@ int My_LQR_control::angular_rates_filtered_publish(){
     angular_rates_filtered.rollspeed = omg_filtered(0);
     angular_rates_filtered.pitchspeed = omg_filtered(1);
     angular_rates_filtered.yawspeed = omg_filtered(2);
+    angular_rates_filtered.roll = eps_filtered(0);
+    angular_rates_filtered.pitch = eps_filtered(1);
+    angular_rates_filtered.yaw = eps_filtered(2);
     angular_rates_filtered.loop_update_freqn = loop_update_freqn;
-    angular_rates_filtered.cutoff_freqn = angular_rates_cutoff_freqn;
-    angular_rates_filtered.filter_status = filter_status;
+    angular_rates_filtered.cutoff_freqn_omg = cutoff_freqn_omg;
+    angular_rates_filtered.filter_status_omg = filter_status_omg;
+    angular_rates_filtered.cutoff_freqn_eps = cutoff_freqn_eps;
+    angular_rates_filtered.filter_status_eps = filter_status_eps;
     
     angular_rates_filtered.timestamp = hrt_absolute_time();
     angular_rates_filtered.timestamp_sample = vehicle_attitude.timestamp;
@@ -506,7 +511,8 @@ int My_LQR_control::timer_clock(){
     if(dt_loop >= 10.0f){ // use 10 seconds to compute the loop update rate
         if(fabsf(loop_update_freqn - loop_counter/dt_loop) > 10.0f){ // if loop freqn change by more than 10 Hz update the filter
             loop_update_freqn = loop_counter/dt_loop;
-            lp_filter_angular_rates.set_cutoff_frequency(loop_update_freqn, angular_rates_cutoff_freqn);
+            lp_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
+            lp_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
         }
         dt_loop = 0.0f;
         loop_counter = 0.0f;
@@ -521,7 +527,8 @@ int My_LQR_control::read_y_state(){
     vehicle_attitude_poll();
     vehicle_local_position_poll();
     convert_quaternions();
-    filter_rates();
+    filter_omg();
+    filter_eps();
         
     y( 0,0) = 0.0f*vehicle_local_position.x;
     y( 1,0) = 0.0f*vehicle_local_position.y;
@@ -532,29 +539,9 @@ int My_LQR_control::read_y_state(){
     y( 6,0) = 1.0f*omg_filtered(0);
     y( 7,0) = 1.0f*omg_filtered(1);
     y( 8,0) = 1.0f*omg_filtered(2);
-    y( 9,0) = 1.0f*eps(0,0);
-    y(10,0) = 1.0f*eps(1,0);
-    y(11,0) = 1.0f*eps(2,0);
-
-    return PX4_OK;
-}
-int My_LQR_control::filter_rates(){
-    omg(0) = vehicle_attitude.rollspeed;
-    omg(1) = vehicle_attitude.pitchspeed;
-    omg(2) = vehicle_attitude.yawspeed;
-
-    if(angular_rates_cutoff_freqn <= 100.0f){
-        omg_filtered = lp_filter_angular_rates.apply(omg);
-        filter_status = 0; // ok
-        if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f)){ // safety check, if NAN this should come to false
-            omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
-            filter_status = 1; // whops
-        }
-    }
-    else{
-        omg_filtered = omg; 
-        filter_status = 2; // no cutoff
-    }
+    y( 9,0) = 1.0f*eps_filtered(0);
+    y(10,0) = 1.0f*eps_filtered(1);
+    y(11,0) = 1.0f*eps_filtered(2);
 
     return PX4_OK;
 }
@@ -563,9 +550,9 @@ int My_LQR_control::convert_quaternions(){
     euler_angles = Qdcm; // this is how you convert the Dcm into Euler angles (readme.md in matrix lib)
     project_theta();
 
-    eps(0,0) = euler_angles.phi();
-    eps(1,0) = euler_angles.theta();
-    eps(2,0) = euler_angles.psi();
+    eps(0) = euler_angles.phi();
+    eps(1) = euler_angles.theta();
+    eps(2) = euler_angles.psi();
     return PX4_OK;
 }
 int My_LQR_control::project_theta(){
@@ -603,6 +590,42 @@ int My_LQR_control::project_theta(){
             euler_angles.theta() = euler_angles.theta() - deg2rad(90.0f); // bring back the unrotated theta
             proj_theta_status = -10; // log status
         }
+    }
+
+    return PX4_OK;
+}
+int My_LQR_control::filter_omg(){
+    omg(0) = vehicle_attitude.rollspeed;
+    omg(1) = vehicle_attitude.pitchspeed;
+    omg(2) = vehicle_attitude.yawspeed;
+
+    if(cutoff_freqn_omg <= 100.0f){
+        omg_filtered = lp_filter_omg.apply(omg);
+        filter_status_omg = 0; // ok
+        if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f && omg_filtered(0) < 1000000.0f && omg_filtered(1) < 1000000.0f && omg_filtered(2) < 1000000.0f)){ // safety check, if NAN this should come to false
+            omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
+            filter_status_omg = 1; // whops
+        }
+    }
+    else{
+        omg_filtered = omg; 
+        filter_status_omg = 2; // no cutoff
+    }
+
+    return PX4_OK;
+}
+int My_LQR_control::filter_eps(){
+    if(cutoff_freqn_eps <= 100.0f){
+        eps_filtered = lp_filter_eps.apply(eps);
+        filter_status_eps = 0; // ok
+        if(!(eps_filtered(0) > -1000000.0f && eps_filtered(1) > -1000000.0f && eps_filtered(2) > -1000000.0f && eps_filtered(0) < 1000000.0f && eps_filtered(1) < 1000000.0f && eps_filtered(2) < 1000000.0f)){ // safety check, if NAN this should come to false
+            eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
+            filter_status_eps = 1; // whops
+        }
+    }
+    else{
+        eps_filtered = eps; 
+        filter_status_eps = 2; // no cutoff
     }
 
     return PX4_OK;
@@ -1073,11 +1096,17 @@ int My_LQR_control::printouts(){
 
             //PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
 
-            if(filter_status == 1){
+            if(filter_status_omg == 1){
                 PX4_ERR("Filtering rates results in NANs!");
             }
-            if(filter_status == 2){
-                PX4_ERR("Filtering freqn off range 100Hz, disabled!");
+            if(filter_status_omg == 2){
+                PX4_ERR("Filtering omg freqn off range 100Hz, disabled!");
+            }
+            if(filter_status_eps == 1){
+                PX4_ERR("Filtering angles results in NANs!");
+            }
+            if(filter_status_eps == 2){
+                PX4_ERR("Filtering eps freqn off range 100Hz, disabled!");
             }
 
             PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
@@ -1233,8 +1262,13 @@ k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f;
     angular_rates_filtered.pitchspeed = 0.0f;
     angular_rates_filtered.yawspeed = 0.0f;
     angular_rates_filtered.loop_update_freqn = loop_update_freqn;
-    angular_rates_filtered.cutoff_freqn = angular_rates_cutoff_freqn;
+    angular_rates_filtered.cutoff_freqn_omg = cutoff_freqn_omg;
     eps.setAll(0.0f);
+    eps_filtered.setAll(0.0f);
+    angular_rates_filtered.roll = 0.0f;
+    angular_rates_filtered.pitch = 0.0f;
+    angular_rates_filtered.yaw = 0.0f;
+    angular_rates_filtered.cutoff_freqn_eps = cutoff_freqn_eps;
 
     Del_c_lim.setAll(1.0f);
 
@@ -1288,9 +1322,13 @@ int My_LQR_control::local_parameters_update(){
     Del_c_lim(2,0) = domg_lim.get();
     Del_c_lim(3,0) = deps_lim.get();
 
-    if(fabsf(angular_rates_cutoff_freqn - math::min(angular_rates_cutoff_fn.get(), 250.0f)) > 0.1f){
-        angular_rates_cutoff_freqn = math::min(angular_rates_cutoff_fn.get(), 250.0f);
-        lp_filter_angular_rates.set_cutoff_frequency(loop_update_freqn, angular_rates_cutoff_freqn);
+    if(fabsf(cutoff_freqn_omg - math::min(cutoff_fn_omg.get(), 100.0f)) > 0.1f){
+        cutoff_freqn_omg = math::min(cutoff_fn_omg.get(), 100.0f);
+        lp_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
+    }
+    if(fabsf(cutoff_freqn_eps - math::min(cutoff_fn_eps.get(), 100.0f)) > 0.1f){
+        cutoff_freqn_eps = math::min(cutoff_fn_eps.get(), 100.0f);
+        lp_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
     }
 
     tailerons_scaling = tailerons_sc.get();
