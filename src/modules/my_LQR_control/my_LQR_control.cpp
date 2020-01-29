@@ -341,35 +341,14 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.gain_scale_d = tune_d;
     setpoints_struct.case_int_f_int = 1.0f*case_int + f_int;
 
-    setpoints_struct.do_adaptive = do_adaptive;
-    setpoints_struct.do_adapt_p = adapt_A(0,0);
-    setpoints_struct.do_adapt_q = adapt_A(1,0);
-    setpoints_struct.do_adapt_r = adapt_A(2,0);
-    setpoints_struct.alpha_p = alpha_A(0,0);
-    setpoints_struct.alpha_q = alpha_A(1,0);
-    setpoints_struct.alpha_r = alpha_A(2,0);
-    setpoints_struct.i_error_p = I_error_A(0,0);
-    setpoints_struct.i_error_q = I_error_A(1,0);
-    setpoints_struct.i_error_r = I_error_A(2,0);
-    setpoints_struct.error_p = error_A(0,0);
-    setpoints_struct.error_q = error_A(1,0);
-    setpoints_struct.error_r = error_A(2,0);
-    setpoints_struct.domg_p = Domg_A(0,0);
-    setpoints_struct.domg_q = Domg_A(1,0);
-    setpoints_struct.domg_r = Domg_A(2,0);
-    setpoints_struct.domg_pred_p = Domg_pred_A(0,0);
-    setpoints_struct.domg_pred_q = Domg_pred_A(1,0);
-    setpoints_struct.domg_pred_r = Domg_pred_A(2,0); 
-    setpoints_struct.p_a = p_A;
-    setpoints_struct.gamma = gamma_A;
     setpoints_struct.dt = dt;
 
+    setpoints_struct.do_recursivels = do_recursiveLS;
     setpoints_struct.x_rls1 = X_RLS(0,0);
     setpoints_struct.x_rls2 = X_RLS(1,0);
-
-    setpoints_struct.kp_rls = K_feedback_y_sc_tun_sched_adapt(0,6);
-    setpoints_struct.kphi_rls = K_feedback_y_sc_tun_sched_adapt(0,9);
-
+    setpoints_struct.do_adaptive = do_adaptive;
+    setpoints_struct.kp_rls = K_p_adapt;
+    setpoints_struct.kphi_rls = K_phi_adapt;
 
 
     setpoints_struct.timestamp = hrt_absolute_time();
@@ -384,8 +363,7 @@ int My_LQR_control::setpoints_publish(){
 
 int My_LQR_control::debug_publish(){
     dbg_val.ind = 0;
-    dbg_val.value = y(6,0); // roll rate to see filtered vibrations
-    dbg_val.value = alpha_A(0,0); // adaptive factor
+    //dbg_val.value = y(6,0); // roll rate to see filtered vibrations
     dbg_val.value = X_RLS(1,0); // identified values
     
     dbg_val.timestamp = hrt_absolute_time();
@@ -684,10 +662,10 @@ int My_LQR_control::setpoints_scale(){
     RC_scale = RC_scale_base;
     if(do_rc_scale){
         for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
-            f_scale = K_feedback_y_sc_tun_sched_adapt(i,9+i);
+            f_scale = K_feedback_y_sc_tun_sched(i,9+i);
             p_scale = fabsf(y(9+i,0))/RC_scale_base(i,0);
             if(p_scale < 1.0f){
-                f_scale = 1.0f + (K_feedback_y_sc_tun_sched_adapt(i,9+i) - 1)*p_scale;
+                f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale;
             }
             RC_scale(i,0) *= f_scale;
         }
@@ -857,41 +835,7 @@ int My_LQR_control::gains_schedule(){
 
     return PX4_OK;
 }
-/*
-int My_LQR_control::adaptive_control(){
-    if(do_adaptive){
-        Omg_A = omg_filtered;
 
-        Domg_A = (Omg_A - Omg_prev_A)/dt;
-        Domg_pred_A = p_A*(A_A*Omg_prev_A + B_A*C_prev_A);
-        error_A = Domg_pred_A - Domg_A;
-
-        for(int i=0; i<3; i++){
-            if(fabsf(Domg_A(i,0)) > 60.0f || fabsf(error_A(i,0)) > p_A*30.0f || dt > 0.3f || dt < 0.002f|| fabsf(Omg_A(i,0)) < 0.001f){
-                error_A(i,0) = 0.0f;
-            }
-            I_error_A(i,0) = I_error_A(i,0) + gamma_A*error_A(i,0)*copysignf(1.0f, Domg_pred_A(i,0));
-            I_error_A(i,0) = math::constrain(I_error_A(i,0), -2.0f, 2.0f);
-            alpha_A(i,0) = powf(2.0f, I_error_A(i,0)*adapt_A(i,0));
-            alpha_A(i,0) = math::constrain(alpha_A(i,0), 0.25f, 4.0f);
-
-            C_prev_A(i,0) = Del_c(i,0);
-            Del_c_adapt(i,0) = Del_c_eps(i,0)*c_eps_bool(i,0)*alpha_A(i,0) + Del_c_omg(i,0)/alpha_A(i,0);
-        }
-
-        Omg_prev_A = Omg_A;
-    }
-
-    else{
-        Del_c_adapt = Del_c;
-        alpha_A.setAll(1.0f);
-        I_error_A.setAll(0.0f);
-        C_prev_A.setAll(0.0f);
-    }
-
-    return PX4_OK;
-}
-*/
 int My_LQR_control::recursiveLS(){
     if(do_recursiveLS){
         M_RLS(0,0) = p_prev_RLS(0,0);
@@ -915,13 +859,13 @@ int My_LQR_control::recursiveLS(){
     return PX4_OK;
 }
 int My_LQR_control::adaptive_control(){
-    K_feedback_y_sc_tun_sched_adapt = K_feedback_y_sc_tun_sched;
+    K_p_adapt = -(ap_adapt - bp_adapt*kp_adapt - X_RLS(0,0))/X_RLS(1,0);
+    K_phi_adapt = -(0.0f - bp_adapt*kphi_adapt - 0.0f)/X_RLS(1,0);
+    K_p_adapt = math::constrain(K_p_adapt, 0.0f, 10.0f);
+    K_phi_adapt = math::constrain(K_phi_adapt, 0.0f, 10.0f);
     if(do_adaptive){
-        K_feedback_y_sc_tun_sched_adapt(0,6) = -(ap_adapt - bp_adapt*kp_adapt - X_RLS(0,0))/X_RLS(1,0);
-        K_feedback_y_sc_tun_sched_adapt(0,9) = -(0.0f - bp_adapt*kphi_adapt - 0.0f)/X_RLS(1,0);
-
-        K_feedback_y_sc_tun_sched_adapt(0,6) = math::constrain(K_feedback_y_sc_tun_sched_adapt(0,6), 0.0f, 10.0f);
-        K_feedback_y_sc_tun_sched_adapt(0,9) = math::constrain(K_feedback_y_sc_tun_sched_adapt(0,9), 0.0f, 10.0f);
+        K_feedback_y_sc_tun_sched(0,6) = K_p_adapt;
+        K_feedback_y_sc_tun_sched(0,9) = K_phi_adapt;
     }
 
     return PX4_OK;
@@ -951,11 +895,11 @@ int My_LQR_control::control_fun(){
     //Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
     //Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
     // Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
-    Del_c_omg = -K_feedback_y_sc_tun_sched_adapt.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution, this way RC input indep of K
+    Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution, this way RC input indep of K
     Del_c_omg(0,0) += y_setpoint(6,0); // p
     Del_c_omg(1,0) += y_setpoint(7,0); // q
     Del_c_omg(2,0) += y_setpoint(8,0); // r
-    Del_c_eps = -K_feedback_y_sc_tun_sched_adapt.T().slice<3,4>(9,0).T()*Del_y_eps; // sliced eps contribution
+    Del_c_eps = -K_feedback_y_sc_tun_sched.T().slice<3,4>(9,0).T()*Del_y_eps; // sliced eps contribution
     for(int i = 0; i < 4; i++){ // not necessarily (-1,1), just a sanity check against NaNs
         Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0));
         Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0));
@@ -1136,9 +1080,9 @@ int My_LQR_control::printouts(){
             PX4_INFO("theta0 [deg]: %3.1f, theta proj [deg]: %3.1f", (double)rad2deg(theta0), (double)rad2deg(y(10,0)));    
             PX4_INFO("Scheduler interval: %d, f_int: %2.4f", case_int, (double)f_int);
 
-            (K_feedback_y_sc_tun_sched_adapt.T().slice<6,4>(6,0)).T().print();
+            (K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
 
-            PX4_INFO("alpha %2.2f, Ierr %2.2f, err %2.2f, Domgpred %2.6f, Domg %2.6f, Cprev %1.2f, Omgprev %2.2f.", (double)alpha_A(0,0), (double)I_error_A(0,0), (double)error_A(0,0), (double)Domg_pred_A(0,0), (double)Domg_A(0,0), (double)C_prev_A(0,0), (double)Omg_prev_A(0,0));
+            PX4_INFO("adapt Kp: %2.2f, adapt Kphi: %2.2f", (double)K_p_adapt, (double)K_phi_adapt);
 
             //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
             //Del_c_eps.print();
@@ -1294,18 +1238,6 @@ k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f;
     E2B(1,1) = 1.0f;
     E2B(2,2) = 1.0f;
 
-    alpha_A.setAll(1.0f);
-    I_error_A.setAll(0.0f);
-    Omg_prev_A.setAll(0.0f);
-    Omg_A.setAll(0.0f);
-    A_A.setAll(0.0f);
-    B_A.setAll(0.0f);
-    A_A(0,0) = -8.0f;
-    A_A(1,0) = -8.0f;
-    A_A(2,0) = -8.0f;
-    B_A(0,0) = 24.0f;
-    B_A(1,0) = 24.0f;
-    B_A(2,0) = 24.0f;
 
     X0_RLS(0,0) = -7.0f;
     X0_RLS(1,0) = 25.0f;
@@ -1315,6 +1247,8 @@ k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f;
     P0_RLS(1,1) = 0.7632f/1000.0f;
     X_RLS = X0_RLS;
     P_RLS = P0_RLS;
+    K_p_adapt = kp_adapt;
+    K_phi_adapt = kphi_adapt;
 
     update_parameters(true);
 
@@ -1375,15 +1309,9 @@ int My_LQR_control::local_parameters_update(){
 
     pitch_sp_max = tht_sp_m.get();
 
-    do_adaptive = bool_adaptive.get() == 1;
-    adapt_A(0,0) = bool_adaptive_p.get();
-    adapt_A(1,0) = bool_adaptive_q.get();
-    adapt_A(2,0) = bool_adaptive_r.get();
-    gamma_A = gamma_adaptive.get();
-    p_A = p_adaptive.get();
-
     do_recursiveLS = bool_recursiveLS.get() == 1;
     lambda_RLS = lambda_rls.get();
+    do_adaptive = bool_adaptive.get() == 1;
 
     
     return PX4_OK;

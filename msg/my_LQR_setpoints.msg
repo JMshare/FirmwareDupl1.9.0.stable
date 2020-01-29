@@ -53,31 +53,12 @@ float32 gain_scale_p
 float32 gain_scale_d
 float32 case_int_f_int		# scheduler interval case + f_int
 
-int32 do_adaptive
-int32 do_adapt_p
-int32 do_adapt_q
-int32 do_adapt_r
-float32 alpha_p
-float32 alpha_q
-float32 alpha_r
-float32 i_error_p
-float32 i_error_q
-float32 i_error_r
-float32 error_p
-float32 error_q
-float32 error_r
-float32 domg_p
-float32 domg_q
-float32 domg_r
-float32 domg_pred_p
-float32 domg_pred_q
-float32 domg_pred_r
-float32 p_a
-float32 gamma
 float32 dt
 
+int32 do_recursivels
 float32 x_rls1
 float32 x_rls2
+int32 do_adaptive
 float32 kp_rls
 float32 kphi_rls
 

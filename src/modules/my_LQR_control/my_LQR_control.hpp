@@ -325,23 +325,7 @@ private:
         * My global decision variables
         */
 		int vehicle_id = 0;
-
-
-		bool do_adaptive = 1; 
-		Matrix<int,3,1> adapt_A; // adapt p/q/r
-		Matrix<float,3,1> alpha_A; // adaptation gain
-		float gamma_A = 0.1f; // learning rate
-		Matrix<float,3,1> error_A; // prediction error
-		Matrix<float,3,1> I_error_A; // integral prediction error
-		Matrix<float,3,1> Omg_A; // current state
-		Matrix<float,3,1> Domg_A; // acceleration
-		Matrix<float,3,1> Domg_pred_A; // acceleration
-		Matrix<float,3,1> Omg_prev_A; // previous state
-		Matrix<float,3,1> C_prev_A; // previous control
-		Matrix<float,3,3> A_A; // A system matrix
-		Matrix<float,3,3> B_A; // B system matrix
-		float p_A = 1.0f; // model system scale
-		Matrix<float,4,1> Del_c_adapt;
+		
 
 		bool do_recursiveLS = 1;
 		Matrix<float,1,2> M_RLS;
@@ -350,12 +334,14 @@ private:
 		Matrix<float,2,2> P_RLS;
 		Matrix<float,2,1> X_RLS;
 		Matrix<float,1,1> p_prev_RLS;
-		float lambda_RLS = 0.97; // forgetting factor
+		float lambda_RLS = 0.97; // forgetting factor, 0.97 in HITL, 0.999 in real cos faster sampling
 		Matrix<float,2,2> P0_RLS;
 		Matrix<float,2,1> X0_RLS;
 		Matrix<float,1,1> fract_RLS; 
 
-		Matrix<float,4,12> K_feedback_y_sc_tun_sched_adapt;
+		bool do_adaptive = 0; 
+		float K_p_adapt = 0.0f;
+		float K_phi_adapt = 0.0f;
 		float ap_adapt = -8.0f;
     	float bp_adapt = 25.0f;
     	float kp_adapt = 0.06f;
@@ -414,13 +400,8 @@ private:
         (ParamInt<px4::params::MY_LQR_BOOL_PTT>) bool_proj_tht,
         (ParamInt<px4::params::MY_LQR_BOOL_PDP>) bool_proj_dpsi,
         (ParamInt<px4::params::MY_LQR_BOOL_ADP>) bool_adaptive,
-        (ParamInt<px4::params::MY_LQR_BOOL_ADPP>) bool_adaptive_p,
-        (ParamInt<px4::params::MY_LQR_BOOL_ADPQ>) bool_adaptive_q,
-        (ParamInt<px4::params::MY_LQR_BOOL_ADPR>) bool_adaptive_r,
-        (ParamFloat<px4::params::MY_LQR_GAMMA_A>) gamma_adaptive,
         (ParamInt<px4::params::MY_LQR_BOOL_RLS>) bool_recursiveLS,
         (ParamFloat<px4::params::MY_LQR_LMBD_RLS>) lambda_rls,
-        (ParamFloat<px4::params::MY_LQR_P_A>) p_adaptive,
         (ParamInt<px4::params::MY_LQR_BOOL_E2B>) bool_e2b
         )// Just the handles, need to .get() them
 };
