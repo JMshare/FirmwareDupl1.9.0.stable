@@ -353,6 +353,8 @@ int My_LQR_control::setpoints_publish(){
 
     setpoints_struct.dt = dt;
 
+    setpoints_struct.control_status = control_status;
+
     setpoints_struct.do_recursivels = do_recursiveLS;
     setpoints_struct.x_rls1 = X_RLS(0,0);
     setpoints_struct.x_rls2 = X_RLS(1,0);
@@ -457,9 +459,8 @@ void My_LQR_control::run(){
                 
                 control_fun(); // computes the actuator controls
 
-                manual_override(); // overrides the controls by manual RC input based on RC switches
-
                 px4_override(); // overrides the controls by the PX4 controller based on RC switches
+                manual_override(); // overrides the controls by manual RC input based on RC switches
 
                 supporting_outputs(); // front engine and tailerons and differential thrust to mixer based on RC switches
 
@@ -602,7 +603,7 @@ int My_LQR_control::filter_omg(){
     if(cutoff_freqn_omg <= 100.0f){
         omg_filtered = lp_filter_omg.apply(omg);
         filter_status_omg = 0; // ok
-        if(!(omg_filtered(0) > -1000000.0f && omg_filtered(1) > -1000000.0f && omg_filtered(2) > -1000000.0f && omg_filtered(0) < 1000000.0f && omg_filtered(1) < 1000000.0f && omg_filtered(2) < 1000000.0f)){ // safety check, if NAN this should come to false
+        if(is_nan(eps_filtered(0)) || is_nan(eps_filtered(1)) || is_nan(eps_filtered(2))){ 
             omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_omg = 1; // whops
         }
@@ -618,7 +619,7 @@ int My_LQR_control::filter_eps(){
     if(cutoff_freqn_eps <= 100.0f){
         eps_filtered = lp_filter_eps.apply(eps);
         filter_status_eps = 0; // ok
-        if(!(eps_filtered(0) > -1000000.0f && eps_filtered(1) > -1000000.0f && eps_filtered(2) > -1000000.0f && eps_filtered(0) < 1000000.0f && eps_filtered(1) < 1000000.0f && eps_filtered(2) < 1000000.0f)){ // safety check, if NAN this should come to false
+        if(is_nan(eps_filtered(0)) || is_nan(eps_filtered(1)) || is_nan(eps_filtered(2))){ 
             eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_eps = 1; // whops
         }
@@ -630,6 +631,7 @@ int My_LQR_control::filter_eps(){
 
     return PX4_OK;
 }
+
 
 
 
@@ -993,7 +995,11 @@ int My_LQR_control::manual_override(){
     if(rc_channels.channels[5] < -0.5f){ // manual override yaw
         cf(2,0) = cm(2,0);
     }
-    if(rc_channels.channels[13] < -0.5f){ // manual override all
+    control_status = 0;
+    if(is_nan(cf(0,0)) || is_nan(cf(1,0)) || is_nan(cf(2,0)) || is_nan(cf(3,0))){ // check for errors in the stabilised control
+        control_status = 1;
+    }
+    if(rc_channels.channels[13] < -0.5f || control_status == 1){ // manual override all
         cf.setAll(0.0f);
         cf(0,0) = cm(0,0);
         cf(1,0) = cm(1,0);
@@ -1108,6 +1114,9 @@ int My_LQR_control::printouts(){
             if(filter_status_eps == 2){
                 PX4_ERR("Filtering eps freqn off range 100Hz, disabled!");
             }
+            if(control_status == 1){
+                PX4_ERR("Control resulted in NANs! Using manual.");
+            }
 
             PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
             PX4_INFO("pitch setpoint [deg]: %3.1f", (double)rad2deg(pitch_setpoint));
@@ -1142,6 +1151,7 @@ int My_LQR_control::initialize_variables(){
     c_setpoint.setAll(0.0f);
     r_setpoint.setAll(0.0f);
     pitch_setpoint = 0.0f;
+    control_status = 0;
 
     y.setAll(0.0f);
     r.setAll(0.0f);
@@ -1322,12 +1332,12 @@ int My_LQR_control::local_parameters_update(){
     Del_c_lim(2,0) = domg_lim.get();
     Del_c_lim(3,0) = deps_lim.get();
 
-    if(fabsf(cutoff_freqn_omg - math::min(cutoff_fn_omg.get(), 100.0f)) > 0.1f){
-        cutoff_freqn_omg = math::min(cutoff_fn_omg.get(), 100.0f);
+    if(fabsf(cutoff_freqn_omg - math::min(cutoff_fn_omg.get(), 300.0f)) > 0.1f){
+        cutoff_freqn_omg = math::min(cutoff_fn_omg.get(), 300.0f);
         lp_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
     }
-    if(fabsf(cutoff_freqn_eps - math::min(cutoff_fn_eps.get(), 100.0f)) > 0.1f){
-        cutoff_freqn_eps = math::min(cutoff_fn_eps.get(), 100.0f);
+    if(fabsf(cutoff_freqn_eps - math::constrain(cutoff_fn_eps.get(), 1.0f, 300.0f)) > 0.1f){
+        cutoff_freqn_eps = math::constrain(cutoff_fn_eps.get(), 1.0f, 300.0f);
         lp_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
     }
 
@@ -1378,6 +1388,9 @@ float My_LQR_control::rad2deg(float rads){
     return rads/0.01745329252f;
 }
 
+bool My_LQR_control::is_nan(float x){
+    return !(x > -1000000.0f && x < 1000000.0f);
+}
 
 
 

@@ -66,7 +66,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_O, 5.0f);
  * @increment 0.1
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_E, 5.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_E, 250.0f);
 
 /**
  * Pitch setpoint max

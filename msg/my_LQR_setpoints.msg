@@ -55,6 +55,8 @@ float32 case_int_f_int		# scheduler interval case + f_int
 
 float32 dt
 
+int32 control_status		# check for the controller outputs, 0 ok, 1 nans
+
 int32 do_recursivels
 float32 x_rls1
 float32 x_rls2

@@ -162,6 +162,7 @@ private:
 		int recursiveLS();
 		float deg2rad(float);
 		float rad2deg(float);
+		bool is_nan(float);
 		
 		
 
@@ -231,6 +232,7 @@ private:
         Matrix<float,6,1> r; // integral of the error in states 
         Matrix<float,8,1> uf; // filtered control surfaces
         Matrix<float,4,1> cm; // manual control
+        int control_status = 0; // check for the controller outputs, 0 ok, 1 nans
 
         Matrix<float,12,1> y_setpoint; 
         Matrix<float,4,1> c_setpoint;
