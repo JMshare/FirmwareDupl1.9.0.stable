@@ -256,7 +256,7 @@ private:
 		float p_scale = 1.0f;
 		bool do_rc_scale;
 
-		Matrix<float,3,1> attitude;
+		Matrix<float,3,1> eps;
 		Eulerf euler_angles;
 		Dcmf Qdcm;
 		Dcmf Qdcm_proj;
