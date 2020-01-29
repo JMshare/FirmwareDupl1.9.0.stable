@@ -356,6 +356,10 @@ private:
 		Matrix<float,1,1> fract_RLS; 
 
 		Matrix<float,4,12> K_feedback_y_sc_tun_sched_adapt;
+		float ap_adapt = -8.0f;
+    	float bp_adapt = 25.0f;
+    	float kp_adapt = 0.06f;
+    	float kphi_adapt = 1.4f;
 
 
 		

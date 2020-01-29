@@ -465,6 +465,7 @@ void My_LQR_control::run(){
                 gains_schedule(); // gains schedule based on pitch angle
 
                 recursiveLS();
+                adaptive_control();
                 
                 control_fun(); // computes the actuator controls
 
@@ -915,13 +916,12 @@ int My_LQR_control::recursiveLS(){
 }
 int My_LQR_control::adaptive_control(){
     K_feedback_y_sc_tun_sched_adapt = K_feedback_y_sc_tun_sched;
-    float ap = -8.0f;
-    float bp = 25.0f;
-    float kp = -0.06f;
-    float kphi = -1.4f;
     if(do_adaptive){
-        K_feedback_y_sc_tun_sched_adapt(0,6) = (ap + bp*kp - X_RLS(0,0))/X_RLS(1,0);
-        K_feedback_y_sc_tun_sched_adapt(0,9) = (0.0f + bp*kphi - 0.0f)/X_RLS(1,0);
+        K_feedback_y_sc_tun_sched_adapt(0,6) = -(ap_adapt - bp_adapt*kp_adapt - X_RLS(0,0))/X_RLS(1,0);
+        K_feedback_y_sc_tun_sched_adapt(0,9) = -(0.0f - bp_adapt*kphi_adapt - 0.0f)/X_RLS(1,0);
+
+        K_feedback_y_sc_tun_sched_adapt(0,6) = math::constrain(K_feedback_y_sc_tun_sched_adapt(0,6), 0.0f, 10.0f);
+        K_feedback_y_sc_tun_sched_adapt(0,9) = math::constrain(K_feedback_y_sc_tun_sched_adapt(0,9), 0.0f, 10.0f);
     }
 
     return PX4_OK;
@@ -965,8 +965,7 @@ int My_LQR_control::control_fun(){
 
     stabilisation_mode();
     Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg;
-    adaptive_control();
-    cf = c_setpoint + Del_c_adapt;
+    cf = c_setpoint + Del_c;
         
     return PX4_OK;
 }
@@ -1137,7 +1136,7 @@ int My_LQR_control::printouts(){
             PX4_INFO("theta0 [deg]: %3.1f, theta proj [deg]: %3.1f", (double)rad2deg(theta0), (double)rad2deg(y(10,0)));    
             PX4_INFO("Scheduler interval: %d, f_int: %2.4f", case_int, (double)f_int);
 
-            (K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
+            (K_feedback_y_sc_tun_sched_adapt.T().slice<6,4>(6,0)).T().print();
 
             PX4_INFO("alpha %2.2f, Ierr %2.2f, err %2.2f, Domgpred %2.6f, Domg %2.6f, Cprev %1.2f, Omgprev %2.2f.", (double)alpha_A(0,0), (double)I_error_A(0,0), (double)error_A(0,0), (double)Domg_pred_A(0,0), (double)Domg_A(0,0), (double)C_prev_A(0,0), (double)Omg_prev_A(0,0));
 
