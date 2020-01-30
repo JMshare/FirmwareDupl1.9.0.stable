@@ -224,6 +224,7 @@ int My_LQR_control::rc_channels_poll(){
     orb_check(rc_channels_sub, &rc_channels_updated);
     if(rc_channels_updated){
         orb_copy(ORB_ID(rc_channels), rc_channels_sub, &rc_channels);
+        rc_loss_failsafe();
         return PX4_OK;
     }
     return PX4_ERROR;
@@ -463,8 +464,6 @@ void My_LQR_control::run(){
                 manual_override(); // overrides the controls by manual RC input based on RC switches
 
                 supporting_outputs(); // front engine and tailerons and differential thrust to mixer based on RC switches
-
-                rc_loss_failsafe();
                 
                 publish_topics();
 
@@ -1045,9 +1044,19 @@ int My_LQR_control::supporting_outputs(){
 int My_LQR_control::rc_loss_failsafe(){
     if(rc_channels.signal_lost == true){
         dt_rcloss = dt_rcloss + dt;
-        if(dt_rcloss >= 4.0f){
-            uf.setAll(0.0f);
-            cf.setAll(0.0f);
+        if(dt_rcloss >= 3.0f){
+            rc_channels.channels[0] = 0.0f;
+            rc_channels.channels[1] = 0.0f;
+            rc_channels.channels[2] = 0.0f;
+            rc_channels.channels[3] = 0.0f; // motors off
+            rc_channels.channels[8] = -1.0f; // front engine off
+            rc_channels.channels[9] = -1.0f; // pitch setpoint 0 deg
+            rc_channels.channels[12] = 1.0f; // mixer setting - everything on 
+            rc_channels.channels[13] = 0.0f; // manual/px4 override - off, keep stabilisation on
+            rc_channels.channels[14] = 1.0f; // manual override pitch - off, keep pitch hold
+            rc_channels.channels[5] = 1.0f; // manual override yaw - off, keep heading hold
+            rc_channels.channels[11] = rc_sc_omg_last;
+            rc_channels.channels[10] = rc_sc_eps_last;
         }
         if(dt_rcloss >= 1000000.0f){ // not to get an overflow
             dt_rcloss = 5.0f;
@@ -1111,8 +1120,8 @@ int My_LQR_control::printouts(){
             if(filter_status_eps == 1){
                 PX4_ERR("Filtering angles results in NANs!");
             }
-            if(filter_status_eps == 2){
-                PX4_ERR("Filtering eps freqn off range 100Hz, disabled!");
+            if(filter_status_eps == 0){
+                PX4_ERR("Filtering eps on!");
             }
             if(control_status == 1){
                 PX4_ERR("Control resulted in NANs! Using manual.");
