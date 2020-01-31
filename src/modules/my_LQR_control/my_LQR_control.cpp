@@ -1044,25 +1044,16 @@ int My_LQR_control::supporting_outputs(){
 int My_LQR_control::rc_loss_failsafe(){
     if(rc_channels.signal_lost == true){
         dt_rcloss = dt_rcloss + dt;
-        if(dt_rcloss >= 3.0f){
-            rc_channels.channels[0] = 0.0f;
-            rc_channels.channels[1] = 0.0f;
-            rc_channels.channels[2] = 0.0f;
-            rc_channels.channels[3] = 0.0f; // motors off
-            rc_channels.channels[8] = -1.0f; // front engine off
-            rc_channels.channels[9] = -1.0f; // pitch setpoint 0 deg
-            rc_channels.channels[12] = 1.0f; // mixer setting - everything on 
-            rc_channels.channels[13] = 0.0f; // manual/px4 override - off, keep stabilisation on
-            rc_channels.channels[14] = 1.0f; // manual override pitch - off, keep pitch hold
-            rc_channels.channels[5] = 1.0f; // manual override yaw - off, keep heading hold
-            rc_channels.channels[11] = rc_sc_omg_last;
-            rc_channels.channels[10] = rc_sc_eps_last;
+        f_rcloss = math::constrain(dt_rcloss/4.0f, 0.0f, 1.0f);
+        for(int i=0; i<16; i++){
+            rc_channels.channels[i] = (1.0f - f_rcloss)*rc_channels_prev.channels[i] + (f_rcloss)*rc_channels_fail.channels[i];
         }
         if(dt_rcloss >= 1000000.0f){ // not to get an overflow
             dt_rcloss = 5.0f;
         }
     }
     else{
+        rc_channels_prev = rc_channels;
         dt_rcloss = 0.0f;
     }
 
@@ -1248,12 +1239,26 @@ k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f;
     manual_control_setpoint.aux1 = 0.0f;
     manual_control_setpoint.aux2 = 0.0f;
 
-    rc_channels.channels[5] = 1.0f; // yaw switch
-    rc_channels.channels[14] = 1.0f; // pitch switch
-    rc_channels.channels[10] = 0.0f; // S1
-    rc_channels.channels[11] = 0.0f; // S2
-    rc_channels.channels[12] = 0.0f; // SB
-    rc_channels.channels[13] = 0.0f; // SA
+    rc_channels_fail.channels[0] = 0.0f;
+    rc_channels_fail.channels[1] = 0.0f;
+    rc_channels_fail.channels[2] = 0.0f;
+    rc_channels_fail.channels[9] = -1.0f; // pitch setpoint 0 deg
+    rc_channels_fail.channels[12] = 0.0f; // mixer setting - use tailerons 
+    rc_channels_fail.channels[13] = 0.0f; // manual/px4 override - off, keep stabilisation on
+    rc_channels_fail.channels[14] = 1.0f; // manual override pitch - off, keep pitch hold
+    rc_channels_fail.channels[5] = 0.0f; // manual override yaw - damp, keep yaw damping only
+    rc_channels_fail.channels[11] = 0.0f; // gains scale omg
+    rc_channels_fail.channels[10] = 0.0f; // gains scale eps
+    rc_channels_fail.channels[3] = 0.0f; // motors off
+    rc_channels_fail.channels[8] = -1.0f; // front engine off
+    rc_channels_fail.channels[4] = -1.0f; // kill channel, not used here
+    rc_channels_fail.channels[6] = 1.0f; // px modes, not used here
+    rc_channels_fail.channels[7] = 1.0f; // arming channel as well, not used here
+    rc_channels_fail.channels[15] = 1.0f; // arming channel, not used here
+
+    rc_channels = rc_channels_fail;
+    rc_channels_prev = rc_channels_fail;
+
 
     vehicle_attitude.rollspeed = 0.0f;
     vehicle_attitude.pitchspeed = 0.0f;

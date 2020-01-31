@@ -175,6 +175,8 @@ private:
         struct vehicle_local_position_setpoint_s vehicle_local_position_setpoint{};
         struct manual_control_setpoint_s manual_control_setpoint{};
         struct rc_channels_s rc_channels{};
+        struct rc_channels_s rc_channels_prev{};
+        struct rc_channels_s rc_channels_fail{};
 		struct actuator_controls_s actuator_controls_0{};        
 		struct actuator_controls_s actuator_controls_1{};
 		struct actuator_controls_s actuator_controls_virtual{};
@@ -222,6 +224,7 @@ private:
 		float dt_print = 0.0f;
 		float dt_perturb = 0.0f;
 		float dt_rcloss = 0.0f;
+		float f_rcloss = 0.0f;
 		float dt_loop = 0.0f;
 		float loop_counter = 0.0f;
 		uint64_t t_start = -1;
