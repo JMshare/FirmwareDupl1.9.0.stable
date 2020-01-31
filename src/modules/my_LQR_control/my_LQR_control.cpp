@@ -832,7 +832,7 @@ int My_LQR_control::gains_schedule(){
     if(schedule_K == 1){ 
         schedule_K_status = 1;
         for(int i = 0; i < n_int; i++){ // find interval
-            f_int = (theta0 - tht_ints(0,i))/(tht_ints(0,i+1) - tht_ints(0,i));
+            f_int = (y(10,0) - tht_ints(0,i))/(tht_ints(0,i+1) - tht_ints(0,i));
             if(f_int >= 0.0f && f_int <= 1.0f){
                 case_int = i;
                 break;
