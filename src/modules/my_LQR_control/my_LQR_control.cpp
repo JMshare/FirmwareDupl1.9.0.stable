@@ -964,7 +964,8 @@ int My_LQR_control::project_del_psi(){
         Del_y_eps(2,0) = -Del_y_eps(2,0);
     }
 */
-
+    // Also let's constraint this so I dont get overreaction at large heading differences
+    math::constrain(Del_y_eps(2,0), -deg2rad(30.0f), deg2rad(30.0f));
     return PX4_OK;
 }
 int My_LQR_control::stabilisation_mode(){
