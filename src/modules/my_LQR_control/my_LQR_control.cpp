@@ -1239,7 +1239,7 @@ k_scheds(9,0) =   1.2910f; k_scheds(9,1) =   1.2910f; k_scheds(9,2) =   1.2910f;
     manual_control_setpoint.aux1 = 0.0f;
     manual_control_setpoint.aux2 = 0.0f;
 
-    rc_channels_fail.channels[0] = 0.0f;
+    rc_channels_fail.channels[0] = 0.1f;
     rc_channels_fail.channels[1] = 0.0f;
     rc_channels_fail.channels[2] = 0.0f;
     rc_channels_fail.channels[9] = -1.0f; // pitch setpoint 0 deg
@@ -1413,12 +1413,19 @@ bool My_LQR_control::is_nan(float x){
 int My_LQR_control::del_epsilon_to_body_frame(){
 // Non-linear transformation on the Del_epsilon     
     if(e2b){
-        E2B(0,0) = 1.0f;
+        /*E2B(0,0) = 1.0f;
         E2B(0,2) = -sin(y(10,0));
         E2B(1,1) = cos(y(9,0));
         E2B(1,2) = sin(y(9,0))*cos(y(10,0));
         E2B(2,1) = -sin(y(9,0));
-        E2B(2,2) = cos(y(9,0))*cos(y(10,0));
+        E2B(2,2) = cos(y(9,0))*cos(y(10,0)); */
+
+        E2B(0,0) = 1.0f;
+        E2B(0,2) = -sin(y(10,0));
+        E2B(1,1) = 1.0f;
+        E2B(1,2) = 0.0f;
+        E2B(2,1) = 0.0f;
+        E2B(2,2) = cos(y(10,0));
 
         Del_y_eps = E2B*Del_y.slice<3,1>(9,0);
     }
