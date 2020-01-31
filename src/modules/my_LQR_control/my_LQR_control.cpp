@@ -556,7 +556,7 @@ int My_LQR_control::convert_quaternions(){
     return PX4_OK;
 }
 int My_LQR_control::project_theta(){
-// Extending the -90 to +90 deg range on theta to -110 to 110 deg
+// Extending the -90 to +90 deg range on theta to -140 to 140 deg
     proj_theta_status = 0;
     theta0 = euler_angles.theta();
     if(proj_theta){
@@ -572,9 +572,10 @@ int My_LQR_control::project_theta(){
             Qdcm_proj(1,2) = -Qdcm(1,0);
             Qdcm_proj(2,2) = -Qdcm(2,0);
 
-            euler_angles = Qdcm_proj; // get the corresponding euler angles
-            euler_angles.theta() = euler_angles.theta() + deg2rad(90.0f); // bring back the unrotated theta
+            euler_angles_proj = Qdcm_proj; // get the corresponding euler angles
+            euler_angles.theta() = euler_angles_proj.theta() + deg2rad(90.0f); // bring back the unrotated theta
             proj_theta_status = 10; // log status
+            //euler_angles.psi() = euler_angles_proj.phi();
         }
         else if(euler_angles.theta() < -deg2rad(50.0f)){ 
             // rotate the device by 90 deg
@@ -586,14 +587,15 @@ int My_LQR_control::project_theta(){
             Qdcm_proj(1,2) = Qdcm(1,0);
             Qdcm_proj(2,2) = Qdcm(2,0);
 
-            euler_angles = Qdcm_proj; // get the corresponding euler angles
-            euler_angles.theta() = euler_angles.theta() - deg2rad(90.0f); // bring back the unrotated theta
+            euler_angles_proj = Qdcm_proj; // get the corresponding euler angles
+            euler_angles.theta() = euler_angles_proj.theta() - deg2rad(90.0f); // bring back the unrotated theta
             proj_theta_status = -10; // log status
+            //euler_angles.psi() = euler_angles_proj.phi();
         }
     }
-
     return PX4_OK;
 }
+
 int My_LQR_control::filter_omg(){
     omg(0) = vehicle_attitude.rollspeed;
     omg(1) = vehicle_attitude.pitchspeed;

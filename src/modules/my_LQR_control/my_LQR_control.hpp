@@ -264,6 +264,7 @@ private:
 
 		Vector3f eps;
 		Eulerf euler_angles;
+		Eulerf euler_angles_proj;
 		Dcmf Qdcm;
 		Dcmf Qdcm_proj;
 		Vector3f eps_filtered;
