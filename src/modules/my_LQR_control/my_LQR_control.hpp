@@ -82,6 +82,7 @@ using matrix::Dcmf;
 using matrix::Quatf;
 
 #include <mathlib/math/filter/LowPassFilter3pVector3f.hpp>
+#include <mathlib/math/filter/LowPassFilter2pVector3f.hpp>
 
 #define MY_PI 3.14159265359f
 
@@ -268,7 +269,7 @@ private:
 		Dcmf Qdcm;
 		Dcmf Qdcm_proj;
 		Vector3f eps_filtered;
-		float cutoff_freqn_eps = 10.0f;
+		float cutoff_freqn_eps = 5.0f;
 		math::LowPassFilter3pVector3f lp_filter_eps{loop_update_freqn, cutoff_freqn_eps};
 		int filter_status_eps = 0;
 
@@ -279,7 +280,7 @@ private:
 
 		Vector3f omg;
 		Vector3f omg_filtered;
-		float cutoff_freqn_omg = 10.0f;
+		float cutoff_freqn_omg = 5.0f;
 		math::LowPassFilter3pVector3f lp_filter_omg{loop_update_freqn, cutoff_freqn_omg};
 		int filter_status_omg = 0;
 		
