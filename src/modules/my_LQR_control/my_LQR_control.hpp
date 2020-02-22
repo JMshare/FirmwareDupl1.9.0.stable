@@ -81,8 +81,9 @@ using matrix::Eulerf;
 using matrix::Dcmf;
 using matrix::Quatf;
 
-#include <mathlib/math/filter/LowPassFilter3pVector3f.hpp>
 #include <mathlib/math/filter/LowPassFilter2pVector3f.hpp>
+#include <mathlib/math/my_lib/LowPassFilter3pVector3f.hpp>
+#include <mathlib/math/my_lib/Detect_oscillations_Vector3f.hpp>
 
 #define MY_PI 3.14159265359f
 
@@ -161,6 +162,7 @@ private:
 		int del_epsilon_to_body_frame();
 		int adaptive_control();
 		int recursiveLS();
+		int gains_limiter_fun();
 		float deg2rad(float);
 		float rad2deg(float);
 		bool is_nan(float);
@@ -360,6 +362,14 @@ private:
     	float kp_adapt = 0.06f;
     	float kphi_adapt = 1.4f;
 
+    	bool gains_limiter_on = 1;
+    	Matrix<int,3,1> oscillating;
+    	Matrix<float,3,1> gain_limiter;
+    	float pksz = 0.08f;
+    	float dtlim = 0.2f;
+    	math::Detect_oscillations_Vector3f detected_oscillations{pksz, dtlim};
+
+
 
 		
 		
@@ -416,6 +426,9 @@ private:
         (ParamInt<px4::params::MY_LQR_BOOL_ADP>) bool_adaptive,
         (ParamInt<px4::params::MY_LQR_BOOL_RLS>) bool_recursiveLS,
         (ParamFloat<px4::params::MY_LQR_LMBD_RLS>) lambda_rls,
+        (ParamInt<px4::params::MY_LQR_BOOL_GLM>) bool_gains_limiter,
+        (ParamFloat<px4::params::MY_LQR_GLM_PKSZ>) glm_pksz,
+        (ParamFloat<px4::params::MY_LQR_GLM_DTLIM>) glm_dtlim,
         (ParamInt<px4::params::MY_LQR_BOOL_E2B>) bool_e2b
         )// Just the handles, need to .get() them
 };

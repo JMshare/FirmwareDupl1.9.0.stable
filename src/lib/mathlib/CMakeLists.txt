@@ -36,6 +36,7 @@ px4_add_library(mathlib
 	math/matrix_alg.cpp
 	math/filter/LowPassFilter2p.cpp
 	math/filter/LowPassFilter2pVector3f.cpp
-	math/filter/LowPassFilter3p.cpp
-	math/filter/LowPassFilter3pVector3f.cpp
+	math/my_lib/LowPassFilter3p.cpp
+	math/my_lib/LowPassFilter3pVector3f.cpp
+	math/my_lib/Detect_oscillations_Vector3f.hpp
 )

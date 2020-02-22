@@ -64,4 +64,11 @@ int32 do_adaptive
 float32 kp_rls
 float32 kphi_rls
 
+float32 gain_limiter_p
+float32 gain_limiter_q
+float32 gain_limiter_r
+int32 oscillating_p
+int32 oscillating_q
+int32 oscillating_r
+
 # TOPICS my_LQR_setpoints

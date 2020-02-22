@@ -363,6 +363,9 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.kp_rls = K_p_adapt;
     setpoints_struct.kphi_rls = K_phi_adapt;
 
+    setpoints_struct.oscillating_q = oscillating(1,0);
+    setpoints_struct.oscillating_r = oscillating(2,0);
+
 
     setpoints_struct.timestamp = hrt_absolute_time();
     setpoints_struct.timestamp_sample = vehicle_attitude.timestamp;
@@ -377,7 +380,8 @@ int My_LQR_control::setpoints_publish(){
 int My_LQR_control::debug_publish(){
     dbg_val.ind = 0;
     //dbg_val.value = y(6,0); // roll rate to see filtered vibrations
-    dbg_val.value = X_RLS(1,0); // identified values
+    //dbg_val.value = X_RLS(1,0); // identified values
+    dbg_val.value = gain_limiter(0,0); // limiter on p gain
     
     dbg_val.timestamp = hrt_absolute_time();
 
@@ -457,6 +461,7 @@ void My_LQR_control::run(){
 
                 recursiveLS();
                 adaptive_control();
+                gains_limiter_fun();
                 
                 control_fun(); // computes the actuator controls
 
@@ -901,6 +906,24 @@ int My_LQR_control::adaptive_control(){
 
     return PX4_OK;
 }
+int My_LQR_control::gains_limiter_fun(){
+    if(gains_limiter_on){
+        oscillating = detected_oscillations.apply(Del_c_omg.slice<3,1>(0,0), vehicle_attitude.timestamp);
+        for(int i=0; i<3; i++){
+            if(oscillating(i,0) == 1){
+                gain_limiter(i,0) *= 0.8f;
+            }
+            else{
+                gain_limiter(i,0) = math::min(gain_limiter(i,0) + (1.0f/(loop_update_freqn*20.0f)), 1.0f); 
+            }
+        }
+    }
+    else{
+        gain_limiter.setAll(1.0f);
+    }
+
+    return PX4_OK;
+}
 
 
 
@@ -926,7 +949,7 @@ int My_LQR_control::control_fun(){
     //Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
     //Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
     // Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
-    Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*y.slice<3,1>(6,0); // slice omg contribution, this way RC input indep of K
+    Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*(y.slice<3,1>(6,0).emult(gain_limiter)); // slice omg contribution, this way RC input indep of K
     Del_c_omg(0,0) += y_setpoint(6,0); // p
     Del_c_omg(1,0) += y_setpoint(7,0); // q
     Del_c_omg(2,0) += y_setpoint(8,0); // r
@@ -1130,6 +1153,10 @@ int My_LQR_control::printouts(){
 
             PX4_INFO("adapt Kp: %2.2f, adapt Kphi: %2.2f", (double)K_p_adapt, (double)K_phi_adapt);
 
+            if(gains_limiter_on){
+                PX4_INFO("glm_p: %1.2f, glm_q: %1.2f, glm_r: %1.2f", (double)gain_limiter(0,0), (double)gain_limiter(1,0), (double)gain_limiter(2,0));
+            }
+
             //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
             //Del_c_eps.print();
             //(-K_feedback_y.T().slice<3,8>(9,0)).T().print();
@@ -1316,6 +1343,9 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     K_p_adapt = kp_adapt;
     K_phi_adapt = kphi_adapt;
 
+    oscillating.setAll(0);
+    gain_limiter.setAll(1.0f);
+
     update_parameters(true);
 
     return PX4_OK;
@@ -1382,6 +1412,10 @@ int My_LQR_control::local_parameters_update(){
     do_recursiveLS = bool_recursiveLS.get() == 1;
     lambda_RLS = lambda_rls.get();
     do_adaptive = bool_adaptive.get() == 1;
+
+    gains_limiter_on = bool_gains_limiter.get() == 1;
+    pksz = glm_pksz.get();
+    dtlim = glm_dtlim.get();
 
     
     return PX4_OK;

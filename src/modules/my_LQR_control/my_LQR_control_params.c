@@ -285,6 +285,41 @@ PARAM_DEFINE_FLOAT(MY_LQR_LMBD_RLS, 0.999f);
 PARAM_DEFINE_INT32(MY_LQR_BOOL_RCSC, 1);
 
 /**
+ * Gains limiter
+ * from detected oscillations
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_GLM, 1);
+
+/**
+ * 
+ * peak size threshold for gains limiter
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 3
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_GLM_PKSZ, 0.08f);
+
+/**
+ * 
+ * dt oscillations threshold for gains limiter
+ *
+ * @unit []
+ * @min 0
+ * @max 1
+ * @decimal 3
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_GLM_DTLIM, 0.2f);
+
+/**
  * RC setpoint scaling on P
  * Scale to change the responsivness of the plane
  *
