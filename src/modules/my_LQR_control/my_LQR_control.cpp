@@ -565,13 +565,13 @@ int My_LQR_control::convert_quaternions(){
     return PX4_OK;
 }
 int My_LQR_control::project_theta(){
-// Extending the -90 to +90 deg range on theta to -140 to 140 deg
+// Extending the -90 to +90 deg range on theta to -120 to 120 deg
     proj_theta_status = 0;
     theta0 = euler_angles.theta();
     if(proj_theta){
         proj_theta_status = 1;
         Qdcm_proj = Qdcm; // predefine
-        if(euler_angles.theta() > deg2rad(50.0f)){ 
+        if(euler_angles.theta() > deg2rad(70.0f)){ 
             // rotate the device by -90 deg
             Qdcm_proj(0,0) = Qdcm(0,2); // z to x
             Qdcm_proj(1,0) = Qdcm(1,2);
@@ -584,9 +584,10 @@ int My_LQR_control::project_theta(){
             euler_angles_proj = Qdcm_proj; // get the corresponding euler angles
             euler_angles.theta() = euler_angles_proj.theta() + deg2rad(90.0f); // bring back the unrotated theta
             proj_theta_status = 10; // log status
-            //euler_angles.psi() = euler_angles_proj.phi();
+            euler_angles.phi() = euler_angles_proj.phi();
+            euler_angles.psi() = euler_angles_proj.psi();
         }
-        else if(euler_angles.theta() < -deg2rad(50.0f)){ 
+        else if(euler_angles.theta() < -deg2rad(70.0f)){ 
             // rotate the device by 90 deg
             Qdcm_proj(0,0) = -Qdcm(0,2); // z to -x
             Qdcm_proj(1,0) = -Qdcm(1,2);
@@ -599,7 +600,8 @@ int My_LQR_control::project_theta(){
             euler_angles_proj = Qdcm_proj; // get the corresponding euler angles
             euler_angles.theta() = euler_angles_proj.theta() - deg2rad(90.0f); // bring back the unrotated theta
             proj_theta_status = -10; // log status
-            //euler_angles.psi() = euler_angles_proj.phi();
+            euler_angles.phi() = euler_angles_proj.phi();
+            euler_angles.psi() = euler_angles_proj.psi();
         }
     }
     return PX4_OK;
@@ -941,10 +943,10 @@ int My_LQR_control::control_fun(){
 
     //Del_c = K_feedback_y*Del_y ... ; // not used if not filter
 
-    if(dt < 0.5f){ // ignore too large dt steps (probably some glitches, startup etc)
+    //if(dt < 0.5f){ // ignore too large dt steps (probably some glitches, startup etc)
         //r  = r  + dt*Ci*Del_y; // not used if no integral compensation
         //cf = cf + dt*Tf*(-Del_cf + Del_c); // not used if not filter
-    }
+    //}
     
     Del_y_eps = Del_y.slice<3,1>(9,0);
     project_del_psi();
@@ -967,6 +969,10 @@ int My_LQR_control::control_fun(){
 
     stabilisation_mode();
     Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg;
+    if(abs(proj_theta_status) == 10){ // swap roll and yaw proportional compensation if above 80 deg
+        Del_c(0,0) = -Del_c_eps(2,0)*c_eps_bool(2,0) + Del_c_omg(0,0);
+        Del_c(2,0) = Del_c_eps(0,0)*c_eps_bool(0,0) + Del_c_omg(2,0);
+    }
     cf = c_setpoint + Del_c;
         
     return PX4_OK;
@@ -1228,17 +1234,17 @@ k_scheds(9,0) =   1.75f; k_scheds(9,1) =   1.75f; k_scheds(9,2) =   1.75f; k_sch
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =  -0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
         K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.0000f; K_feedback_y(2,7) =  -0.0000f; K_feedback_y(2,8) =   0.7414f; K_feedback_y(2,9) =  -0.0000f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2910f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
-k_scheds(0,0) =   0.10f; k_scheds(0,1) =   0.10f; k_scheds(0,2) =   1.0f; k_scheds(0,3) =   1.2f; k_scheds(0,4) =   1.3f; k_scheds(0,5) =   1.45f; 
-k_scheds(1,0) =   0.00f; k_scheds(1,1) =   0.00f; k_scheds(1,2) =   0.00f; k_scheds(1,3) =   0.00f; k_scheds(1,4) =   0.00f; k_scheds(1,5) =   0.00f;  
-k_scheds(2,0) =   0.00f; k_scheds(2,1) =   0.00f; k_scheds(2,2) =   0.00f; k_scheds(2,3) =  -0.00f; k_scheds(2,4) =  -0.00f; k_scheds(2,5) =  -0.00f;  
-k_scheds(3,0) =   0.30f; k_scheds(3,1) =   0.30f; k_scheds(3,2) =   3.0f; k_scheds(3,3) =   10.0f; k_scheds(3,4) =   10.0f; k_scheds(3,4) =   10.0f;  
-k_scheds(4,0) =   1.30f; k_scheds(4,1) =   1.30f; k_scheds(4,2) =   4.6f; k_scheds(4,3) =   4.6f; k_scheds(4,4) =   4.6f; k_scheds(4,5) =   4.6f; 
-k_scheds(5,0) =  -0.0000f; k_scheds(5,1) =  -0.0000f; k_scheds(5,2) =  -0.0000f; k_scheds(5,3) =  -0.0000f; k_scheds(5,4) =  -0.0000f; k_scheds(5,5) =  -0.0000f; 
-k_scheds(6,0) =  -0.0000f; k_scheds(6,1) =  -0.0000f; k_scheds(6,2) =  -0.0000f; k_scheds(6,3) =  -0.0000f; k_scheds(6,4) =  -0.0000f; k_scheds(6,5) =  -0.0000f; 
-k_scheds(7,0) =   0.35f; k_scheds(7,1) =   0.35f; k_scheds(7,2) =   0.35f; k_scheds(7,3) =   0.35f; k_scheds(7,4) =   0.35f; k_scheds(7,5) =   0.35f; 
-k_scheds(8,0) =   0.00f; k_scheds(8,1) =   0.00f; k_scheds(8,2) =   0.20f; k_scheds(8,3) =   0.80f; k_scheds(8,4) =   0.8f; k_scheds(8,5) =   0.8f; 
-k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_scheds(9,3) =   4.0f; k_scheds(9,4) =   4.0f; k_scheds(9,5) =   4.0f; 
-        tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.3963f; 
+k_scheds(0,0) =   0.10f; k_scheds(0,1) =   0.10f; k_scheds(0,2) =   1.0f; k_scheds(0,3) =   1.2f; k_scheds(0,4) =   1.3f; k_scheds(0,5) =   1.45f; k_scheds(0,6) =   1.45f; 
+k_scheds(1,0) =   0.00f; k_scheds(1,1) =   0.00f; k_scheds(1,2) =   0.00f; k_scheds(1,3) =   0.00f; k_scheds(1,4) =   0.00f; k_scheds(1,5) =   0.00f; k_scheds(1,6) =   0.00f; 
+k_scheds(2,0) =   0.00f; k_scheds(2,1) =   0.00f; k_scheds(2,2) =   0.00f; k_scheds(2,3) =  -0.00f; k_scheds(2,4) =  -0.00f; k_scheds(2,5) =  -0.00f; k_scheds(2,6) =  -0.00f;
+k_scheds(3,0) =   0.30f; k_scheds(3,1) =   0.30f; k_scheds(3,2) =   3.0f; k_scheds(3,3) =   10.0f; k_scheds(3,4) =   10.0f; k_scheds(3,5) =   10.0f; k_scheds(3,6) =   10.0f;
+k_scheds(4,0) =   1.30f; k_scheds(4,1) =   1.30f; k_scheds(4,2) =   4.6f; k_scheds(4,3) =   4.6f; k_scheds(4,4) =   4.6f; k_scheds(4,5) =   4.6f; k_scheds(4,6) =   4.6f;
+k_scheds(5,0) =  -0.0000f; k_scheds(5,1) =  -0.0000f; k_scheds(5,2) =  -0.0000f; k_scheds(5,3) =  -0.0000f; k_scheds(5,4) =  -0.0000f; k_scheds(5,5) =  -0.0000f; k_scheds(5,6) =  -0.0000f;
+k_scheds(6,0) =  -0.0000f; k_scheds(6,1) =  -0.0000f; k_scheds(6,2) =  -0.0000f; k_scheds(6,3) =  -0.0000f; k_scheds(6,4) =  -0.0000f; k_scheds(6,5) =  -0.0000f; k_scheds(6,6) =  -0.0000f;
+k_scheds(7,0) =   0.35f; k_scheds(7,1) =   0.35f; k_scheds(7,2) =   0.35f; k_scheds(7,3) =   0.35f; k_scheds(7,4) =   0.35f; k_scheds(7,5) =   0.35f; k_scheds(7,6) =   0.35f;
+k_scheds(8,0) =   0.00f; k_scheds(8,1) =   0.00f; k_scheds(8,2) =   0.20f; k_scheds(8,3) =   0.80f; k_scheds(8,4) =   0.8f; k_scheds(8,5) =   0.8f; k_scheds(8,6) =   0.8f;
+k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_scheds(9,3) =   4.0f; k_scheds(9,4) =   4.0f; k_scheds(9,5) =   4.0f; k_scheds(9,6) =   4.0f; 
+        tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.3963f; tht_ints(0,6) = 3.0f;
         // pitch angles (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
     }
     else{ // Not specified

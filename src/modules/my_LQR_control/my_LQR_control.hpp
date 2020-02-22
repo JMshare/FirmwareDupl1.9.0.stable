@@ -289,7 +289,7 @@ private:
 		int case_int = 1;
 		int case_int_last = 1;
 		float f_int = 0.0f;
-		const static int n_int = 5;
+		const static int n_int = 6;
 		Matrix<float,1,n_int+1> tht_ints;
 		Matrix<float,10,n_int+1> k_scheds; // [pp, pr, rp, rr, ..., q, tht]
 		Matrix<float,10,n_int+1> k_scheds_sc;
