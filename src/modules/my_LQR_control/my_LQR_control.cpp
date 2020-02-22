@@ -363,6 +363,10 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.kp_rls = K_p_adapt;
     setpoints_struct.kphi_rls = K_phi_adapt;
 
+    setpoints_struct.gain_limiter_p = gain_limiter(0,0);
+    setpoints_struct.gain_limiter_q = gain_limiter(1,0);
+    setpoints_struct.gain_limiter_r = gain_limiter(2,0);
+    setpoints_struct.oscillating_p = oscillating(0,0);
     setpoints_struct.oscillating_q = oscillating(1,0);
     setpoints_struct.oscillating_r = oscillating(2,0);
 
