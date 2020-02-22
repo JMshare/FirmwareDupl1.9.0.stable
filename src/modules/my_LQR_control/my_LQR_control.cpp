@@ -950,7 +950,11 @@ int My_LQR_control::control_fun(){
     
     Del_y_eps = Del_y.slice<3,1>(9,0);
     project_del_psi();
-    del_epsilon_to_body_frame(); // depreciated
+    // del_epsilon_to_body_frame(); // depreciated
+    // Let's constraint Del_eps so I dont get overreaction at large perturbs. The Del_c is limited but if this is too large then the omg compensation wont be able to react
+    math::constrain(Del_y_eps(0,0), -deg2rad(30.0f), deg2rad(30.0f));
+    math::constrain(Del_y_eps(1,0), -deg2rad(30.0f), deg2rad(30.0f));
+    math::constrain(Del_y_eps(2,0), -deg2rad(30.0f), deg2rad(30.0f));
 
     //Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
     //Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
@@ -991,14 +995,6 @@ int My_LQR_control::project_del_psi(){
             proj_dpsi_status = -10;
         }
     }
-/* not true
-// If pitch over 90deg, the yaw compensation must flip
-    if(proj_dpsi && fabsf(y(10,0)) > deg2rad(90.0f)){
-        Del_y_eps(2,0) = -Del_y_eps(2,0);
-    }
-*/
-    // Also let's constraint this so I dont get overreaction at large heading differences
-    math::constrain(Del_y_eps(2,0), -deg2rad(30.0f), deg2rad(30.0f));
     return PX4_OK;
 }
 int My_LQR_control::stabilisation_mode(){
