@@ -1160,7 +1160,7 @@ int My_LQR_control::printouts(){
             PX4_INFO("adapt Kp: %2.2f, adapt Kphi: %2.2f", (double)K_p_adapt, (double)K_phi_adapt);
 
             if(gains_limiter_on){
-                PX4_INFO("glm_p: %1.2f, glm_q: %1.2f, glm_r: %1.2f", (double)gain_limiter(0,0), (double)gain_limiter(1,0), (double)gain_limiter(2,0));
+                PX4_INFO("glm_p: %1.2f, glm_q: %1.2f, glm_r: %1.2f, glm_pksz: %1.4f", (double)gain_limiter(0,0), (double)gain_limiter(1,0), (double)gain_limiter(2,0), (double)pksz);
             }
 
             //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
@@ -1420,9 +1420,11 @@ int My_LQR_control::local_parameters_update(){
     do_adaptive = bool_adaptive.get() == 1;
 
     gains_limiter_on = bool_gains_limiter.get() == 1;
-    pksz = glm_pksz.get();
-    dtlim = glm_dtlim.get();
-
+    if(fabsf(pksz - glm_pksz.get()) > 0.0001f || fabsf(pksz - glm_pksz.get()) > 0.0001f){
+        pksz = glm_pksz.get();
+        dtlim = glm_dtlim.get();
+        detected_oscillations.reset(pksz, dtlim);
+    }
     
     return PX4_OK;
 }
