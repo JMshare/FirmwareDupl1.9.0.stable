@@ -623,7 +623,7 @@ int My_LQR_control::filter_omg(){
             omg_filtered = lp3_filter_omg.apply(omg);
         }
         filter_status_omg = 0; // ok
-        if(is_nan(eps_filtered(0)) || is_nan(eps_filtered(1)) || is_nan(eps_filtered(2))){ 
+        if(!PX4_ISFINITE(eps_filtered(0)) || !PX4_ISFINITE(eps_filtered(1)) || !PX4_ISFINITE(eps_filtered(2))){ 
             omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_omg = 1; // whops
         }
@@ -644,7 +644,7 @@ int My_LQR_control::filter_eps(){
             eps_filtered = lp3_filter_eps.apply(eps);
         }
         filter_status_eps = 0; // ok
-        if(is_nan(eps_filtered(0)) || is_nan(eps_filtered(1)) || is_nan(eps_filtered(2))){ 
+        if(!PX4_ISFINITE(eps_filtered(0)) || !PX4_ISFINITE(eps_filtered(1)) || !PX4_ISFINITE(eps_filtered(2))){ 
             eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_eps = 1; // whops
         }
@@ -1040,7 +1040,7 @@ int My_LQR_control::manual_override(){
         cf(2,0) = cm(2,0);
     }
     control_status = 0;
-    if(is_nan(cf(0,0)) || is_nan(cf(1,0)) || is_nan(cf(2,0)) || is_nan(cf(3,0))){ // check for errors in the stabilised control
+    if(!PX4_ISFINITE(cf(0,0)) || !PX4_ISFINITE(cf(1,0)) || !PX4_ISFINITE(cf(2,0)) || !PX4_ISFINITE(cf(3,0))){ // check for errors in the stabilised control
         control_status = 1;
     }
     if(rc_channels.channels[13] < -0.5f || control_status == 1){ // manual override all
@@ -1461,10 +1461,6 @@ float My_LQR_control::deg2rad(float degs){
 
 float My_LQR_control::rad2deg(float rads){
     return rads/0.01745329252f;
-}
-
-bool My_LQR_control::is_nan(float x){
-    return !(x > -1000000.0f && x < 1000000.0f);
 }
 
 
