@@ -16,4 +16,6 @@ float32 yaw			# filtered yaw about Z body axis in rad
 float32 cutoff_freqn_eps # cutoff param in lp_filter_eps
 int32 filter_status_eps 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn)
 
+int32 lpf_order		# order of the lpf used
+
 # TOPICS angular_rates_filtered

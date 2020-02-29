@@ -69,6 +69,15 @@ PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_O, 5.0f);
 PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_E, 250.0f);
 
 /**
+ * LPF order
+ * set to 2 or 3
+ *
+ * @unit none
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_LPF_ORD, 3);
+
+/**
  * Pitch setpoint max
  *
  * @unit []

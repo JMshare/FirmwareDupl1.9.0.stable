@@ -292,6 +292,7 @@ int My_LQR_control::angular_rates_filtered_publish(){
     angular_rates_filtered.filter_status_omg = filter_status_omg;
     angular_rates_filtered.cutoff_freqn_eps = cutoff_freqn_eps;
     angular_rates_filtered.filter_status_eps = filter_status_eps;
+    angular_rates_filtered.lpf_order = lpf_order;
     
     angular_rates_filtered.timestamp = hrt_absolute_time();
     angular_rates_filtered.timestamp_sample = vehicle_attitude.timestamp;
@@ -520,8 +521,10 @@ int My_LQR_control::timer_clock(){
     if(dt_loop >= 10.0f){ // use 10 seconds to compute the loop update rate
         if(fabsf(loop_update_freqn - loop_counter/dt_loop) > 10.0f){ // if loop freqn change by more than 10 Hz update the filter
             loop_update_freqn = loop_counter/dt_loop;
-            lp_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
-            lp_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
+            lp2_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
+            lp2_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
+            lp3_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
+            lp3_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
         }
         dt_loop = 0.0f;
         loop_counter = 0.0f;
@@ -613,7 +616,12 @@ int My_LQR_control::filter_omg(){
     omg(2) = vehicle_attitude.yawspeed;
 
     if(cutoff_freqn_omg <= 100.0f){
-        omg_filtered = lp_filter_omg.apply(omg);
+        if(lpf_order == 2){
+            omg_filtered = lp2_filter_omg.apply(omg);
+        }
+        else{
+            omg_filtered = lp3_filter_omg.apply(omg);
+        }
         filter_status_omg = 0; // ok
         if(is_nan(eps_filtered(0)) || is_nan(eps_filtered(1)) || is_nan(eps_filtered(2))){ 
             omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
@@ -629,7 +637,12 @@ int My_LQR_control::filter_omg(){
 }
 int My_LQR_control::filter_eps(){
     if(cutoff_freqn_eps <= 100.0f){
-        eps_filtered = lp_filter_eps.apply(eps);
+        if(lpf_order == 2){
+            eps_filtered = lp2_filter_eps.apply(eps);
+        }
+        else{
+            eps_filtered = lp3_filter_eps.apply(eps);
+        }
         filter_status_eps = 0; // ok
         if(is_nan(eps_filtered(0)) || is_nan(eps_filtered(1)) || is_nan(eps_filtered(2))){ 
             eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
@@ -1385,13 +1398,16 @@ int My_LQR_control::local_parameters_update(){
     Del_c_lim(2,0) = domg_lim.get();
     Del_c_lim(3,0) = deps_lim.get();
 
+    lpf_order = lpf_ord.get();
     if(fabsf(cutoff_freqn_omg - math::min(cutoff_fn_omg.get(), 300.0f)) > 0.1f){
         cutoff_freqn_omg = math::min(cutoff_fn_omg.get(), 300.0f);
-        lp_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
+        lp2_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
+        lp3_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
     }
     if(fabsf(cutoff_freqn_eps - math::constrain(cutoff_fn_eps.get(), 1.0f, 300.0f)) > 0.1f){
         cutoff_freqn_eps = math::constrain(cutoff_fn_eps.get(), 1.0f, 300.0f);
-        lp_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
+        lp2_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
+        lp3_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
     }
 
     tailerons_scaling = tailerons_sc.get();
