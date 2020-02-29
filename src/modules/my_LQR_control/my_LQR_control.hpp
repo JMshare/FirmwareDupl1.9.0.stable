@@ -74,6 +74,7 @@
 #include <uORB/topics/angular_rates_filtered.h>
 #include <uORB/topics/my_LQR_setpoints.h>
 #include <uORB/topics/debug_value.h>
+#include <uORB/topics/airspeed.h>
 
 using matrix::Matrix;
 using matrix::Vector3f;
@@ -129,6 +130,7 @@ private:
         int rc_channels_poll();
         int actuator_controls_virtual_poll();
 		int home_position_poll();
+		int airspeed_poll();
 		int actuator_controls_publish();
 		int angular_rates_filtered_publish();
 		int setpoints_publish();
@@ -186,6 +188,7 @@ private:
 		struct angular_rates_filtered_s angular_rates_filtered{};
 		struct my_LQR_setpoints_s setpoints_struct{};
 		struct debug_value_s dbg_val{};
+		struct airspeed_s airspeed{};
 
         /**
         * My subscription topics subsriptors
@@ -198,6 +201,7 @@ private:
         int rc_channels_sub = -1;
         int actuator_controls_virtual_sub = -1;
 		int home_position_sub = -1;
+		int airspeed_sub = -1;
 		
 		/**
 		* My publication topics publictors

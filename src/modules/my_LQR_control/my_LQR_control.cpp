@@ -250,6 +250,16 @@ int My_LQR_control::home_position_poll(){
     return PX4_ERROR;
 }
 
+int My_LQR_control::airspeed_poll(){
+    bool airspeed_updated;
+    orb_check(airspeed_sub, &airspeed_updated);
+    if(airspeed_updated){
+        orb_copy(ORB_ID(airspeed), airspeed_sub, &airspeed);
+        return PX4_OK;
+    }
+    return PX4_ERROR;
+}
+
 int My_LQR_control::actuator_controls_publish(){
     bound_controls(); // bounds pqr control to (-1,1) and thrust to (0,1)
 
@@ -351,7 +361,9 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.tuner_status = tuner_status;
     setpoints_struct.gain_scale_p = tune_p;
     setpoints_struct.gain_scale_d = tune_d;
+
     setpoints_struct.case_int_f_int = 1.0f*case_int + f_int;
+    setpoints_struct.scheduler_status = schedule_K_status;
 
     setpoints_struct.dt = dt;
 
@@ -420,6 +432,7 @@ void My_LQR_control::run(){
     rc_channels_sub = orb_subscribe(ORB_ID(rc_channels));
     actuator_controls_virtual_sub = orb_subscribe(actuator_controls_virtual_id);
     home_position_sub = orb_subscribe(ORB_ID(home_position));
+    airspeed_sub = orb_subscribe(ORB_ID(airspeed));
     
     // advertise topics
     actuator_controls_0_pub = orb_advertise(ORB_ID(actuator_controls_0), &actuator_controls_0);    
@@ -495,6 +508,7 @@ void My_LQR_control::run(){
     orb_unsubscribe(rc_channels_sub);
     orb_unsubscribe(actuator_controls_virtual_sub);
     orb_unsubscribe(home_position_sub);
+    orb_unsubscribe(airspeed_sub);
 
     // unadvertise topics
     orb_unadvertise(actuator_controls_0_pub);    
@@ -862,6 +876,11 @@ int My_LQR_control::gains_schedule(){
                 break;
             }
         }
+        if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 20.0f)){ // checking if <50 as a safety check for infs or nans or bad readings
+            case_int = 1;
+            f_int = 0.0f;
+            schedule_K_status = 2; // blocked by airspeed
+        }
         case_int_last = 100; // comment if you just want a step function
         if(case_int_last != case_int){ // interpolate
             // f_int = 0.0f; // zero order interpolation
@@ -1161,6 +1180,9 @@ int My_LQR_control::printouts(){
             }
             if(control_status == 1){
                 PX4_ERR("Control resulted in NANs! Using manual.");
+            }
+            if(schedule_K_status == 2){
+                PX4_ERR("Gain scheduler restricted by Airspeed!");
             }
 
             PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
