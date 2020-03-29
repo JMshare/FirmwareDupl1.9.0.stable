@@ -1033,8 +1033,13 @@ int My_LQR_control::project_del_psi(){
 int My_LQR_control::stabilisation_mode(){
 // Decide whether to disable pitch or yaw compensation
     c_eps_bool.setAll(1.0f);
-    if(rc_channels.channels[14] < 0.5f){ // pitch rate compensation only
-        c_eps_bool(1,0) = 0.0f;
+    if(rc_channels.channels[14] < 0.5f){ // pitch/roll rate compensation only
+        if(rc_channels.channels[6] > 0.0f){ // roll just rates
+            c_eps_bool(0,0) = 0.0f;
+        }
+        else{ // pitch just rates
+            c_eps_bool(1,0) = 0.0f;
+        }
     }
     if(rc_channels.channels[5] < 0.5f){ // yaw rate compensation only
         c_eps_bool(2,0) = 0.0f;
