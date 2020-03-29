@@ -876,6 +876,7 @@ int My_LQR_control::gains_schedule(){
                 break;
             }
         }
+        airspeed_poll();
         if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 20.0f)){ // checking if <50 as a safety check for infs or nans or bad readings
             case_int = 1;
             f_int = 0.0f;
@@ -1052,8 +1053,13 @@ int My_LQR_control::manual_override(){
     cm(2,0) =  rc_channels.channels[2] * RC_scale_base(2,0);
     cm(3,0) =  rc_channels.channels[3];
     
-    if(rc_channels.channels[14] < -0.5f){ // manual override pitch
-        cf(1,0) = cm(1,0);
+    if(rc_channels.channels[14] < -0.5f){ // manual override pitch/roll
+        if(rc_channels.channels[6] > 0.0f){ // roll override
+            cf(0,0) = cm(0,0);
+        }
+        else{ // pitch override
+            cf(1,0) = cm(1,0);
+        }
     }
     if(rc_channels.channels[5] < -0.5f){ // manual override yaw
         cf(2,0) = cm(2,0);
