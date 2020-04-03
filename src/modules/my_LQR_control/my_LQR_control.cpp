@@ -1034,10 +1034,10 @@ int My_LQR_control::stabilisation_mode(){
 // Decide whether to disable pitch or yaw compensation
     c_eps_bool.setAll(1.0f);
     if(rc_channels.channels[14] < 0.5f){ // pitch/roll rate compensation only
-        if(rc_channels.channels[6] > 0.0f){ // roll just rates
+        if(rc_channels.channels[6] > 0.0f){ // roll
             c_eps_bool(0,0) = 0.0f;
         }
-        else{ // pitch just rates
+        else{ // pitch 
             c_eps_bool(1,0) = 0.0f;
         }
     }
@@ -1334,7 +1334,7 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     rc_channels_fail.channels[3] = 0.0f; // motors off
     rc_channels_fail.channels[8] = -1.0f; // front engine off
     rc_channels_fail.channels[4] = -1.0f; // kill channel, not used here
-    rc_channels_fail.channels[6] = 1.0f; // px modes, not used here
+    rc_channels_fail.channels[6] = -1.0f; // px modes, not used here
     rc_channels_fail.channels[7] = 1.0f; // arming channel as well, not used here
     rc_channels_fail.channels[15] = 1.0f; // arming channel, not used here
 
