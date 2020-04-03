@@ -182,6 +182,7 @@ int LidarLitePWM::measure()
 	_range.orientation = _rotation;
 	/* TODO: set proper ID */
 	_range.id = 0;
+	_range.signal_quality = 90; // for ekf2 to fuse it in
 
 	/* Due to a bug in older versions of the LidarLite firmware, we have to reset sensor on (distance == 0) */
 	if (_range.current_distance <= 0.0f) {
