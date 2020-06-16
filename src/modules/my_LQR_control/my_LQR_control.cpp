@@ -1161,6 +1161,7 @@ int My_LQR_control::printouts(){
     if(do_printouts){
         dt_print = dt_print + dt;
         if(dt_print > 3.0f){
+            PX4_INFO("\n");
             //PX4_INFO("dt:%2.5f", (double)dt);
             
             //PX4_INFO("x:%2.2f, xd:%2.2f", (double)y(0,0), (double)y_setpoint(0,0));
@@ -1181,19 +1182,19 @@ int My_LQR_control::printouts(){
                 PX4_ERR("Filtering rates results in NANs!");
             }
             if(filter_status_omg == 2){
-                PX4_ERR("Filtering omg freqn off range 100Hz, disabled!");
+                PX4_WARN("Filtering omg freqn off range 100Hz, disabled!");
             }
             if(filter_status_eps == 1){
                 PX4_ERR("Filtering angles results in NANs!");
             }
             if(filter_status_eps == 0){
-                PX4_ERR("Filtering eps on!");
+                PX4_WARN("Filtering eps on!");
             }
             if(control_status == 1){
                 PX4_ERR("Control resulted in NANs! Using manual.");
             }
             if(schedule_K_status == 2){
-                PX4_ERR("Gain scheduler restricted by Airspeed!");
+                PX4_WARN("Gain scheduler restricted by Airspeed!");
             }
 
             PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
