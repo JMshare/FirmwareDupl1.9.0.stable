@@ -81,6 +81,18 @@ then
 	mb12xx start -a
 fi
 
+# my_rpm rpm sensor
+if param greater SENS_EN_MY_RPM 0
+then
+	my_rpm start -a
+fi
+
+# my_scale scale sensor
+if param greater SENS_EN_MY_SCALE 0
+then
+	my_rpm start -a
+fi
+
 # pga460 sonar sensor
 if param greater SENS_EN_PGA460 0
 then

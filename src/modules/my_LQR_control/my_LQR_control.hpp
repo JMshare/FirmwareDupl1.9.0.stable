@@ -58,6 +58,7 @@
 //#include <mathlib/mathlib.h>
 //#include <matrix/Vector.hpp>
 //#include <matrix/Matrix.hpp>
+#include <mathlib/mathlib.h>
 #include <drivers/drv_hrt.h> // for the hrt_absolute_time fn
 //#include <lib/mixer/mixer.h> // for the load_mixer_file function
 

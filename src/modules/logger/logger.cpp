@@ -752,6 +752,8 @@ void Logger::add_system_identification_topics()
 	add_topic("my_LQR_setpoints"); // for debug only, need high freqn now for adaptive checs
 	add_topic("actuator_controls_virtual_fw", 200); // for comparison only
 	add_topic("rc_channels", 200); // for comparison only
+	add_topic("my_rpm_topic");
+	add_topic("my_scale_topic");
 }
 
 int Logger::add_topics_from_file(const char *fname)

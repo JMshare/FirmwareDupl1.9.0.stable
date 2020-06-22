@@ -79,6 +79,8 @@ set(msg_files
 	mount_orientation.msg
 	multirotor_motor_limits.msg
 	my_LQR_setpoints.msg
+	my_rpm_topic.msg
+	my_scale_topic.msg
 	obstacle_distance.msg
 	offboard_control_mode.msg
 	optical_flow.msg
