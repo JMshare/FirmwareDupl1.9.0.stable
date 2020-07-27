@@ -699,7 +699,7 @@ int My_LQR_control::read_c_setpoint(){
 int My_LQR_control::read_y_setpoint(){
     y_setpoint.setAll(0.0f);
 
-    pitch_setpoint = pitch_sp_min + ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
+    pitch_setpoint = deg2rad(pitch_sp_min) + ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
     //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
 
     /* 
