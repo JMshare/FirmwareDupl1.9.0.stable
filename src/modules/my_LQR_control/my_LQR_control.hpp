@@ -282,8 +282,9 @@ private:
 
 		float thrust_setpoint = 0.0f;
 		float pitch_setpoint = 0.0f;
-		float pitch_sp_max = 60.0f;
+		float pitch_sp_max = 40.0f;
 		float yaw_setpoint = 0.0f;
+		float pitch_sp_min = 0.0f;
 
 		Vector3f omg;
 		Vector3f omg_filtered;
@@ -416,6 +417,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_K_SC_RI>) k_sc_ri,
         (ParamFloat<px4::params::MY_LQR_TUNE_EX>) tune_ex,
         (ParamFloat<px4::params::MY_LQR_THT_SP_M>) tht_sp_m,
+        (ParamFloat<px4::params::MY_LQR_THT_SP_MN>) tht_sp_min,
         (ParamFloat<px4::params::MY_LQR_DX_LIM>) dx_lim,
         (ParamFloat<px4::params::MY_LQR_DV_LIM>) dv_lim,
         (ParamFloat<px4::params::MY_LQR_DOMG_LIM>) domg_lim,

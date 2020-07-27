@@ -82,12 +82,24 @@ PARAM_DEFINE_INT32(MY_LQR_LPF_ORD, 3);
  *
  * @unit []
  * @min 0
- * @max 1000
- * @decimal 4
- * @increment 0.001
+ * @max 90
+ * @decimal 1
+ * @increment 0.1
  * @group MY LQR Control
  */
 PARAM_DEFINE_FLOAT(MY_LQR_THT_SP_M, 40.0f);
+
+/**
+ * Pitch setpoint min
+ *
+ * @unit []
+ * @min -90
+ * @max 90
+ * @decimal 1
+ * @increment 0.1
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_THT_SP_MN, 0.0f);
 
 /**
  * Feedback matrix scaling

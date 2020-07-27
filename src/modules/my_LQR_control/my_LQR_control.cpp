@@ -40,7 +40,6 @@
  */
 
 #include "my_LQR_control.hpp"
-#include <mathlib/mathlib.h>
 
 
 int My_LQR_control::print_usage(const char *reason)
@@ -700,7 +699,7 @@ int My_LQR_control::read_c_setpoint(){
 int My_LQR_control::read_y_setpoint(){
     y_setpoint.setAll(0.0f);
 
-    pitch_setpoint = ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
+    pitch_setpoint = pitch_sp_min + ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
     //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
 
     /* 
@@ -984,7 +983,7 @@ int My_LQR_control::control_fun(){
     Del_y_eps = Del_y.slice<3,1>(9,0);
     project_del_psi();
     // del_epsilon_to_body_frame(); // depreciated
-    // Let's constraint Del_eps so I dont get overreaction at large perturbs. The Del_c is limited but if this is too large then the omg compensation wont be able to react
+    // Let's constrain Del_eps so I dont get overreaction at large perturbs. The Del_c is limited but if this is too large then the omg compensation wont be able to react
     math::constrain(Del_y_eps(0,0), -deg2rad(30.0f), deg2rad(30.0f));
     math::constrain(Del_y_eps(1,0), -deg2rad(30.0f), deg2rad(30.0f));
     math::constrain(Del_y_eps(2,0), -deg2rad(30.0f), deg2rad(30.0f));
@@ -1464,6 +1463,7 @@ int My_LQR_control::local_parameters_update(){
     tune_expo = tune_ex.get();
 
     pitch_sp_max = tht_sp_m.get();
+    pitch_sp_min = tht_sp_min.get();
 
     do_recursiveLS = bool_recursiveLS.get() == 1;
     lambda_RLS = lambda_rls.get();
