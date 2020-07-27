@@ -74,12 +74,12 @@
 
 /* Configuration Constants */
 #define MY_SCALE_BUS_DEFAULT		PX4_I2C_BUS_EXPANSION
-#define MY_SCALE_BASEADDR 	0x70 /* 7-bit address */
+#define MY_SCALE_BASEADDR 	0x6F /* 7-bit address */
 #define MY_SCALE_DEVICE_PATH	"/dev/my_scales"
 
 /* MY_SCALE Registers addresses */
 
-#define MY_SCALE_TAKE_RANGE_REG	0x51		/* Measure range Register */
+#define MY_SCALE_TAKE_RANGE_REG	0x51		/* Measure Register */
 
 /* Device limits */
 #define MY_SCALE_MIN_SCALE 	0

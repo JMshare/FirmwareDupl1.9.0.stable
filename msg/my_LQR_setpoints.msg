@@ -9,7 +9,7 @@ float32 y2
 float32 y3
 float32 y4
 float32 y5
-float32 y6
+float32 y6			# from 6 to 11 these are the RC setpoints actually after all scaling
 float32 y7
 float32 y8
 float32 y9

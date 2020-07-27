@@ -79,7 +79,7 @@
 
 /* MY_RPM Registers addresses */
 
-#define MY_RPM_TAKE_RANGE_REG	0x51		/* Measure range Register */
+#define MY_RPM_TAKE_RANGE_REG	0x51		/* Measure Register */
 
 /* Device limits */
 #define MY_RPM_MIN_RPM 	0
