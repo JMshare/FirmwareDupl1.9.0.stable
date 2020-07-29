@@ -729,11 +729,13 @@ int My_LQR_control::omg_setpoints_scale(){
     RC_scale = RC_scale_base;
     if(do_rc_scale){
         for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
-            f_scale = K_feedback_y_sc_tun_sched(i,9+i);
-            p_scale = fabsf(Del_y_eps(i,0))/RC_scale_base(i,0);
+            f_scale = K_feedback_y_sc_tun_sched(i,9+i); // this scales the RC such that I reach exactly eps==1 at c==1 (omg==0).
+            
+            p_scale = fabsf(Del_y_eps(i,0))/RC_scale_base(i,0); // however it may make the RC scale so small that it would give very small inputs at eps==0.
             if(p_scale < 1.0f){
-                f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale;
+                f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale; // so I do a linear interpolation between the base RC at eps==0 and the scaled RC at eps==1
             }
+
             RC_scale(i,0) *= f_scale;
         }
     }
