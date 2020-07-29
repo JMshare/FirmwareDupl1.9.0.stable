@@ -152,7 +152,7 @@ private:
         int gains_schedule();
         int gains_scale();
         int gains_tune();
-        int setpoints_scale();
+        int omg_setpoints_scale();
         int supporting_outputs();
 		int bound_controls();
 		int rc_loss_failsafe();

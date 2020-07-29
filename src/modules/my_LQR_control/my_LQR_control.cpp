@@ -680,7 +680,6 @@ int My_LQR_control::read_setpoints(){
     rc_channels_poll();
     read_y_setpoint();
     read_c_setpoint();
-    setpoints_scale();
     return PX4_OK;
 }
 int My_LQR_control::read_c_setpoint(){
@@ -723,7 +722,7 @@ int My_LQR_control::read_y_setpoint(){
 
     return PX4_OK;
 }
-int My_LQR_control::setpoints_scale(){
+int My_LQR_control::omg_setpoints_scale(){
 // RC pass through scaled by RC_scale cos i.e. for multicopters we don't want such high rates
 // also p,q,r can react differently to cp,cq,cr in fixed-wing plane
 
@@ -731,7 +730,7 @@ int My_LQR_control::setpoints_scale(){
     if(do_rc_scale){
         for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
             f_scale = K_feedback_y_sc_tun_sched(i,9+i);
-            p_scale = fabsf(y(9+i,0))/RC_scale_base(i,0);
+            p_scale = fabsf(Del_y_eps(i,0))/RC_scale_base(i,0);
             if(p_scale < 1.0f){
                 f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale;
             }
@@ -982,6 +981,7 @@ int My_LQR_control::control_fun(){
     
     Del_y_eps = Del_y.slice<3,1>(9,0);
     project_del_psi();
+    omg_setpoints_scale();
     // del_epsilon_to_body_frame(); // depreciated
     // Let's constrain Del_eps so I dont get overreaction at large perturbs. The Del_c is limited but if this is too large then the omg compensation wont be able to react
     math::constrain(Del_y_eps(0,0), -deg2rad(30.0f), deg2rad(30.0f));
@@ -1085,9 +1085,11 @@ int My_LQR_control::manual_override(){
 
 int My_LQR_control::px4_override(){
     if(rc_channels.channels[13] > 0.5f){ // PX4 override
-        actuator_controls_virtual_poll();
-        for(int i=0; i<8; i++){
-            cf(i,0) = actuator_controls_virtual.control[i];
+        if(vehicle_id != 2){ // don't let this happen in custer, px4 not set up yet and could be in some weird hold mode
+            actuator_controls_virtual_poll();
+            for(int i=0; i<8; i++){
+                cf(i,0) = actuator_controls_virtual.control[i];
+            }
         }
     }
     return PX4_OK;
