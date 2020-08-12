@@ -44,6 +44,34 @@
  *
  */
 
+
+/**
+ * RC tuning of roll/pitch/yaw or combinations
+ *
+ * 0/1/2/10/20/21/210
+ * @unit []
+ * @min 1
+ * @max 210
+ * @decimal 0
+ * @increment 1
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_TUNE_MODE, 210);
+
+
+/**
+ * Pitch trim 
+ *
+ * @unit []
+ * @min -1
+ * @max 1
+ * @decimal 1
+ * @increment 0.1
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_THT_TRM, 0.0f);
+
+
 /**
  * Cutoff frequency for angular rates filter
  *

@@ -309,8 +309,15 @@ private:
 		float rc_sc_eps_last = 0;
 		int tuner_status = 0;
 		float tune_expo = 10.0f;
+		int tune_mod = 123;
 		float tune_p = 1.0f;
 		float tune_d = 1.0f;
+		float tune_p_p = 1.0f;
+		float tune_d_p = 1.0f;
+		float tune_p_q = 1.0f;
+		float tune_d_q = 1.0f;
+		float tune_p_r = 1.0f;
+		float tune_d_r = 1.0f;
 
 		Matrix<float,4,12> K_feedback_y_scaled;
 		Matrix<float,4,6> K_feedback_int_scaled; 
@@ -378,8 +385,6 @@ private:
     	float dtlim = 0.2f;
     	math::Detect_oscillations_Vector3f detected_oscillations{pksz, dtlim};
 
-
-
 		
 		
 
@@ -391,6 +396,7 @@ private:
 
 
 	DEFINE_PARAMETERS(
+		(ParamFloat<px4::params::MY_LQR_THT_TRM>) theta_trim,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_P>) rc_scale_p,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_Q>) rc_scale_q,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_R>) rc_scale_r, 
@@ -417,6 +423,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_K_SC_CF>) k_sc_cf,
         (ParamFloat<px4::params::MY_LQR_K_SC_RI>) k_sc_ri,
         (ParamFloat<px4::params::MY_LQR_TUNE_EX>) tune_ex,
+        (ParamInt<px4::params::MY_LQR_TUNE_MODE>) tune_mode,
         (ParamFloat<px4::params::MY_LQR_THT_SP_M>) tht_sp_m,
         (ParamFloat<px4::params::MY_LQR_THT_SP_MN>) tht_sp_min,
         (ParamFloat<px4::params::MY_LQR_DX_LIM>) dx_lim,

@@ -49,8 +49,13 @@ float32 dpsi 				# the dpsi value after projection [deg]
 int32 proj_theta_status 	# status of the theta projection (0 off, 1 on, 10 projected+, -10 projected-)
 
 int32 tuner_status 			# status of the gains tuner (0 no change, 1 change detected)
-float32 gain_scale_p
-float32 gain_scale_d
+float32 gain_scale_p_p
+float32 gain_scale_d_p
+float32 gain_scale_p_q
+float32 gain_scale_d_q
+float32 gain_scale_p_r
+float32 gain_scale_d_r
+int32 tuner_mode			# which states I am tunning
 
 float32 case_int_f_int		# scheduler interval case + f_int
 int32 scheduler_status 	# scheduler status (0..off, 1..on, 2..limited by airsp)

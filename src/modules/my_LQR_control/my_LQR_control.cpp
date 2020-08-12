@@ -358,8 +358,13 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.proj_theta_status = proj_theta_status;
 
     setpoints_struct.tuner_status = tuner_status;
-    setpoints_struct.gain_scale_p = tune_p;
-    setpoints_struct.gain_scale_d = tune_d;
+    setpoints_struct.gain_scale_p_p = tune_p_p;
+    setpoints_struct.gain_scale_p_p = tune_d_p;
+    setpoints_struct.gain_scale_p_q = tune_p_q;
+    setpoints_struct.gain_scale_d_q = tune_d_q;
+    setpoints_struct.gain_scale_p_r = tune_p_r;
+    setpoints_struct.gain_scale_d_r = tune_d_r;
+    setpoints_struct.tuner_mode = tune_mod;
 
     setpoints_struct.case_int_f_int = 1.0f*case_int + f_int;
     setpoints_struct.scheduler_status = schedule_K_status;
@@ -837,26 +842,53 @@ int My_LQR_control::gains_tune(){
         tune_d = powf(tune_expo, rc_channels.channels[11]);
         tune_p = powf(tune_expo, rc_channels.channels[10]);
 
-        K_feedback_y_scaled_tuned = K_feedback_y_scaled;
-        for(int i=0; i<4; i++){
-            for(int j=6; j<9; j++){
-                K_feedback_y_scaled_tuned(i,j) *= tune_d;
-            }
-            for(int j=9; j<12; j++){
-                K_feedback_y_scaled_tuned(i,j) *= tune_p;
-            }
+        // updating only those scales that are currently selected, the rest stays as it was
+        if((tune_mod == 0) | (tune_mod == 10) | (tune_mod == 20)  | (tune_mod == 210)){
+            tune_d_p = tune_d;
+            tune_p_p = tune_p;
+        }
+        if((tune_mod == 1) | (tune_mod == 10) | (tune_mod == 21)  | (tune_mod == 210)){
+            tune_d_q = tune_d;
+            tune_p_q = tune_p;
+        }
+        if((tune_mod == 2) | (tune_mod == 20) | (tune_mod == 21)  | (tune_mod == 210)){
+            tune_d_r = tune_d;
+            tune_p_r = tune_p;
         }
 
-        k_scheds_sc_tun = k_scheds_sc;
+        K_feedback_y_scaled_tuned = K_feedback_y_scaled;
+        for(int j=6; j<9; j++){
+            K_feedback_y_scaled_tuned(0,j) *= tune_d_p;
+        }
+        for(int j=9; j<12; j++){
+            K_feedback_y_scaled_tuned(0,j) *= tune_p_p;
+        }
+        for(int j=6; j<9; j++){
+            K_feedback_y_scaled_tuned(1,j) *= tune_d_q;
+        }
+        for(int j=9; j<12; j++){
+            K_feedback_y_scaled_tuned(1,j) *= tune_p_q;
+        }
+        for(int j=6; j<9; j++){
+            K_feedback_y_scaled_tuned(2,j) *= tune_d_r;
+        }
+        for(int j=9; j<12; j++){
+            K_feedback_y_scaled_tuned(2,j) *= tune_p_r;
+        }
+
+
+        k_scheds_sc_tun = k_scheds_sc; //[pp, pr, rp, rr, ..., q, tht]
         for(int j=0; j<n_int+1; j++){
-            for(int i=0; i<4; i++){
-                k_scheds_sc_tun(i,j) *= tune_d; // omg
-            }
-            k_scheds_sc_tun(8,j) *= tune_d; // p
-            for(int i=4; i<8; i++){
-                k_scheds_sc_tun(i,j) *= tune_p; // eps
-            }
-            k_scheds_sc_tun(9,j) *= tune_p; // tht
+            k_scheds_sc_tun(0,j) *= tune_d_p;
+            k_scheds_sc_tun(1,j) *= tune_d_p;
+            k_scheds_sc_tun(2,j) *= tune_d_r;
+            k_scheds_sc_tun(3,j) *= tune_d_r;
+            k_scheds_sc_tun(4,j) *= tune_p_p;
+            k_scheds_sc_tun(5,j) *= tune_p_p;
+            k_scheds_sc_tun(6,j) *= tune_p_r;
+            k_scheds_sc_tun(7,j) *= tune_p_r;
+            k_scheds_sc_tun(8,j) *= tune_d_q;
+            k_scheds_sc_tun(9,j) *= tune_p_q;
         }
 
         // trigger the scheduler as well if tuning changed
@@ -1054,10 +1086,10 @@ int My_LQR_control::stabilisation_mode(){
 
 int My_LQR_control::manual_override(){
     cm.setAll(0.0f);
-    cm(0,0) =  rc_channels.channels[0] * RC_scale_base(0,0);
-    cm(1,0) = -rc_channels.channels[1] * RC_scale_base(1,0);
-    cm(2,0) =  rc_channels.channels[2] * RC_scale_base(2,0);
-    cm(3,0) =  rc_channels.channels[3];
+    cm(0,0) =  rc_channels.channels[0] * RC_scale_base(0,0) + c_setpoint(0,0);
+    cm(1,0) = -rc_channels.channels[1] * RC_scale_base(1,0) + c_setpoint(1,0);
+    cm(2,0) =  rc_channels.channels[2] * RC_scale_base(2,0) + c_setpoint(2,0);
+    cm(3,0) =  c_setpoint(3,0);
     
     if(rc_channels.channels[14] < -0.5f){ // manual override pitch/roll
         if(rc_channels.channels[6] > 0.0f){ // roll override
@@ -1249,6 +1281,13 @@ int My_LQR_control::initialize_variables(){
     K_feedback_cf.setAll(0.0f);
     c_nominal_control.setAll(0.0f);
 
+    tune_p_p = 1.0f;
+    tune_d_p = 1.0f;
+    tune_p_q = 1.0f;
+    tune_d_q = 1.0f;
+    tune_p_r = 1.0f;
+    tune_d_r = 1.0f;
+
     k_scheds.setAll(0.0f);
 
     if(vehicle_id == 1){ // S500 quad
@@ -1366,6 +1405,12 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     actuator_controls_virtual.control[2] = 0.0f;
     actuator_controls_virtual.control[3] = 0.0f;
 
+    if(vehicle_id == 3){
+        loop_update_freqn = 20.0f;
+    }
+    else{
+        loop_update_freqn = 250.0f;
+    }
     omg.setAll(0.0f);
     omg_filtered.setAll(0.0f);
     angular_rates_filtered.rollspeed = 0.0f;
@@ -1422,6 +1467,8 @@ int My_LQR_control::local_parameters_update(){
     RC_scale_base(0,0) = rc_scale_p.get();
     RC_scale_base(1,0) = rc_scale_q.get();
     RC_scale_base(2,0) = rc_scale_r.get();
+
+    c_nominal_control(1,0) = theta_trim.get();
     
     Tf.setAll(0.0f);
     for(int i = 0; i < 4; i++){
@@ -1465,6 +1512,7 @@ int My_LQR_control::local_parameters_update(){
     do_printouts = bool_printouts.get() == 1;
 
     tune_expo = tune_ex.get();
+    tune_mod = tune_mode.get();
 
     pitch_sp_max = tht_sp_m.get();
     pitch_sp_min = tht_sp_min.get();
