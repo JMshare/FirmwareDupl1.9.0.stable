@@ -168,6 +168,7 @@ private:
 		int gains_limiter_fun();
 		float deg2rad(float);
 		float rad2deg(float);
+		bool isbound(float);
 		
 		
 

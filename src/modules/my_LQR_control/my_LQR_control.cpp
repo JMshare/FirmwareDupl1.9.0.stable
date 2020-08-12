@@ -636,7 +636,7 @@ int My_LQR_control::filter_omg(){
             omg_filtered = lp3_filter_omg.apply(omg);
         }
         filter_status_omg = 0; // ok
-        if(!PX4_ISFINITE(eps_filtered(0)) || !PX4_ISFINITE(eps_filtered(1)) || !PX4_ISFINITE(eps_filtered(2))){ 
+        if(!isbound(omg_filtered(0)) || !isbound(omg_filtered(1)) || !isbound(omg_filtered(2))){ 
             omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_omg = 1; // whops
         }
@@ -657,7 +657,7 @@ int My_LQR_control::filter_eps(){
             eps_filtered = lp3_filter_eps.apply(eps);
         }
         filter_status_eps = 0; // ok
-        if(!PX4_ISFINITE(eps_filtered(0)) || !PX4_ISFINITE(eps_filtered(1)) || !PX4_ISFINITE(eps_filtered(2))){ 
+        if(!isbound(eps_filtered(0)) || !isbound(eps_filtered(1)) || !isbound(eps_filtered(2))){ 
             eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_eps = 1; // whops
         }
@@ -1500,6 +1500,11 @@ float My_LQR_control::deg2rad(float degs){
 float My_LQR_control::rad2deg(float rads){
     return rads/0.01745329252f;
 }
+
+bool My_LQR_control::isbound(float val){
+    return (val >= -100) && (val <= 100); // bounds for angular rates
+}
+
 
 
 
