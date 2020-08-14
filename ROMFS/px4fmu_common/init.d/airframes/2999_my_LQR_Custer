@@ -102,6 +102,9 @@ then
 	# FW takeoff acceleration can easily exceed ublox GPS 2G default.
 	#
 	param set GPS_UBX_DYNMODEL 8
+
+	param set SENS_EN_SF1XX 4
+	# param set EKF2_HGT_MODE 2
 fi
 
 set MIXER my_LQR_Custer
