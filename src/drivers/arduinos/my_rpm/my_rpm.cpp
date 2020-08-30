@@ -491,13 +491,6 @@ MY_RPM::collect()
 
 	ret = transfer(nullptr, 0, &val[0], I2C_BUFF_SIZE);
 
-	if (ret < 0) {
-		PX4_DEBUG("error reading from sensor: %d", ret);
-		perf_count(_comms_errors);
-		perf_end(_sample_perf);
-		return ret;
-	}
-
 	struct my_rpm_topic_s report;
 	report.timestamp = hrt_absolute_time();
 	report.rpm = val[0] + val[1]*100 + val[2]*10000;
@@ -531,7 +524,7 @@ MY_RPM::collect()
 	report.telem1_24 = val[telem_start+23];
 	report.telem1_25 = val[telem_start+24];
 	report.telem1_26 = val[telem_start+25];
-	report.telem1_27 = val[telem_start+25];
+	report.telem1_27 = val[telem_start+26];
 	report.telem1_28 = val[telem_start+27];
 	report.telem1_29 = val[telem_start+28];
 	report.telem1_30 = val[telem_start+29];
@@ -567,7 +560,7 @@ MY_RPM::collect()
 	report.telem2_24 = val[telem_start+23];
 	report.telem2_25 = val[telem_start+24];
 	report.telem2_26 = val[telem_start+25];
-	report.telem2_27 = val[telem_start+25];
+	report.telem2_27 = val[telem_start+26];
 	report.telem2_28 = val[telem_start+27];
 	report.telem2_29 = val[telem_start+28];
 	report.telem2_30 = val[telem_start+29];
@@ -576,10 +569,16 @@ MY_RPM::collect()
 	report.telem2_33 = val[telem_start+32];
 	report.telem2_34 = val[telem_start+33];
 
-	
-	
-	
 
+	if (ret < 0) {
+		report.status = 1; // fail
+		PX4_DEBUG("error reading from sensor: %d", ret);
+		perf_count(_comms_errors);
+	}
+	else{
+		report.status = 0; // OK
+		ret = OK;
+	}
 
 
 	/* TODO: set proper ID */
@@ -595,8 +594,7 @@ MY_RPM::collect()
 	/* notify anyone waiting for data */
 	poll_notify(POLLIN);
 
-	ret = OK;
-
+	
 	perf_end(_sample_perf);
 	return ret;
 }

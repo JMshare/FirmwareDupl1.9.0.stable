@@ -1,7 +1,8 @@
 ## RPM sensor message topic
 uint64 timestamp                      # time since system start (microseconds)
+uint8 status 	# status of the sensor (0=OK, 1=fail)
 
-uint64 rpm       # indicated rotor Frequency in Revolution per minute
+uint64 rpm      # indicated rotor Frequency in Revolution per minute
 uint8 current1 	# current from current sensor 1
 uint8 current2	# current from current sensor 2
 

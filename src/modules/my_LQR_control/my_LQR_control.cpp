@@ -259,6 +259,16 @@ int My_LQR_control::airspeed_poll(){
     return PX4_ERROR;
 }
 
+int My_LQR_control::my_rpm_topic_poll(){
+    bool my_rpm_topic_updated;
+    orb_check(my_rpm_topic_sub, &my_rpm_topic_updated);
+    if(my_rpm_topic_updated){
+        orb_copy(ORB_ID(my_rpm_topic), my_rpm_topic_sub, &my_rpm_topic);
+        return PX4_OK;
+    }
+    return PX4_ERROR;
+}
+
 int My_LQR_control::actuator_controls_publish(){
     bound_controls(); // bounds pqr control to (-1,1) and thrust to (0,1)
 
@@ -437,6 +447,7 @@ void My_LQR_control::run(){
     actuator_controls_virtual_sub = orb_subscribe(actuator_controls_virtual_id);
     home_position_sub = orb_subscribe(ORB_ID(home_position));
     airspeed_sub = orb_subscribe(ORB_ID(airspeed));
+    my_rpm_topic_sub = orb_subscribe(ORB_ID(my_rpm_topic));
     
     // advertise topics
     actuator_controls_0_pub = orb_advertise(ORB_ID(actuator_controls_0), &actuator_controls_0);    
@@ -513,6 +524,7 @@ void My_LQR_control::run(){
     orb_unsubscribe(actuator_controls_virtual_sub);
     orb_unsubscribe(home_position_sub);
     orb_unsubscribe(airspeed_sub);
+    orb_unsubscribe(my_rpm_topic_sub);
 
     // unadvertise topics
     orb_unadvertise(actuator_controls_0_pub);    
@@ -1195,16 +1207,25 @@ int My_LQR_control::bound_controls(){
 int My_LQR_control::printouts(){
     if(do_printouts){
         dt_print = dt_print + dt;
-        if(dt_print > 3.0f){
-            PX4_INFO("\n");
+        if(dt_print > 0.8f){
+            PX4_INFO("\n\n\n");
             //PX4_INFO("dt:%2.5f", (double)dt);
             
+            my_rpm_topic_poll();
+            if(my_rpm_topic.status == 0){
+                print_my_rpm();
+            }
+            else{
+                PX4_INFO("my_rpm_topic sensors failed\n");
+            }
+
             //PX4_INFO("x:%2.2f, xd:%2.2f", (double)y(0,0), (double)y_setpoint(0,0));
             
             //PX4_INFO("m1:%2.4f, m2:%2.4f, m3:%2.4f, m4:%2.4f\n", (double)uf(0,0), (double)uf(1,0), (double)uf(2,0), (double)uf(3,0));
 
             //PX4_INFO("m5:%2.4f, m6:%2.4f, m7:%2.4f, m8:%2.4f\n", (double)uf(4,0), (double)uf(5,0), (double)uf(6,0), (double)uf(7,0));
 
+            PX4_INFO("y1(roll):%2.4f, y2(pitch):%2.4f, y3(yaw):%2.4f", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
             PX4_INFO("c1(roll):%2.4f, c2(pitch):%2.4f, c3(yaw):%2.4f, c4(thrust):%2.4f", (double)cf(0,0), (double)cf(1,0), (double)cf(2,0), (double)cf(3,0));
             //PX4_INFO("y1(roll):%2.4f, y2(pitch):%2.4f, y3(yaw):%2.4f", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
 
@@ -1214,6 +1235,7 @@ int My_LQR_control::printouts(){
 
             //PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
 
+            printf("\n");
             if(filter_status_omg == 1){
                 PX4_ERR("Filtering rates results in NANs!");
             }
@@ -1233,14 +1255,14 @@ int My_LQR_control::printouts(){
                 PX4_WARN("Gain scheduler restricted by Airspeed!");
             }
 
-            PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
+            //PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
             PX4_INFO("pitch setpoint [deg]: %3.1f", (double)rad2deg(pitch_setpoint));
             PX4_INFO("theta0 [deg]: %3.1f, theta proj [deg]: %3.1f", (double)rad2deg(theta0), (double)rad2deg(y(10,0)));    
             PX4_INFO("Scheduler interval: %d, f_int: %2.4f", case_int, (double)f_int);
 
             (K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
 
-            PX4_INFO("adapt Kp: %2.2f, adapt Kphi: %2.2f", (double)K_p_adapt, (double)K_phi_adapt);
+            //PX4_INFO("adapt Kp: %2.2f, adapt Kphi: %2.2f", (double)K_p_adapt, (double)K_phi_adapt);
 
             if(gains_limiter_on){
                 PX4_INFO("glm_p: %1.2f, glm_q: %1.2f, glm_r: %1.2f, glm_pksz: %1.4f", (double)gain_limiter(0,0), (double)gain_limiter(1,0), (double)gain_limiter(2,0), (double)pksz);
@@ -1555,6 +1577,84 @@ bool My_LQR_control::isbound(float val){
     return (val >= -100) && (val <= 100); // bounds for angular rates
 }
 
+
+int My_LQR_control::print_my_rpm(){
+    PX4_INFO("RPM front: %llu", my_rpm_topic.rpm);
+    PX4_INFO("current1: %d [A], current2: %d [A]", my_rpm_topic.current1, my_rpm_topic.current2);
+    printf("%s", "\ttelem1: ");
+    printf("%c", my_rpm_topic.telem1_1);
+    printf("%c", my_rpm_topic.telem1_2);
+    printf("%c", my_rpm_topic.telem1_3);
+    printf("%c", my_rpm_topic.telem1_4);
+    printf("%c", my_rpm_topic.telem1_5);
+    printf("%c", my_rpm_topic.telem1_6);
+    printf("%c", my_rpm_topic.telem1_7);
+    printf("%c", my_rpm_topic.telem1_8);
+    printf("%c", my_rpm_topic.telem1_9);
+    printf("%c", my_rpm_topic.telem1_10);
+    printf("%c", my_rpm_topic.telem1_11);
+    printf("%c", my_rpm_topic.telem1_12);
+    printf("%c", my_rpm_topic.telem1_13);
+    printf("%c", my_rpm_topic.telem1_14);
+    printf("%c", my_rpm_topic.telem1_15);
+    printf("%c", my_rpm_topic.telem1_16);
+    printf("%c", my_rpm_topic.telem1_17);
+    printf("%c", my_rpm_topic.telem1_18);
+    printf("%c", my_rpm_topic.telem1_19);
+    printf("%c", my_rpm_topic.telem1_20);
+    printf("%c", my_rpm_topic.telem1_21);
+    printf("%c", my_rpm_topic.telem1_22);
+    printf("%c", my_rpm_topic.telem1_23);
+    printf("%c", my_rpm_topic.telem1_24);
+    printf("%c", my_rpm_topic.telem1_25);
+    printf("%c", my_rpm_topic.telem1_26);
+    printf("%c", my_rpm_topic.telem1_27);
+    printf("%c", my_rpm_topic.telem1_28);
+    printf("%c", my_rpm_topic.telem1_29);
+    printf("%c", my_rpm_topic.telem1_30);
+    printf("%c", my_rpm_topic.telem1_31);
+    printf("%c", my_rpm_topic.telem1_32);
+    printf("%c", my_rpm_topic.telem1_33);
+    printf("%c", my_rpm_topic.telem1_34);
+    printf("%c", '\n');
+    printf("%s", "\ttelem2: ");
+    printf("%c", my_rpm_topic.telem2_1);
+    printf("%c", my_rpm_topic.telem2_2);
+    printf("%c", my_rpm_topic.telem2_3);
+    printf("%c", my_rpm_topic.telem2_4);
+    printf("%c", my_rpm_topic.telem2_5);
+    printf("%c", my_rpm_topic.telem2_6);
+    printf("%c", my_rpm_topic.telem2_7);
+    printf("%c", my_rpm_topic.telem2_8);
+    printf("%c", my_rpm_topic.telem2_9);
+    printf("%c", my_rpm_topic.telem2_10);
+    printf("%c", my_rpm_topic.telem2_11);
+    printf("%c", my_rpm_topic.telem2_12);
+    printf("%c", my_rpm_topic.telem2_13);
+    printf("%c", my_rpm_topic.telem2_14);
+    printf("%c", my_rpm_topic.telem2_15);
+    printf("%c", my_rpm_topic.telem2_16);
+    printf("%c", my_rpm_topic.telem2_17);
+    printf("%c", my_rpm_topic.telem2_18);
+    printf("%c", my_rpm_topic.telem2_19);
+    printf("%c", my_rpm_topic.telem2_20);
+    printf("%c", my_rpm_topic.telem2_21);
+    printf("%c", my_rpm_topic.telem2_22);
+    printf("%c", my_rpm_topic.telem2_23);
+    printf("%c", my_rpm_topic.telem2_24);
+    printf("%c", my_rpm_topic.telem2_25);
+    printf("%c", my_rpm_topic.telem2_26);
+    printf("%c", my_rpm_topic.telem2_27);
+    printf("%c", my_rpm_topic.telem2_28);
+    printf("%c", my_rpm_topic.telem2_29);
+    printf("%c", my_rpm_topic.telem2_30);
+    printf("%c", my_rpm_topic.telem2_31);
+    printf("%c", my_rpm_topic.telem2_32);
+    printf("%c", my_rpm_topic.telem2_33);
+    printf("%c", my_rpm_topic.telem2_34);
+    printf("%s", "\n\n");
+    return PX4_OK;
+}
 
 
 
