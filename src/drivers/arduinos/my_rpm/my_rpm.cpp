@@ -69,6 +69,7 @@
 
 #include <board_config.h>
 
+#define I2C_BUFF_SIZE (3 + 2*1 + 2*34)
 #define MY_RPM_BASE_DEVICE_PATH	"/dev/rpm"
 #define MY_RPM_MAX_SENSORS	12	// Maximum number of sensors on bus
 
@@ -132,7 +133,7 @@ private:
 	uint8_t				_cycle_counter;	/* counter in cycle to change i2c adresses */
 	int					_cycling_rate;	/* */
 	uint8_t				_index_counter;	/* temporary sonar i2c address */
-	px4::Array<uint8_t, MY_RPM_MAX_SENSORS>	addr_ind; 	/* temp sonar i2c address vector */
+	px4::Array<uint8_t, MY_RPM_MAX_SENSORS>	addr_ind; 	/* temp rpm i2c address vector */
 
 	/**
 	* Test whether the device supported by the driver is present at a
@@ -263,17 +264,17 @@ MY_RPM::init()
 	// XXX we should find out why we need to wait 200 ms here
 	px4_usleep(200000);
 
-	/* check for connected rangefinders on each i2c port:
+	/* check for connected sensors on each i2c port:
 	   We start from i2c base address (0x70 = 112) and count downwards
 	   So second iteration it uses i2c address 111, third iteration 110 and so on*/
 	for (unsigned counter = 0; counter <= MY_RPM_MAX_SENSORS; counter++) {
-		_index_counter = MY_RPM_BASEADDR - counter;	/* set temp sonar i2c address to base adress - counter */
-		set_device_address(_index_counter);			/* set I2c port to temp sonar i2c adress */
+		_index_counter = MY_RPM_BASEADDR - counter;	/* set temp rpm i2c address to base adress - counter */
+		set_device_address(_index_counter);			/* set I2c port to temp rpm i2c adress */
 		int ret2 = measure();
 
-		if (ret2 == 0) { /* sonar is present -> store address_index in array */
+		if (ret2 == 0) { /* sensor is present -> store address_index in array */
 			addr_ind.push_back(_index_counter);
-			PX4_DEBUG("sonar added");
+			PX4_DEBUG("sensor added");
 		}
 	}
 
@@ -288,12 +289,12 @@ MY_RPM::init()
 		_cycling_rate = TICKS_BETWEEN_SUCCESIVE_FIRES;
 	}
 
-	/* show the connected sonars in terminal */
+	/* show the connected sensors in terminal */
 	for (unsigned i = 0; i < addr_ind.size(); i++) {
-		PX4_DEBUG("sonar %d with address %d added", (i + 1), addr_ind[i]);
+		PX4_DEBUG("sensor %d with address %d added", (i + 1), addr_ind[i]);
 	}
 
-	PX4_DEBUG("Number of sonars connected: %lu", addr_ind.size());
+	PX4_DEBUG("Number of sensors connected: %lu", addr_ind.size());
 
 	ret = OK;
 	/* sensor is ok, but we don't really know if it is within range */
@@ -484,11 +485,11 @@ MY_RPM::collect()
 	int	ret = -EIO;
 
 	/* read from the sensor */
-	uint8_t val[3] = {0, 0, 0};
+	uint8_t val[I2C_BUFF_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 	perf_begin(_sample_perf);
 
-	ret = transfer(nullptr, 0, &val[0], 3);
+	ret = transfer(nullptr, 0, &val[0], I2C_BUFF_SIZE);
 
 	if (ret < 0) {
 		PX4_DEBUG("error reading from sensor: %d", ret);
@@ -497,15 +498,89 @@ MY_RPM::collect()
 		return ret;
 	}
 
-	uint64_t rpm = val[0];
-	math::constrain(rpm, _max_rpm, _min_rpm);
-
 	struct my_rpm_topic_s report;
 	report.timestamp = hrt_absolute_time();
-	report.rpm = rpm;
-	report.val0 = val[0];
-	report.val1 = val[1];
-	report.val2 = val[2];
+	report.rpm = val[0] + val[1]*100 + val[2]*10000;
+	report.current1 = val[3];
+	report.current2 = val[4];
+
+	int telem_start = 5;
+	report.telem1_1 = val[telem_start+0];
+	report.telem1_2 = val[telem_start+1];
+	report.telem1_3 = val[telem_start+2];
+	report.telem1_4 = val[telem_start+3];
+	report.telem1_5 = val[telem_start+4];
+	report.telem1_6 = val[telem_start+5];
+	report.telem1_7 = val[telem_start+6];
+	report.telem1_8 = val[telem_start+7];
+	report.telem1_9 = val[telem_start+8];
+	report.telem1_10 = val[telem_start+9];
+	report.telem1_11 = val[telem_start+10];
+	report.telem1_12 = val[telem_start+11];
+	report.telem1_13 = val[telem_start+12];
+	report.telem1_14 = val[telem_start+13];
+	report.telem1_15 = val[telem_start+14];
+	report.telem1_16 = val[telem_start+15];
+	report.telem1_17 = val[telem_start+16];
+	report.telem1_18 = val[telem_start+17];
+	report.telem1_19 = val[telem_start+18];
+	report.telem1_20 = val[telem_start+19];
+	report.telem1_21 = val[telem_start+20];
+	report.telem1_22 = val[telem_start+21];
+	report.telem1_23 = val[telem_start+22];
+	report.telem1_24 = val[telem_start+23];
+	report.telem1_25 = val[telem_start+24];
+	report.telem1_26 = val[telem_start+25];
+	report.telem1_27 = val[telem_start+25];
+	report.telem1_28 = val[telem_start+27];
+	report.telem1_29 = val[telem_start+28];
+	report.telem1_30 = val[telem_start+29];
+	report.telem1_31 = val[telem_start+30];
+	report.telem1_32 = val[telem_start+31];
+	report.telem1_33 = val[telem_start+32];
+	report.telem1_34 = val[telem_start+33];
+
+	telem_start = telem_start + 34;
+	report.telem2_1 = val[telem_start+0];
+	report.telem2_2 = val[telem_start+1];
+	report.telem2_3 = val[telem_start+2];
+	report.telem2_4 = val[telem_start+3];
+	report.telem2_5 = val[telem_start+4];
+	report.telem2_6 = val[telem_start+5];
+	report.telem2_7 = val[telem_start+6];
+	report.telem2_8 = val[telem_start+7];
+	report.telem2_9 = val[telem_start+8];
+	report.telem2_10 = val[telem_start+9];
+	report.telem2_11 = val[telem_start+10];
+	report.telem2_12 = val[telem_start+11];
+	report.telem2_13 = val[telem_start+12];
+	report.telem2_14 = val[telem_start+13];
+	report.telem2_15 = val[telem_start+14];
+	report.telem2_16 = val[telem_start+15];
+	report.telem2_17 = val[telem_start+16];
+	report.telem2_18 = val[telem_start+17];
+	report.telem2_19 = val[telem_start+18];
+	report.telem2_20 = val[telem_start+19];
+	report.telem2_21 = val[telem_start+20];
+	report.telem2_22 = val[telem_start+21];
+	report.telem2_23 = val[telem_start+22];
+	report.telem2_24 = val[telem_start+23];
+	report.telem2_25 = val[telem_start+24];
+	report.telem2_26 = val[telem_start+25];
+	report.telem2_27 = val[telem_start+25];
+	report.telem2_28 = val[telem_start+27];
+	report.telem2_29 = val[telem_start+28];
+	report.telem2_30 = val[telem_start+29];
+	report.telem2_31 = val[telem_start+30];
+	report.telem2_32 = val[telem_start+31];
+	report.telem2_33 = val[telem_start+32];
+	report.telem2_34 = val[telem_start+33];
+
+	
+	
+	
+
+
 
 	/* TODO: set proper ID */
 	report.id = _id;
