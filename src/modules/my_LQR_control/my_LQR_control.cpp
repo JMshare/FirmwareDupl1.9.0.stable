@@ -1206,6 +1206,7 @@ int My_LQR_control::printouts(){
             //PX4_INFO("m5:%2.4f, m6:%2.4f, m7:%2.4f, m8:%2.4f\n", (double)uf(4,0), (double)uf(5,0), (double)uf(6,0), (double)uf(7,0));
 
             PX4_INFO("c1(roll):%2.4f, c2(pitch):%2.4f, c3(yaw):%2.4f, c4(thrust):%2.4f", (double)cf(0,0), (double)cf(1,0), (double)cf(2,0), (double)cf(3,0));
+            //PX4_INFO("y1(roll):%2.4f, y2(pitch):%2.4f, y3(yaw):%2.4f", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
 
             //PX4_INFO("Dcf1:%2.2f, Dcf2:%2.2f, Dcf3:%2.2f, Dcf4:%2.2f\n", (double)Del_cf(0,0), (double)Del_cf(1,0), (double)Del_cf(2,0), (double)Del_cf(3,0));
 
@@ -1327,10 +1328,11 @@ k_scheds(4,0) =   1.30f; k_scheds(4,1) =   1.30f; k_scheds(4,2) =   4.6f; k_sche
 k_scheds(5,0) =  -0.0000f; k_scheds(5,1) =  -0.0000f; k_scheds(5,2) =  -0.0000f; k_scheds(5,3) =  -0.0000f; k_scheds(5,4) =  -0.0000f; k_scheds(5,5) =  -0.0000f; k_scheds(5,6) =  -0.0000f;
 k_scheds(6,0) =  -0.0000f; k_scheds(6,1) =  -0.0000f; k_scheds(6,2) =  -0.0000f; k_scheds(6,3) =  -0.0000f; k_scheds(6,4) =  -0.0000f; k_scheds(6,5) =  -0.0000f; k_scheds(6,6) =  -0.0000f;
 k_scheds(7,0) =   0.35f; k_scheds(7,1) =   0.35f; k_scheds(7,2) =   0.35f; k_scheds(7,3) =   0.35f; k_scheds(7,4) =   0.35f; k_scheds(7,5) =   0.35f; k_scheds(7,6) =   0.35f;
-k_scheds(8,0) =   0.00f; k_scheds(8,1) =   0.00f; k_scheds(8,2) =   0.20f; k_scheds(8,3) =   0.80f; k_scheds(8,4) =   0.8f; k_scheds(8,5) =   0.8f; k_scheds(8,6) =   0.8f;
+k_scheds(8,0) =   0.05f; k_scheds(8,1) =   0.05f; k_scheds(8,2) =   0.20f; k_scheds(8,3) =   0.80f; k_scheds(8,4) =   0.8f; k_scheds(8,5) =   0.8f; k_scheds(8,6) =   0.8f;
 k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_scheds(9,3) =   4.0f; k_scheds(9,4) =   4.0f; k_scheds(9,5) =   4.0f; k_scheds(9,6) =   4.0f; 
         tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.3963f; tht_ints(0,6) = 3.0f;
         // pitch angles (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
+        //// [pp, pr, rp, rr, ..., q, tht]
     }
     else{ // Not specified
         PX4_WARN("No airframe specified, using unit gains K");
