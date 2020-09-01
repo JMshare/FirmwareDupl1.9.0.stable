@@ -291,6 +291,7 @@ private:
 		float pitch_sp_max = 40.0f;
 		float yaw_setpoint = 0.0f;
 		float pitch_sp_min = 0.0f;
+		float pitch_setpoint_ramp = 0.0f;
 
 		Vector3f omg;
 		Vector3f omg_filtered;
@@ -303,6 +304,7 @@ private:
 		int case_int = 1;
 		int case_int_last = 1;
 		float f_int = 0.0f;
+		float tht_sched = 0;
 		const static int n_int = 6;
 		Matrix<float,1,n_int+1> tht_ints;
 		Matrix<float,10,n_int+1> k_scheds; // [pp, pr, rp, rr, ..., q, tht]

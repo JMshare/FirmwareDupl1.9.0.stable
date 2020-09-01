@@ -42,6 +42,7 @@ float32 del_c_eps_psi
 
 
 float32 pitch_setpoint 		# [deg]
+float32 pitch_setpoint_ramp # [deg]
 
 int32 proj_dpsi_status 		# status of the dpsi projection (0 off, 1 on, 10 projected+, -10 projected-)
 float32 dpsi 				# the dpsi value after projection [deg]
