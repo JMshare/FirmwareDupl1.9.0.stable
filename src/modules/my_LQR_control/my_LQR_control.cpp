@@ -718,7 +718,7 @@ int My_LQR_control::read_y_setpoint(){
 
     pitch_setpoint = deg2rad(pitch_sp_min) + ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
     //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
-    pitch_setpoint_ramp = pitch_setpoint_ramp + (dt/4.0f)*(pitch_setpoint - pitch_setpoint_ramp); // for use with gain scheduler
+    pitch_setpoint_ramp = pitch_setpoint_ramp + (dt/1.0f)*(pitch_setpoint - pitch_setpoint_ramp); // for use with gain scheduler
 
     /* 
     // Position/ velocity control
@@ -915,7 +915,8 @@ int My_LQR_control::gains_tune(){
 int My_LQR_control::gains_schedule(){
     if(schedule_K == 1){ 
         schedule_K_status = 1;
-        tht_sched = y(10,0); // set the scheduling variable to theta state
+        // tht_sched = y(10,0); // set the scheduling variable to theta state
+        tht_sched = pitch_setpoint_ramp; // set the scheduling variable to the theta setpoint
         for(int i = 0; i < n_int; i++){ // find interval
             f_int = (tht_sched - tht_ints(0,i))/(tht_ints(0,i+1) - tht_ints(0,i));
             if(f_int >= 0.0f && f_int <= 1.0f){
