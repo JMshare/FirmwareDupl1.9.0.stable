@@ -266,6 +266,9 @@ int My_LQR_control::my_rpm_topic_poll(){
         orb_copy(ORB_ID(my_rpm_topic), my_rpm_topic_sub, &my_rpm_topic);
         return PX4_OK;
     }
+    if((hrt_absolute_time() - my_rpm_topic.timestamp) > 2000000){ // if no new data for 2 seconds
+        my_rpm_topic.status = 5; // set different to zero
+    }
     return PX4_ERROR;
 }
 
