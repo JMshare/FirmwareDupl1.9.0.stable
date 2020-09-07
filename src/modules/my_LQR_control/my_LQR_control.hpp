@@ -403,7 +403,7 @@ private:
 
 
 	DEFINE_PARAMETERS(
-		(ParamFloat<px4::params::MY_LQR_THT_TRM>) theta_trim,
+		(ParamFloat<px4::params::MY_LQR_CQ_TRM>) cq_trim,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_P>) rc_scale_p,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_Q>) rc_scale_q,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_R>) rc_scale_r, 

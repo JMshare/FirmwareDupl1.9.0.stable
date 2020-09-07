@@ -1503,7 +1503,7 @@ int My_LQR_control::local_parameters_update(){
     RC_scale_base(1,0) = rc_scale_q.get();
     RC_scale_base(2,0) = rc_scale_r.get();
 
-    c_nominal_control(1,0) = theta_trim.get();
+    c_nominal_control(1,0) = cq_trim.get();
     
     Tf.setAll(0.0f);
     for(int i = 0; i < 4; i++){
