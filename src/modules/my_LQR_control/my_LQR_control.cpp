@@ -993,7 +993,6 @@ int My_LQR_control::adaptive_control(){
         K_feedback_y_sc_tun_sched(0,6) = K_p_adapt;
         K_feedback_y_sc_tun_sched(0,9) = K_phi_adapt;
     }
-
     return PX4_OK;
 }
 int My_LQR_control::gains_limiter_fun(){
@@ -1058,7 +1057,7 @@ int My_LQR_control::control_fun(){
 
     stabilisation_mode();
     Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg;
-    if(abs(proj_theta_status) == 10){ // swap roll and yaw proportional compensation if above 80 deg
+    if(abs(proj_theta_status) == 10){ // swap roll and yaw proportional compensation if above the treshold pitch deg
         Del_c(0,0) = -Del_c_eps(2,0)*c_eps_bool(2,0) + Del_c_omg(0,0);
         Del_c(2,0) = Del_c_eps(0,0)*c_eps_bool(0,0) + Del_c_omg(2,0);
     }
@@ -1222,8 +1221,11 @@ int My_LQR_control::printouts(){
             if(my_rpm_topic.status == 0){
                 print_my_rpm();
             }
-            else{
-                PX4_INFO("my_rpm_topic sensors failed\n");
+            else if(my_rpm_topic.status == 5){
+                PX4_INFO("my_rpm_topic sensors not updated\n");
+            }
+            else if(my_rpm_topic.status == 1){
+                PX4_INFO("my_rpm_topic sensors reading failed\n");
             }
 
             //PX4_INFO("x:%2.2f, xd:%2.2f", (double)y(0,0), (double)y_setpoint(0,0));
@@ -1349,7 +1351,7 @@ k_scheds(9,0) =   1.75f; k_scheds(9,1) =   1.75f; k_scheds(9,2) =   1.75f; k_sch
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.7414f; K_feedback_y(1,8) =  -0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
         K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.0000f; K_feedback_y(2,7) =  -0.0000f; K_feedback_y(2,8) =   0.7414f; K_feedback_y(2,9) =  -0.0000f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2910f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
-k_scheds(0,0) =   0.10f; k_scheds(0,1) =   0.10f; k_scheds(0,2) =   1.0f; k_scheds(0,3) =   1.2f; k_scheds(0,4) =   1.3f; k_scheds(0,5) =   1.45f; k_scheds(0,6) =   1.45f; 
+k_scheds(0,0) =   0.10f; k_scheds(0,1) =   0.10f; k_scheds(0,2) =   1.00f; k_scheds(0,3) =   1.20f; k_scheds(0,4) =   1.30f; k_scheds(0,5) =   1.45f; k_scheds(0,6) =   1.45f; 
 k_scheds(1,0) =   0.00f; k_scheds(1,1) =   0.00f; k_scheds(1,2) =   0.00f; k_scheds(1,3) =   0.00f; k_scheds(1,4) =   0.00f; k_scheds(1,5) =   0.00f; k_scheds(1,6) =   0.00f; 
 k_scheds(2,0) =   0.00f; k_scheds(2,1) =   0.00f; k_scheds(2,2) =   0.00f; k_scheds(2,3) =  -0.00f; k_scheds(2,4) =  -0.00f; k_scheds(2,5) =  -0.00f; k_scheds(2,6) =  -0.00f;
 k_scheds(3,0) =   0.30f; k_scheds(3,1) =   0.30f; k_scheds(3,2) =   3.0f; k_scheds(3,3) =   10.0f; k_scheds(3,4) =   10.0f; k_scheds(3,5) =   10.0f; k_scheds(3,6) =   10.0f;
