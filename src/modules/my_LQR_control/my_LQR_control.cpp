@@ -928,7 +928,7 @@ int My_LQR_control::gains_schedule(){
             }
         }
         airspeed_poll();
-        if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 20.0f)){ // checking if <50 as a safety check for infs or nans or bad readings
+        if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 17.0f)){ // checking if <50 as a safety check for infs or nans or bad readings
             case_int = 1;
             f_int = 0.0f;
             schedule_K_status = 2; // blocked by airspeed
