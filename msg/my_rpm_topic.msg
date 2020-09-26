@@ -3,7 +3,9 @@ uint64 timestamp                      # time since system start (microseconds)
 uint8 status 	# status of the sensor (0=OK, 1=fail)
 
 uint64 rpm      # indicated rotor Frequency in Revolution per minute
+uint8 current1_sign # sign of current from sensor 1
 uint8 current1 	# current from current sensor 1
+uint8 current2_sign # sign of current from sensor 2
 uint8 current2	# current from current sensor 2
 
 uint8 telem1_1 	# telem1 char values

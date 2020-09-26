@@ -69,7 +69,7 @@
 
 #include <board_config.h>
 
-#define I2C_BUFF_SIZE (3 + 2*1 + 2*34)
+#define I2C_BUFF_SIZE (3 + 2*2 + 2*34)
 #define MY_RPM_BASE_DEVICE_PATH	"/dev/rpm"
 #define MY_RPM_MAX_SENSORS	12	// Maximum number of sensors on bus
 
@@ -494,10 +494,12 @@ MY_RPM::collect()
 	struct my_rpm_topic_s report;
 	report.timestamp = hrt_absolute_time();
 	report.rpm = val[0] + val[1]*100 + val[2]*10000;
-	report.current1 = val[3];
-	report.current2 = val[4];
+	report.current1_sign = val[3];
+	report.current1 = val[4];
+	report.current2_sign = val[5];
+	report.current2 = val[6];
 
-	int telem_start = 5;
+	int telem_start = 7;
 	report.telem1_1 = val[telem_start+0];
 	report.telem1_2 = val[telem_start+1];
 	report.telem1_3 = val[telem_start+2];
