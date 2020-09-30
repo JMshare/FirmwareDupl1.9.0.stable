@@ -220,13 +220,14 @@ int My_LQR_control::manual_control_setpoint_poll(){
 
 int My_LQR_control::rc_channels_poll(){
     bool rc_channels_updated;
+    int ret = PX4_ERROR;
     orb_check(rc_channels_sub, &rc_channels_updated);
     if(rc_channels_updated){
         orb_copy(ORB_ID(rc_channels), rc_channels_sub, &rc_channels);
-        rc_loss_failsafe();
-        return PX4_OK;
+        ret = PX4_OK;
     }
-    return PX4_ERROR;
+    rc_loss_failsafe();
+    return ret;
 }
 
 int My_LQR_control::actuator_controls_virtual_poll(){
