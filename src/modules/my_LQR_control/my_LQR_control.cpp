@@ -310,11 +310,16 @@ int My_LQR_control::angular_rates_filtered_publish(){
     angular_rates_filtered.roll = eps_filtered(0);
     angular_rates_filtered.pitch = eps_filtered(1);
     angular_rates_filtered.yaw = eps_filtered(2);
+    angular_rates_filtered.rc_roll = RC_filtered(0);
+    angular_rates_filtered.rc_pitch = RC_filtered(1);
+    angular_rates_filtered.rc_yaw = RC_filtered(2);
     angular_rates_filtered.loop_update_freqn = loop_update_freqn;
     angular_rates_filtered.cutoff_freqn_omg = cutoff_freqn_omg;
     angular_rates_filtered.filter_status_omg = filter_status_omg;
     angular_rates_filtered.cutoff_freqn_eps = cutoff_freqn_eps;
     angular_rates_filtered.filter_status_eps = filter_status_eps;
+    angular_rates_filtered.cutoff_freqn_rc = cutoff_freqn_RC;
+    angular_rates_filtered.filter_status_rc = filter_status_RC;
     angular_rates_filtered.lpf_order = lpf_order;
     
     angular_rates_filtered.timestamp = hrt_absolute_time();
@@ -560,6 +565,7 @@ int My_LQR_control::timer_clock(){
             lp2_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
             lp3_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
             lp3_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
+            lp2_filter_RC.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_RC);
         }
         dt_loop = 0.0f;
         loop_counter = 0.0f;
@@ -680,13 +686,38 @@ int My_LQR_control::filter_eps(){
         }
         filter_status_eps = 0; // ok
         if(!isbound(eps_filtered(0)) || !isbound(eps_filtered(1)) || !isbound(eps_filtered(2))){ 
-            eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_eps = 1; // whops
+            if(!isbound(eps(0)) || !isbound(eps(1)) || !isbound(eps(2))){ // check the orig eps
+                eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
+            }
+            else{ // if they are bounded
+                eps_filtered = eps; // better to use the non-filtered than nothing
+            }
         }
     }
     else{
         eps_filtered = eps; 
         filter_status_eps = 2; // no cutoff
+    }
+
+    return PX4_OK;
+}
+int My_LQR_control::filter_RC(){
+    RC(0) = rc_channels.channels[0];
+    RC(1) = rc_channels.channels[1];
+    RC(2) = rc_channels.channels[2];
+
+    if(cutoff_freqn_RC <= 100.0f){
+        RC_filtered = lp2_filter_RC.apply(RC);
+        filter_status_RC = 0; // ok
+        if(!isbound(RC_filtered(0)) || !isbound(RC_filtered(1)) || !isbound(RC_filtered(2))){ 
+            filter_status_RC = 1; // whops
+            RC_filtered = RC; // definitely better to use the non-filtered than nothing
+        }
+    }
+    else{
+        RC_filtered = RC; 
+        filter_status_RC = 2; // no cutoff
     }
 
     return PX4_OK;
@@ -700,6 +731,7 @@ int My_LQR_control::read_setpoints(){
     // manual_control_setpoint_poll();
     // vehicle_local_position_setpoint_poll();
     rc_channels_poll();
+    filter_RC();
     read_y_setpoint();
     read_c_setpoint();
     return PX4_OK;
@@ -733,9 +765,9 @@ int My_LQR_control::read_y_setpoint(){
     */
 
     // Attitude control
-    y_setpoint(6,0) =  rc_channels.channels[0];
-    y_setpoint(7,0) = -rc_channels.channels[1];
-    y_setpoint(8,0) =  rc_channels.channels[2];
+    y_setpoint(6,0) =  RC(0);
+    y_setpoint(7,0) = -RC(1);
+    y_setpoint(8,0) =  RC(2);
     y_setpoint(9,0) = 0.0f;
     y_setpoint(10,0) = pitch_setpoint;
     y_setpoint(11,0) = yaw_setpoint;
@@ -752,11 +784,11 @@ int My_LQR_control::omg_setpoints_scale(){
     RC_scale = RC_scale_base;
     if(do_rc_scale){
         for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
-            f_scale = K_feedback_y_sc_tun_sched(i,9+i); // this scales the RC such that I reach exactly eps==1 at c==1 (omg==0).
+            f_scale = K_feedback_y_sc_tun_sched(i,9+i); // this scales the RC such that I reach exactly eps==1[rad]~57.3[deg] at c==1 (omg==0).
             
-            p_scale = fabsf(Del_y_eps(i,0))/RC_scale_base(i,0); // however it may make the RC scale so small that it would give very small inputs at eps==0.
+            p_scale = fabsf(Del_y_eps(i,0))/RC_scale_base(i,0); // however it may make the RC scale so small that it would give very small inputs at eps==0 if Keps->0. Same way, if keps->large, I get overreactions at eps==0.
             if(p_scale < 1.0f){
-                f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale; // so I do a linear interpolation between the base RC at eps==0 and the scaled RC at eps==1
+                f_scale = 1.0f + (K_feedback_y_sc_tun_sched(i,9+i) - 1)*p_scale; // so I do a linear interpolation between the base RC at eps==0 and the scaled RC at eps==1 (eps=1*RC_scale_base)
             }
 
             RC_scale(i,0) *= f_scale;
@@ -1255,8 +1287,8 @@ int My_LQR_control::printouts(){
             if(filter_status_eps == 1){
                 PX4_ERR("Filtering angles results in NANs!");
             }
-            if(filter_status_eps == 0){
-                PX4_WARN("Filtering eps on!");
+            if(filter_status_RC == 1){
+                PX4_ERR("Filtering RC results in NANs!");
             }
             if(control_status == 1){
                 PX4_ERR("Control resulted in NANs! Using manual.");
@@ -1458,6 +1490,12 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     angular_rates_filtered.pitch = 0.0f;
     angular_rates_filtered.yaw = 0.0f;
     angular_rates_filtered.cutoff_freqn_eps = cutoff_freqn_eps;
+    RC.setAll(0.0f);
+    RC_filtered.setAll(0.0f);
+    angular_rates_filtered.rc_roll = 0.0f;
+    angular_rates_filtered.rc_pitch = 0.0f;
+    angular_rates_filtered.rc_yaw = 0.0f;
+    angular_rates_filtered.cutoff_freqn_rc = cutoff_freqn_RC;
 
     my_rpm_topic.status = 1; // manually preset different to zero to make sure it's faulty if no updates
 
@@ -1528,6 +1566,10 @@ int My_LQR_control::local_parameters_update(){
         cutoff_freqn_eps = math::constrain(cutoff_fn_eps.get(), 1.0f, 300.0f);
         lp2_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
         lp3_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
+    }
+    if(fabsf(cutoff_freqn_RC - math::constrain(cutoff_fn_RC.get(), 1.0f, 300.0f)) > 0.1f){
+        cutoff_freqn_RC = math::constrain(cutoff_fn_RC.get(), 1.0f, 300.0f);
+        lp2_filter_RC.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_RC);
     }
 
     tailerons_scaling = tailerons_sc.get();

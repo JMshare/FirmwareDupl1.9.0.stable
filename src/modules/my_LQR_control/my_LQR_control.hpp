@@ -148,6 +148,7 @@ private:
         int convert_quaternions();
         int filter_omg();
         int filter_eps();
+        int filter_RC();
         int read_setpoints();
         int read_y_setpoint();
         int read_c_setpoint();
@@ -301,6 +302,13 @@ private:
 		int filter_status_omg = 0;
 		int lpf_order = 3; // order of the lp filter to use
 
+		Vector3f RC;
+		Vector3f RC_filtered;
+		float cutoff_freqn_RC = 5.0f;
+		math::LowPassFilter2pVector3f lp2_filter_RC{loop_update_freqn, cutoff_freqn_RC};
+		int filter_status_RC = 0;
+
+
 		int case_int = 1;
 		int case_int_last = 1;
 		float f_int = 0.0f;
@@ -437,8 +445,9 @@ private:
         (ParamFloat<px4::params::MY_LQR_DV_LIM>) dv_lim,
         (ParamFloat<px4::params::MY_LQR_DOMG_LIM>) domg_lim,
         (ParamFloat<px4::params::MY_LQR_DEPS_LIM>) deps_lim,
-        (ParamFloat<px4::params::MY_LQR_RTS_CTF_O>) cutoff_fn_omg,
-        (ParamFloat<px4::params::MY_LQR_RTS_CTF_E>) cutoff_fn_eps,
+        (ParamFloat<px4::params::MY_LQR_CTF_OMG>) cutoff_fn_omg,
+        (ParamFloat<px4::params::MY_LQR_CTF_EPS>) cutoff_fn_eps,
+        (ParamFloat<px4::params::MY_LQR_CTF_RC>) cutoff_fn_RC,
         (ParamInt<px4::params::MY_LQR_LPF_ORD>) lpf_ord,
         (ParamFloat<px4::params::MY_LQR_TAILERONS>) tailerons_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSP>) motorons_p_sc,

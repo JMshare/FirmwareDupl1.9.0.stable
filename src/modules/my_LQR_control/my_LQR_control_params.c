@@ -82,7 +82,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_CQ_TRM, 0.0f);
  * @increment 0.1
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_O, 5.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_CTF_OMG, 5.0f);
 
 /**
  * Cutoff frequency for angles filter
@@ -94,7 +94,19 @@ PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_O, 5.0f);
  * @increment 0.1
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_RTS_CTF_E, 250.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_CTF_EPS, 250.0f);
+
+/**
+ * Cutoff frequency for RC
+ *
+ * @unit [Hz]
+ * @min 0
+ * @max 250
+ * @decimal 1
+ * @increment 0.1
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_CTF_RC, 5.0f);
 
 /**
  * LPF order

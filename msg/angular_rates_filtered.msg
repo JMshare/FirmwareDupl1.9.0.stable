@@ -18,4 +18,12 @@ int32 filter_status_eps 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutoff
 
 int32 lpf_order		# order of the lpf used
 
+float32 rc_roll		    # filtered RC roll input 
+float32 rc_pitch		# filtered RC pitch input
+float32 rc_yaw			# filtered RC yaw input
+float32 cutoff_freqn_rc # cutoff param in lp_filter_RC
+int32 filter_status_rc 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn)
+# always using 2nd order for RC for safety
+
+
 # TOPICS angular_rates_filtered
