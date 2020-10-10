@@ -400,6 +400,8 @@ private:
     	float dtlim = 0.2f;
     	math::Detect_oscillations_Vector3f detected_oscillations{pksz, dtlim};
 
+    	float current1 = 0.0f;
+    	float current2 = 0.0f;
 		
 		
 

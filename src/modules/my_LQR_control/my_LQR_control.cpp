@@ -265,10 +265,14 @@ int My_LQR_control::my_rpm_topic_poll(){
     orb_check(my_rpm_topic_sub, &my_rpm_topic_updated);
     if(my_rpm_topic_updated){
         orb_copy(ORB_ID(my_rpm_topic), my_rpm_topic_sub, &my_rpm_topic);
+        current1 = 0.9f*current1 + 0.1f*my_rpm_topic.current1;
+        current2 = 0.9f*current2 + 0.1f*my_rpm_topic.current2;
         return PX4_OK;
     }
     if((hrt_absolute_time() - my_rpm_topic.timestamp) > 2000000){ // if no new data for 2 seconds
         my_rpm_topic.status = 5; // set different to zero
+        current1 = 0.0f;
+        current2 = 0.0f;
     }
     return PX4_ERROR;
 }
@@ -1634,7 +1638,7 @@ bool My_LQR_control::isbound(float val){
 
 int My_LQR_control::print_my_rpm(){
     PX4_INFO("RPM front: %llu", my_rpm_topic.rpm);
-    PX4_INFO("current1: %d [A], current2: %d [A]", my_rpm_topic.current1, my_rpm_topic.current2);
+    PX4_INFO("current1: %ld [A], current2: %ld [A]", lroundf(current1), lroundf(current2));
     printf("%s", "\ttelem1: ");
     printf("%c", my_rpm_topic.telem1_1);
     printf("%c", my_rpm_topic.telem1_2);
