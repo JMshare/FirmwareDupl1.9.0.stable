@@ -1249,12 +1249,12 @@ int My_LQR_control::bound_controls(){
 
 int My_LQR_control::printouts(){
     if(do_printouts){
+        my_rpm_topic_poll();
         dt_print = dt_print + dt;
         if(dt_print > 2.0f){
             PX4_INFO("\n\n\n");
             //PX4_INFO("dt:%2.5f", (double)dt);
             
-            my_rpm_topic_poll();
             if(my_rpm_topic.status == 0){
                 print_my_rpm();
             }
