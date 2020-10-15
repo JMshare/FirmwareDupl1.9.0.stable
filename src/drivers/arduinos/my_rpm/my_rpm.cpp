@@ -93,6 +93,10 @@
 # error This requires CONFIG_SCHED_WORKQUEUE.
 #endif
 
+uint8_t val0[I2C_BUFF_SIZE] = {99, 99, 99, 0, 99, 0, 99, 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z'};
+uint8_t val[I2C_BUFF_SIZE];
+
+
 class MY_RPM : public device::I2C
 {
 public:
@@ -484,8 +488,9 @@ MY_RPM::collect()
 {
 	int	ret = -EIO;
 
-	/* read from the sensor */
-	uint8_t val[I2C_BUFF_SIZE] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+	for(int i=0; i<I2C_BUFF_SIZE; i++){ // set to 0
+		val[i] = val0[i];
+	}
 
 	perf_begin(_sample_perf);
 
