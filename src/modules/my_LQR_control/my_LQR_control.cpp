@@ -661,14 +661,24 @@ int My_LQR_control::filter_omg(){
     omg(2) = vehicle_attitude.yawspeed;
 
     if(cutoff_freqn_omg <= 100.0f){
-        if(lpf_order == 2){
-            omg_filtered = lp2_filter_omg.apply(omg);
+        omg_filtered_temp_lp2 = lp2_filter_omg.apply(omg);
+        omg_filtered_temp_lp3 = lp3_filter_omg.apply(omg);
+        filter_status_omg = 0; // ok
+        if((lpf_order == 3) && (isbound(omg_filtered_temp_lp3(0)) && isbound(omg_filtered_temp_lp3(1)) && isbound(omg_filtered_temp_lp3(2)))){
+            omg_filtered = omg_filtered_temp_lp3;
+        }
+        else if((lpf_order == 2) && (isbound(omg_filtered_temp_lp2(0)) && isbound(omg_filtered_temp_lp2(1)) && isbound(omg_filtered_temp_lp2(2)))){
+            omg_filtered = omg_filtered_temp_lp2;
+        }
+        else if(isbound(omg_filtered_temp_lp3(0)) && isbound(omg_filtered_temp_lp3(1)) && isbound(omg_filtered_temp_lp3(2))){ // not looking anymore on the filter preference
+            omg_filtered = omg_filtered_temp_lp3;
+            filter_status_omg = 23; // overriden by lpf3
+        }
+        else if(isbound(omg_filtered_temp_lp2(0)) && isbound(omg_filtered_temp_lp2(1)) && isbound(omg_filtered_temp_lp2(2))){
+            omg_filtered = omg_filtered_temp_lp2;
+            filter_status_omg = 22; // overriden by lpf2
         }
         else{
-            omg_filtered = lp3_filter_omg.apply(omg);
-        }
-        filter_status_omg = 0; // ok
-        if(!isbound(omg_filtered(0)) || !isbound(omg_filtered(1)) || !isbound(omg_filtered(2))){ 
             omg_filtered = omg*0.0f; // turn it off to prevent feeding vibrations to servos
             filter_status_omg = 1; // whops
         }
@@ -682,21 +692,30 @@ int My_LQR_control::filter_omg(){
 }
 int My_LQR_control::filter_eps(){
     if(cutoff_freqn_eps <= 100.0f){
-        if(lpf_order == 2){
-            eps_filtered = lp2_filter_eps.apply(eps);
-        }
-        else{
-            eps_filtered = lp3_filter_eps.apply(eps);
-        }
+        eps_filtered_temp_lp2 = lp2_filter_eps.apply(eps);
+        eps_filtered_temp_lp3 = lp3_filter_eps.apply(eps);
         filter_status_eps = 0; // ok
-        if(!isbound(eps_filtered(0)) || !isbound(eps_filtered(1)) || !isbound(eps_filtered(2))){ 
-            filter_status_eps = 1; // whops
-            if(!isbound(eps(0)) || !isbound(eps(1)) || !isbound(eps(2))){ // check the orig eps
-                eps_filtered = eps*0.0f; // turn it off to prevent feeding vibrations to servos
-            }
-            else{ // if they are bounded
+        if((lpf_order == 3) && (isbound(eps_filtered_temp_lp3(0)) && isbound(eps_filtered_temp_lp3(1)) && isbound(eps_filtered_temp_lp3(2)))){
+            eps_filtered = eps_filtered_temp_lp3;
+        }
+        else if((lpf_order == 2) && (isbound(eps_filtered_temp_lp2(0)) && isbound(eps_filtered_temp_lp2(1)) && isbound(eps_filtered_temp_lp2(2)))){
+            eps_filtered = eps_filtered_temp_lp2;
+        }
+        else if(isbound(eps_filtered_temp_lp3(0)) && isbound(eps_filtered_temp_lp3(1)) && isbound(eps_filtered_temp_lp3(2))){ // not looking anymore on the filter preference
+            eps_filtered = eps_filtered_temp_lp3;
+            filter_status_eps = 23; // overriden by lpf3
+        }
+        else if(isbound(eps_filtered_temp_lp2(0)) && isbound(eps_filtered_temp_lp2(1)) && isbound(eps_filtered_temp_lp2(2))){
+            eps_filtered = eps_filtered_temp_lp2;
+            filter_status_eps = 22; // overriden by lpf2
+        }
+        else if(isbound(eps(0)) && isbound(eps(1)) && isbound(eps(2))){ // check the orig eps
                 eps_filtered = eps; // better to use the non-filtered than nothing
-            }
+                filter_status_eps = 10; // overriden by non-filtered
+        }
+        else{ // if they are not bounded
+                eps_filtered = eps*0.0f; // then no point feeding them back 
+                filter_status_eps = 1; // whops
         }
     }
     else{
@@ -1483,6 +1502,8 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     }
     omg.setAll(0.0f);
     omg_filtered.setAll(0.0f);
+    omg_filtered_temp_lp2.setAll(0.0f);
+    omg_filtered_temp_lp3.setAll(0.0f);
     angular_rates_filtered.rollspeed = 0.0f;
     angular_rates_filtered.pitchspeed = 0.0f;
     angular_rates_filtered.yawspeed = 0.0f;
@@ -1490,6 +1511,8 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     angular_rates_filtered.cutoff_freqn_omg = cutoff_freqn_omg;
     eps.setAll(0.0f);
     eps_filtered.setAll(0.0f);
+    eps_filtered_temp_lp2.setAll(0.0f);
+    eps_filtered_temp_lp3.setAll(0.0f);
     angular_rates_filtered.roll = 0.0f;
     angular_rates_filtered.pitch = 0.0f;
     angular_rates_filtered.yaw = 0.0f;

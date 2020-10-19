@@ -286,6 +286,8 @@ private:
 		math::LowPassFilter2pVector3f lp2_filter_eps{loop_update_freqn, cutoff_freqn_eps};
 		math::LowPassFilter3pVector3f lp3_filter_eps{loop_update_freqn, cutoff_freqn_eps};
 		int filter_status_eps = 0;
+		Vector3f eps_filtered_temp_lp2;
+		Vector3f eps_filtered_temp_lp3;
 
 		float thrust_setpoint = 0.0f;
 		float pitch_setpoint = 0.0f;
@@ -301,6 +303,8 @@ private:
 		math::LowPassFilter3pVector3f lp3_filter_omg{loop_update_freqn, cutoff_freqn_omg};
 		int filter_status_omg = 0;
 		int lpf_order = 3; // order of the lp filter to use
+		Vector3f omg_filtered_temp_lp2;
+		Vector3f omg_filtered_temp_lp3;
 
 		Vector3f RC;
 		Vector3f RC_filtered;

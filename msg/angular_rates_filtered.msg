@@ -8,13 +8,13 @@ float32 pitchspeed		# filtered angular velocity about Y body axis in rad/s
 float32 yawspeed		# filtered angular velocity about Z body axis in rad/s
 float32 loop_update_freqn # update rate param in lp_filter_omg and lp_fiter_eps
 float32 cutoff_freqn_omg # cutoff param in lp_filter_omg
-int32 filter_status_omg 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn)
+int32 filter_status_omg 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn, 22 Nans so lp2, 23 Nans so lp3)
 
 float32 roll		# filtered roll about X body axis in rad
 float32 pitch		# filtered pitch about Y body axis in rad
 float32 yaw			# filtered yaw about Z body axis in rad
 float32 cutoff_freqn_eps # cutoff param in lp_filter_eps
-int32 filter_status_eps 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn)
+int32 filter_status_eps 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn, 10 NaNs so eps fed in, 22 Nans so lp2, 23 Nans so lp3)
 
 int32 lpf_order		# order of the lpf used
 
