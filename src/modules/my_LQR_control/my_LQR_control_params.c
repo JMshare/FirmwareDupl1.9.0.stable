@@ -106,7 +106,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_CTF_EPS, 250.0f);
  * @increment 0.1
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_CTF_RC, 5.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_CTF_RC, 250.0f);
 
 /**
  * LPF order

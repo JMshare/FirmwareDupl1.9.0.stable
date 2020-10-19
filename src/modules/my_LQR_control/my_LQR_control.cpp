@@ -788,9 +788,9 @@ int My_LQR_control::read_y_setpoint(){
     */
 
     // Attitude control
-    y_setpoint(6,0) =  RC(0);
-    y_setpoint(7,0) = -RC(1);
-    y_setpoint(8,0) =  RC(2);
+    y_setpoint(6,0) =  RC_filtered(0);
+    y_setpoint(7,0) = -RC_filtered(1);
+    y_setpoint(8,0) =  RC_filtered(2);
     y_setpoint(9,0) = 0.0f;
     y_setpoint(10,0) = pitch_setpoint;
     y_setpoint(11,0) = yaw_setpoint;
