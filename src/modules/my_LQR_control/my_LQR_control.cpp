@@ -984,7 +984,7 @@ int My_LQR_control::gains_schedule(){
             }
         }
         airspeed_poll();
-        if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 17.0f)){ // checking if <50 as a safety check for infs or nans or bad readings
+        if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 17.0f)){ // checking if <50 as a safety check for infs or nans or bad readings. You control the gains by pitch setpoint now, but if it happens for example in transitions that the airspeed is still high, then keep them lower.
             case_int = 1;
             f_int = 0.0f;
             schedule_K_status = 2; // blocked by airspeed
@@ -1316,9 +1316,10 @@ int My_LQR_control::printouts(){
             if(control_status == 1){
                 PX4_ERR("Control resulted in NANs! Using manual.");
             }
-            if(schedule_K_status == 2){
+            
+            /*if(schedule_K_status == 2){
                 PX4_WARN("Gain scheduler restricted by Airspeed!");
-            }
+            }*/
 
             //PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
             PX4_INFO("pitch setpoint [deg]: %3.1f", (double)rad2deg(pitch_setpoint));
