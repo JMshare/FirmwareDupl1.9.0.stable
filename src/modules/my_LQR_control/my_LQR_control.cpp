@@ -1322,7 +1322,7 @@ int My_LQR_control::printouts(){
             }*/
 
             //PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
-            PX4_INFO("V= %3.1f m/s, alt= %3.1f m", (double)airspeed.true_airspeed_m_s, -(double)vehicle_local_position.z);
+            PX4_WARN("V= %3.1f m/s, alt= %3.1f m", (double)airspeed.true_airspeed_m_s, -(double)vehicle_local_position.z); // using warn here cos that will log. Can debug if the printouts stop
             PX4_INFO("pitch setpoint [deg]: %3.1f", (double)rad2deg(pitch_setpoint));
             PX4_INFO("theta0 [deg]: %3.1f, theta proj [deg]: %3.1f", (double)rad2deg(theta0), (double)rad2deg(y(10,0)));    
             PX4_INFO("Scheduler interval: %d, f_int: %2.4f", case_int, (double)f_int);
