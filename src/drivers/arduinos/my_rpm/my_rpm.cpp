@@ -69,7 +69,7 @@
 
 #include <board_config.h>
 
-#define I2C_BUFF_SIZE (3 + 2*2 + 2*34)
+#define I2C_BUFF_SIZE (3 + 2*2 + 1+34)
 #define MY_RPM_BASE_DEVICE_PATH	"/dev/rpm"
 #define MY_RPM_MAX_SENSORS	12	// Maximum number of sensors on bus
 
@@ -93,7 +93,7 @@
 # error This requires CONFIG_SCHED_WORKQUEUE.
 #endif
 
-uint8_t val0[I2C_BUFF_SIZE] = {99, 99, 99, 0, 99, 0, 99, 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z'};
+uint8_t val0[I2C_BUFF_SIZE] = {99, 99, 99, 0, 99, 0, 99, 0, 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z', 'z'};
 uint8_t val[I2C_BUFF_SIZE];
 
 
@@ -504,77 +504,81 @@ MY_RPM::collect()
 	report.current2_sign = val[5];
 	report.current2 = val[6];
 
-	int telem_start = 7;
-	report.telem1_1 = val[telem_start+0];
-	report.telem1_2 = val[telem_start+1];
-	report.telem1_3 = val[telem_start+2];
-	report.telem1_4 = val[telem_start+3];
-	report.telem1_5 = val[telem_start+4];
-	report.telem1_6 = val[telem_start+5];
-	report.telem1_7 = val[telem_start+6];
-	report.telem1_8 = val[telem_start+7];
-	report.telem1_9 = val[telem_start+8];
-	report.telem1_10 = val[telem_start+9];
-	report.telem1_11 = val[telem_start+10];
-	report.telem1_12 = val[telem_start+11];
-	report.telem1_13 = val[telem_start+12];
-	report.telem1_14 = val[telem_start+13];
-	report.telem1_15 = val[telem_start+14];
-	report.telem1_16 = val[telem_start+15];
-	report.telem1_17 = val[telem_start+16];
-	report.telem1_18 = val[telem_start+17];
-	report.telem1_19 = val[telem_start+18];
-	report.telem1_20 = val[telem_start+19];
-	report.telem1_21 = val[telem_start+20];
-	report.telem1_22 = val[telem_start+21];
-	report.telem1_23 = val[telem_start+22];
-	report.telem1_24 = val[telem_start+23];
-	report.telem1_25 = val[telem_start+24];
-	report.telem1_26 = val[telem_start+25];
-	report.telem1_27 = val[telem_start+26];
-	report.telem1_28 = val[telem_start+27];
-	report.telem1_29 = val[telem_start+28];
-	report.telem1_30 = val[telem_start+29];
-	report.telem1_31 = val[telem_start+30];
-	report.telem1_32 = val[telem_start+31];
-	report.telem1_33 = val[telem_start+32];
-	report.telem1_34 = val[telem_start+33];
-
-	telem_start = telem_start + 34;
-	report.telem2_1 = val[telem_start+0];
-	report.telem2_2 = val[telem_start+1];
-	report.telem2_3 = val[telem_start+2];
-	report.telem2_4 = val[telem_start+3];
-	report.telem2_5 = val[telem_start+4];
-	report.telem2_6 = val[telem_start+5];
-	report.telem2_7 = val[telem_start+6];
-	report.telem2_8 = val[telem_start+7];
-	report.telem2_9 = val[telem_start+8];
-	report.telem2_10 = val[telem_start+9];
-	report.telem2_11 = val[telem_start+10];
-	report.telem2_12 = val[telem_start+11];
-	report.telem2_13 = val[telem_start+12];
-	report.telem2_14 = val[telem_start+13];
-	report.telem2_15 = val[telem_start+14];
-	report.telem2_16 = val[telem_start+15];
-	report.telem2_17 = val[telem_start+16];
-	report.telem2_18 = val[telem_start+17];
-	report.telem2_19 = val[telem_start+18];
-	report.telem2_20 = val[telem_start+19];
-	report.telem2_21 = val[telem_start+20];
-	report.telem2_22 = val[telem_start+21];
-	report.telem2_23 = val[telem_start+22];
-	report.telem2_24 = val[telem_start+23];
-	report.telem2_25 = val[telem_start+24];
-	report.telem2_26 = val[telem_start+25];
-	report.telem2_27 = val[telem_start+26];
-	report.telem2_28 = val[telem_start+27];
-	report.telem2_29 = val[telem_start+28];
-	report.telem2_30 = val[telem_start+29];
-	report.telem2_31 = val[telem_start+30];
-	report.telem2_32 = val[telem_start+31];
-	report.telem2_33 = val[telem_start+32];
-	report.telem2_34 = val[telem_start+33];
+	uint8_t telemID = val[7];
+	int telem_start = 8;
+	if(telemID == 1){
+		report.telem1_1 = val[telem_start+0];
+		report.telem1_2 = val[telem_start+1];
+		report.telem1_3 = val[telem_start+2];
+		report.telem1_4 = val[telem_start+3];
+		report.telem1_5 = val[telem_start+4];
+		report.telem1_6 = val[telem_start+5];
+		report.telem1_7 = val[telem_start+6];
+		report.telem1_8 = val[telem_start+7];
+		report.telem1_9 = val[telem_start+8];
+		report.telem1_10 = val[telem_start+9];
+		report.telem1_11 = val[telem_start+10];
+		report.telem1_12 = val[telem_start+11];
+		report.telem1_13 = val[telem_start+12];
+		report.telem1_14 = val[telem_start+13];
+		report.telem1_15 = val[telem_start+14];
+		report.telem1_16 = val[telem_start+15];
+		report.telem1_17 = val[telem_start+16];
+		report.telem1_18 = val[telem_start+17];
+		report.telem1_19 = val[telem_start+18];
+		report.telem1_20 = val[telem_start+19];
+		report.telem1_21 = val[telem_start+20];
+		report.telem1_22 = val[telem_start+21];
+		report.telem1_23 = val[telem_start+22];
+		report.telem1_24 = val[telem_start+23];
+		report.telem1_25 = val[telem_start+24];
+		report.telem1_26 = val[telem_start+25];
+		report.telem1_27 = val[telem_start+26];
+		report.telem1_28 = val[telem_start+27];
+		report.telem1_29 = val[telem_start+28];
+		report.telem1_30 = val[telem_start+29];
+		report.telem1_31 = val[telem_start+30];
+		report.telem1_32 = val[telem_start+31];
+		report.telem1_33 = val[telem_start+32];
+		report.telem1_34 = val[telem_start+33];
+	}
+	else if(telemID == 2){
+		report.telem2_1 = val[telem_start+0];
+		report.telem2_2 = val[telem_start+1];
+		report.telem2_3 = val[telem_start+2];
+		report.telem2_4 = val[telem_start+3];
+		report.telem2_5 = val[telem_start+4];
+		report.telem2_6 = val[telem_start+5];
+		report.telem2_7 = val[telem_start+6];
+		report.telem2_8 = val[telem_start+7];
+		report.telem2_9 = val[telem_start+8];
+		report.telem2_10 = val[telem_start+9];
+		report.telem2_11 = val[telem_start+10];
+		report.telem2_12 = val[telem_start+11];
+		report.telem2_13 = val[telem_start+12];
+		report.telem2_14 = val[telem_start+13];
+		report.telem2_15 = val[telem_start+14];
+		report.telem2_16 = val[telem_start+15];
+		report.telem2_17 = val[telem_start+16];
+		report.telem2_18 = val[telem_start+17];
+		report.telem2_19 = val[telem_start+18];
+		report.telem2_20 = val[telem_start+19];
+		report.telem2_21 = val[telem_start+20];
+		report.telem2_22 = val[telem_start+21];
+		report.telem2_23 = val[telem_start+22];
+		report.telem2_24 = val[telem_start+23];
+		report.telem2_25 = val[telem_start+24];
+		report.telem2_26 = val[telem_start+25];
+		report.telem2_27 = val[telem_start+26];
+		report.telem2_28 = val[telem_start+27];
+		report.telem2_29 = val[telem_start+28];
+		report.telem2_30 = val[telem_start+29];
+		report.telem2_31 = val[telem_start+30];
+		report.telem2_32 = val[telem_start+31];
+		report.telem2_33 = val[telem_start+32];
+		report.telem2_34 = val[telem_start+33];
+	}
+	
 
 
 	if (ret < 0) {
