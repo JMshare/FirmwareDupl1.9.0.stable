@@ -754,6 +754,9 @@ void Logger::add_system_identification_topics()
 	add_topic("rc_channels", 200); // for comparison only
 	add_topic("my_rpm_topic");
 	add_topic("my_scale_topic");
+	add_topic("log_message");
+	add_topic("mavlink_log");
+	add_topic("qshell_req");
 }
 
 int Logger::add_topics_from_file(const char *fname)
