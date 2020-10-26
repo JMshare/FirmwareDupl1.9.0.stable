@@ -383,7 +383,7 @@ int My_LQR_control::setpoints_publish(){
 
     setpoints_struct.tuner_status = tuner_status;
     setpoints_struct.gain_scale_p_p = tune_p_p;
-    setpoints_struct.gain_scale_p_p = tune_d_p;
+    setpoints_struct.gain_scale_d_p = tune_d_p;
     setpoints_struct.gain_scale_p_q = tune_p_q;
     setpoints_struct.gain_scale_d_q = tune_d_q;
     setpoints_struct.gain_scale_p_r = tune_p_r;
