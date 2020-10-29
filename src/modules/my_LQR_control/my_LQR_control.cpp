@@ -1271,17 +1271,20 @@ int My_LQR_control::printouts(){
         my_rpm_topic_poll();
         dt_print = dt_print + dt;
         if(dt_print > 2.0f){
-            PX4_INFO("\n\n\n");
+            PX4_INFO(" ");
+            PX4_INFO(" ");
+            PX4_INFO(" ");
             //PX4_INFO("dt:%2.5f", (double)dt);
+
             
             if(my_rpm_topic.status == 0){
                 print_my_rpm();
             }
             else if(my_rpm_topic.status == 5){
-                PX4_INFO("my_rpm_topic sensors not updated\n");
+                PX4_INFO("my_rpm_topic sensors not updated");
             }
             else if(my_rpm_topic.status == 1){
-                PX4_INFO("my_rpm_topic sensors reading failed\n");
+                PX4_INFO("my_rpm_topic sensors reading failed");
             }
 
             //PX4_INFO("x:%2.2f, xd:%2.2f", (double)y(0,0), (double)y_setpoint(0,0));
@@ -1289,9 +1292,9 @@ int My_LQR_control::printouts(){
             //PX4_INFO("m1:%2.4f, m2:%2.4f, m3:%2.4f, m4:%2.4f\n", (double)uf(0,0), (double)uf(1,0), (double)uf(2,0), (double)uf(3,0));
 
             //PX4_INFO("m5:%2.4f, m6:%2.4f, m7:%2.4f, m8:%2.4f\n", (double)uf(4,0), (double)uf(5,0), (double)uf(6,0), (double)uf(7,0));
-
-            PX4_INFO("y1(roll):%2.4f, y2(pitch):%2.4f, y3(yaw):%2.4f", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
-            PX4_INFO("c1(roll):%2.4f, c2(pitch):%2.4f, c3(yaw):%2.4f, c4(thrust):%2.4f", (double)cf(0,0), (double)cf(1,0), (double)cf(2,0), (double)cf(3,0));
+            PX4_INFO(" ");
+            PX4_INFO("roll: %4.1f, y2: %4.1f, y3: %4.1f   [deg]", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
+            PX4_INFO("c1(roll): %2.2f, c2(pitch): %2.2f, c3(yaw): %2.2f, c4(thrust): %2.4f", (double)cf(0,0), (double)cf(1,0), (double)cf(2,0), (double)cf(3,0));
             //PX4_INFO("y1(roll):%2.4f, y2(pitch):%2.4f, y3(yaw):%2.4f", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
 
             //PX4_INFO("Dcf1:%2.2f, Dcf2:%2.2f, Dcf3:%2.2f, Dcf4:%2.2f\n", (double)Del_cf(0,0), (double)Del_cf(1,0), (double)Del_cf(2,0), (double)Del_cf(3,0));
@@ -1300,7 +1303,7 @@ int My_LQR_control::printouts(){
 
             //PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
 
-            printf("\n");
+            PX4_INFO(" ");
             if(filter_status_omg == 1){
                 PX4_ERR("Filtering rates results in NANs!");
             }
@@ -1327,11 +1330,15 @@ int My_LQR_control::printouts(){
             PX4_INFO("theta0 [deg]: %3.1f, theta proj [deg]: %3.1f", (double)rad2deg(theta0), (double)rad2deg(y(10,0)));    
             PX4_INFO("Scheduler interval: %d, f_int: %2.4f", case_int, (double)f_int);
 
-            (K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
+            PX4_INFO(" ");
+            PX4_INFO("KD p = %5.2f, KD q = %5.2f, KD r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,6), (double)K_feedback_y_sc_tun_sched(1,7), (double)K_feedback_y_sc_tun_sched(2,8));
+            PX4_INFO("KP p = %5.2f, KP q = %5.2f, KP r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,9), (double)K_feedback_y_sc_tun_sched(1,10), (double)K_feedback_y_sc_tun_sched(2,11));
+            //(K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
 
             //PX4_INFO("adapt Kp: %2.2f, adapt Kphi: %2.2f", (double)K_p_adapt, (double)K_phi_adapt);
 
             if(gains_limiter_on){
+                PX4_INFO(" ");
                 PX4_INFO("glm_p: %1.2f, glm_q: %1.2f, glm_r: %1.2f, glm_pksz: %1.4f", (double)gain_limiter(0,0), (double)gain_limiter(1,0), (double)gain_limiter(2,0), (double)pksz);
             }
 
@@ -1663,79 +1670,82 @@ bool My_LQR_control::isbound(float val){
 
 int My_LQR_control::print_my_rpm(){
     PX4_INFO("RPM front: %llu", my_rpm_topic.rpm);
-    PX4_INFO("current1: %ld [A], current2: %ld [A]", lroundf(current1), lroundf(current2));
-    printf("%s", "\ttelem1: ");
-    printf("%c", my_rpm_topic.telem1_1);
-    printf("%c", my_rpm_topic.telem1_2);
-    printf("%c", my_rpm_topic.telem1_3);
-    printf("%c", my_rpm_topic.telem1_4);
-    printf("%c", my_rpm_topic.telem1_5);
-    printf("%c", my_rpm_topic.telem1_6);
-    printf("%c", my_rpm_topic.telem1_7);
-    printf("%c", my_rpm_topic.telem1_8);
-    printf("%c", my_rpm_topic.telem1_9);
-    printf("%c", my_rpm_topic.telem1_10);
-    printf("%c", my_rpm_topic.telem1_11);
-    printf("%c", my_rpm_topic.telem1_12);
-    printf("%c", my_rpm_topic.telem1_13);
-    printf("%c", my_rpm_topic.telem1_14);
-    printf("%c", my_rpm_topic.telem1_15);
-    printf("%c", my_rpm_topic.telem1_16);
-    printf("%c", my_rpm_topic.telem1_17);
-    printf("%c", my_rpm_topic.telem1_18);
-    printf("%c", my_rpm_topic.telem1_19);
-    printf("%c", my_rpm_topic.telem1_20);
-    printf("%c", my_rpm_topic.telem1_21);
-    printf("%c", my_rpm_topic.telem1_22);
-    printf("%c", my_rpm_topic.telem1_23);
-    printf("%c", my_rpm_topic.telem1_24);
-    printf("%c", my_rpm_topic.telem1_25);
-    printf("%c", my_rpm_topic.telem1_26);
-    printf("%c", my_rpm_topic.telem1_27);
-    printf("%c", my_rpm_topic.telem1_28);
-    printf("%c", my_rpm_topic.telem1_29);
-    printf("%c", my_rpm_topic.telem1_30);
-    printf("%c", my_rpm_topic.telem1_31);
-    printf("%c", my_rpm_topic.telem1_32);
-    printf("%c", my_rpm_topic.telem1_33);
-    printf("%c", my_rpm_topic.telem1_34);
-    printf("%c", '\n');
-    printf("%s", "\ttelem2: ");
-    printf("%c", my_rpm_topic.telem2_1);
-    printf("%c", my_rpm_topic.telem2_2);
-    printf("%c", my_rpm_topic.telem2_3);
-    printf("%c", my_rpm_topic.telem2_4);
-    printf("%c", my_rpm_topic.telem2_5);
-    printf("%c", my_rpm_topic.telem2_6);
-    printf("%c", my_rpm_topic.telem2_7);
-    printf("%c", my_rpm_topic.telem2_8);
-    printf("%c", my_rpm_topic.telem2_9);
-    printf("%c", my_rpm_topic.telem2_10);
-    printf("%c", my_rpm_topic.telem2_11);
-    printf("%c", my_rpm_topic.telem2_12);
-    printf("%c", my_rpm_topic.telem2_13);
-    printf("%c", my_rpm_topic.telem2_14);
-    printf("%c", my_rpm_topic.telem2_15);
-    printf("%c", my_rpm_topic.telem2_16);
-    printf("%c", my_rpm_topic.telem2_17);
-    printf("%c", my_rpm_topic.telem2_18);
-    printf("%c", my_rpm_topic.telem2_19);
-    printf("%c", my_rpm_topic.telem2_20);
-    printf("%c", my_rpm_topic.telem2_21);
-    printf("%c", my_rpm_topic.telem2_22);
-    printf("%c", my_rpm_topic.telem2_23);
-    printf("%c", my_rpm_topic.telem2_24);
-    printf("%c", my_rpm_topic.telem2_25);
-    printf("%c", my_rpm_topic.telem2_26);
-    printf("%c", my_rpm_topic.telem2_27);
-    printf("%c", my_rpm_topic.telem2_28);
-    printf("%c", my_rpm_topic.telem2_29);
-    printf("%c", my_rpm_topic.telem2_30);
-    printf("%c", my_rpm_topic.telem2_31);
-    printf("%c", my_rpm_topic.telem2_32);
-    printf("%c", my_rpm_topic.telem2_33);
-    printf("%c", my_rpm_topic.telem2_34);
-    printf("%s", "\n\n");
+    PX4_INFO("current1: %3.0f [A], current2: %3.0f [A]", (double) current1, (double) current2);
+
+    telem_string1[0] = my_rpm_topic.telem1_1;
+    telem_string1[1] = my_rpm_topic.telem1_2;
+    telem_string1[2] = my_rpm_topic.telem1_3;
+    telem_string1[3] = my_rpm_topic.telem1_4;
+    telem_string1[4] = my_rpm_topic.telem1_5;
+    telem_string1[5] = my_rpm_topic.telem1_6;
+    telem_string1[6] = my_rpm_topic.telem1_7;
+    telem_string1[7] = my_rpm_topic.telem1_8;
+    telem_string1[8] = my_rpm_topic.telem1_9;
+    telem_string1[9] = my_rpm_topic.telem1_10;
+    telem_string1[10] = my_rpm_topic.telem1_11;
+    telem_string1[11] = my_rpm_topic.telem1_12;
+    telem_string1[12] = my_rpm_topic.telem1_13;
+    telem_string1[13] = my_rpm_topic.telem1_14;
+    telem_string1[14] = my_rpm_topic.telem1_15;
+    telem_string1[15] = my_rpm_topic.telem1_16;
+    telem_string1[16] = my_rpm_topic.telem1_17;
+    telem_string1[17] = my_rpm_topic.telem1_18;
+    telem_string1[18] = my_rpm_topic.telem1_19;
+    telem_string1[19] = my_rpm_topic.telem1_20;
+    telem_string1[20] = my_rpm_topic.telem1_21;
+    telem_string1[21] = my_rpm_topic.telem1_22;
+    telem_string1[22] = my_rpm_topic.telem1_23;
+    telem_string1[23] = my_rpm_topic.telem1_24;
+    telem_string1[24] = my_rpm_topic.telem1_25;
+    telem_string1[25] = my_rpm_topic.telem1_26;
+    telem_string1[26] = my_rpm_topic.telem1_27;
+    telem_string1[27] = my_rpm_topic.telem1_28;
+    telem_string1[28] = my_rpm_topic.telem1_29;
+    telem_string1[29] = my_rpm_topic.telem1_30;
+    telem_string1[30] = my_rpm_topic.telem1_31;
+    telem_string1[31] = my_rpm_topic.telem1_32;
+    telem_string1[32] = my_rpm_topic.telem1_33;
+    telem_string1[33] = my_rpm_topic.telem1_34;
+    telem_string1[34] = '\0';
+    PX4_INFO("\ttelem 1: %s", telem_string1);
+
+    telem_string2[0] = my_rpm_topic.telem2_1;
+    telem_string2[1] = my_rpm_topic.telem2_2;
+    telem_string2[2] = my_rpm_topic.telem2_3;
+    telem_string2[3] = my_rpm_topic.telem2_4;
+    telem_string2[4] = my_rpm_topic.telem2_5;
+    telem_string2[5] = my_rpm_topic.telem2_6;
+    telem_string2[6] = my_rpm_topic.telem2_7;
+    telem_string2[7] = my_rpm_topic.telem2_8;
+    telem_string2[8] = my_rpm_topic.telem2_9;
+    telem_string2[9] = my_rpm_topic.telem2_10;
+    telem_string2[10] = my_rpm_topic.telem2_11;
+    telem_string2[11] = my_rpm_topic.telem2_12;
+    telem_string2[12] = my_rpm_topic.telem2_13;
+    telem_string2[13] = my_rpm_topic.telem2_14;
+    telem_string2[14] = my_rpm_topic.telem2_15;
+    telem_string2[15] = my_rpm_topic.telem2_16;
+    telem_string2[16] = my_rpm_topic.telem2_17;
+    telem_string2[17] = my_rpm_topic.telem2_18;
+    telem_string2[18] = my_rpm_topic.telem2_19;
+    telem_string2[19] = my_rpm_topic.telem2_20;
+    telem_string2[20] = my_rpm_topic.telem2_21;
+    telem_string2[21] = my_rpm_topic.telem2_22;
+    telem_string2[22] = my_rpm_topic.telem2_23;
+    telem_string2[23] = my_rpm_topic.telem2_24;
+    telem_string2[24] = my_rpm_topic.telem2_25;
+    telem_string2[25] = my_rpm_topic.telem2_26;
+    telem_string2[26] = my_rpm_topic.telem2_27;
+    telem_string2[27] = my_rpm_topic.telem2_28;
+    telem_string2[28] = my_rpm_topic.telem2_29;
+    telem_string2[29] = my_rpm_topic.telem2_30;
+    telem_string2[30] = my_rpm_topic.telem2_31;
+    telem_string2[31] = my_rpm_topic.telem2_32;
+    telem_string2[32] = my_rpm_topic.telem2_33;
+    telem_string2[33] = my_rpm_topic.telem2_34;
+    telem_string2[34] = '\0';
+    PX4_INFO("\ttelem 2: %s", telem_string2);
+
     return PX4_OK;
 }
 

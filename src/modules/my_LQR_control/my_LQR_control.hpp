@@ -406,6 +406,9 @@ private:
 
     	float current1 = 0.0f;
     	float current2 = 0.0f;
+    	char telem_string1[35];
+    	char telem_string2[35];
+
 		
 		
 
