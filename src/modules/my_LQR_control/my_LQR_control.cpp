@@ -909,11 +909,12 @@ int My_LQR_control::gains_tune(){
     tuner_status = 0;
     if(fabsf(rc_sc_omg_last - rc_channels.channels[11]) > 0.002f || fabsf(rc_sc_eps_last - rc_channels.channels[10]) > 0.002f){
         tuner_status = 1;
-        rc_sc_omg_last = rc_channels.channels[11];
-        rc_sc_eps_last = rc_channels.channels[10];
 
         tune_d = powf(tune_expo, rc_channels.channels[11]);
         tune_p = powf(tune_expo, rc_channels.channels[10]);
+
+        rc_sc_omg_last = rc_channels.channels[11];
+        rc_sc_eps_last = rc_channels.channels[10];
 
         // updating only those scales that are currently selected, the rest stays as it was
         if((tune_mod == 0) | (tune_mod == 10) | (tune_mod == 20)  | (tune_mod == 210)){
@@ -1410,6 +1411,7 @@ k_scheds(8,0) =   0.05f; k_scheds(8,1) =   0.05f; k_scheds(8,2) =   0.12f; k_sch
 k_scheds(9,0) =   1.30f; k_scheds(9,1) =   1.30f; k_scheds(9,2) =   1.75f; k_scheds(9,3) =   1.75f; k_scheds(9,4) =   1.75f; k_scheds(9,5) =   1.75f; 
         tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.35; tht_ints(0,3) =   0.7854f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.5708f; 
         // pitch angles (0.35, 0.52, 0.70, 0.78, 0.87, 1.04, 1.57 rad = 20, 30, 40, 45, 50, 60, 90 deg)
+        //// [pp, pr, rp, rr, ..., q, tht]
     }
     else if(vehicle_id == 3){ // Custer HITL
         K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.7414f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =   0.2000f; K_feedback_y(0,9) =   1.2910f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =   0.2000f; 
