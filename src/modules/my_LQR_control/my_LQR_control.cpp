@@ -985,7 +985,7 @@ int My_LQR_control::gains_schedule(){
             }
         }
         airspeed_poll();
-        if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 17.0f)){ // checking if <50 as a safety check for infs or nans or bad readings. You control the gains by pitch setpoint now, but if it happens for example in transitions that the airspeed is still high, then keep them lower.
+        if((airspeed.true_airspeed_m_s <= 50.0f) && (airspeed.true_airspeed_m_s > 15.0f)){ // checking if <50 as a safety check for infs or nans or bad readings. You control the gains by pitch setpoint now, but if it happens for example in transitions that the airspeed is still high, then keep them lower.
             case_int = 1;
             f_int = 0.0f;
             schedule_K_status = 2; // blocked by airspeed
