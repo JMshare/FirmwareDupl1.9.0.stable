@@ -277,7 +277,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SW1QVZ, 0.00f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MZ, 0.08f);
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MZ, 0.0f);
 /**
  * Feedback matrix scaling
  *
@@ -288,7 +288,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MZ, 0.08f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MVZ, 0.2f);
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MVZ, 0.0f);
 /**
  * Feedback matrix scaling
  *
@@ -299,7 +299,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MVZ, 0.2f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QZ, 0.00f);
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QZ, 0.0f);
 /**
  * Feedback matrix scaling
  *
@@ -310,7 +310,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QZ, 0.00f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QVZ, 0.00f);
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QVZ, 0.0f);
 /**
  * Feedback matrix scaling
  *
@@ -321,7 +321,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QVZ, 0.00f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SW2MZ, 0.00f);
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2MZ, 0.08f);
 /**
  * Feedback matrix scaling
  *
@@ -332,7 +332,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SW2MZ, 0.00f);
  * @increment 0.001
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_K_SW2MVZ, 0.00f);
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2MVZ, 0.2f);
 
 /**
  * Motorons roll mixer scaling
