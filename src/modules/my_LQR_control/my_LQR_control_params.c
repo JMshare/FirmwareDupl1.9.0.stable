@@ -56,7 +56,7 @@
  * @increment 1
  * @group MY LQR Control
  */
-PARAM_DEFINE_INT32(MY_LQR_TUNE_MODE, 210);
+PARAM_DEFINE_INT32(MY_LQR_TUNE_MOD, 210);
 
 
 /**
@@ -244,6 +244,95 @@ PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCP, 1.0f);
  * @group MY LQR Control
  */
 PARAM_DEFINE_FLOAT(MY_LQR_K_SC_CCD, 1.0f);
+
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW1QZ, 0.02f);
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW1QVZ, 0.00f);
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MZ, 0.08f);
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW1MVZ, 0.2f);
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QZ, 0.00f);
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2QVZ, 0.00f);
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2MZ, 0.00f);
+/**
+ * Feedback matrix scaling
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 4
+ * @increment 0.001
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_K_SW2MVZ, 0.00f);
 
 /**
  * Motorons roll mixer scaling
@@ -465,7 +554,7 @@ PARAM_DEFINE_INT32(MY_LQR_BOOL_PRNT, 1);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_DX_LIM, 1.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_DX_LIM, 0.8f);
 
 /**
  * Limit on max Del_c from Del_y_omg contribution
@@ -477,7 +566,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DX_LIM, 1.0f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_DV_LIM, 1.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_DV_LIM, 0.8f);
 
 /**
  * Limit on max Del_c from Del_y_omg contribution
@@ -489,7 +578,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DV_LIM, 1.0f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 10.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 1.0f);
 
 /**
  * Limit on max Del_c from Del_y_eps contribution
@@ -501,7 +590,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_DOMG_LIM, 10.0f);
  * @increment 0.01
  * @group MY LQR Control
  */
-PARAM_DEFINE_FLOAT(MY_LQR_DEPS_LIM, 10.0f);
+PARAM_DEFINE_FLOAT(MY_LQR_DEPS_LIM, 1.0f);
 
 
 

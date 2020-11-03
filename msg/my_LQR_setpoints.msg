@@ -2,14 +2,10 @@
 
 uint64 timestamp		# time since system start (microseconds)
 uint64 timestamp_sample	    # the timestamp the data this control response is based on was sampled
-
-float32 y0		
-float32 y1		
+	
 float32 y2
-float32 y3
-float32 y4
 float32 y5
-float32 y6			# from 6 to 11 these are the RC setpoints actually after all scaling
+float32 y6			
 float32 y7
 float32 y8
 float32 y9
@@ -78,5 +74,27 @@ float32 gain_limiter_r
 int32 oscillating_p
 int32 oscillating_q
 int32 oscillating_r
+
+		
+float32 sp_y2
+float32 sp_y5
+float32 sp_y6			
+float32 sp_y7
+float32 sp_y8
+float32 sp_y9
+float32 sp_y10
+float32 sp_y11
+
+float32 del_c_x_z
+float32 del_c_v_vz
+
+float32 k_x_qz
+float32 k_x_mz
+float32 k_v_qvz
+float32 k_v_mvz
+
+int32 alt_mode 				# altitude stabilisation 0 off, 1 cruise, 2 slow, -2 slow rejected
+
+
 
 # TOPICS my_LQR_setpoints

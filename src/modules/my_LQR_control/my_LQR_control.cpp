@@ -337,18 +337,24 @@ int My_LQR_control::angular_rates_filtered_publish(){
 }
 
 int My_LQR_control::setpoints_publish(){
-    setpoints_struct.y0 = y(6,0);
-    setpoints_struct.y1 = y(7,0);
-    setpoints_struct.y2 = y(8,0);
-    setpoints_struct.y3 = y(9,0);
-    setpoints_struct.y4 = y(10,0);
-    setpoints_struct.y5 = y(11,0);
-    setpoints_struct.y6 = y_setpoint(6,0);
-    setpoints_struct.y7 = y_setpoint(7,0);
-    setpoints_struct.y8 = y_setpoint(8,0);
-    setpoints_struct.y9 = y_setpoint(9,0);
-    setpoints_struct.y10 = y_setpoint(10,0);
-    setpoints_struct.y11 = y_setpoint(11,0);
+    setpoints_struct.y2 = y(2,0);
+    setpoints_struct.y5 = y(5,0);
+    setpoints_struct.y6 = y(6,0);
+    setpoints_struct.y7 = y(7,0);
+    setpoints_struct.y8 = y(8,0);
+    setpoints_struct.y9 = y(9,0);
+    setpoints_struct.y10 = y(10,0);
+    setpoints_struct.y11 = y(11,0);
+
+    
+    setpoints_struct.sp_y2 = y_setpoint(2,0);
+    setpoints_struct.sp_y5 = y_setpoint(5,0);
+    setpoints_struct.sp_y6 = y_setpoint(6,0);
+    setpoints_struct.sp_y7 = y_setpoint(7,0);
+    setpoints_struct.sp_y8 = y_setpoint(8,0);
+    setpoints_struct.sp_y9 = y_setpoint(9,0);
+    setpoints_struct.sp_y10 = y_setpoint(10,0);
+    setpoints_struct.sp_y11 = y_setpoint(11,0);
 
     setpoints_struct.c0 = c_setpoint(0,0);
     setpoints_struct.c1 = c_setpoint(1,0);
@@ -374,6 +380,15 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.del_c_eps_tht = Del_c_eps(1,0);
     setpoints_struct.del_c_eps_psi = Del_c_eps(2,0);
 
+    setpoints_struct.del_c_v_vz = Del_c_v(2,0);
+    setpoints_struct.del_c_x_z = Del_c_x(2,0);
+    setpoints_struct.k_x_qz = K_feedback_y_sc_tun_sched(1,2);
+    setpoints_struct.k_x_mz = K_feedback_y_sc_tun_sched(3,2);
+    setpoints_struct.k_v_qvz = K_feedback_y_sc_tun_sched(1,5);
+    setpoints_struct.k_v_mvz = K_feedback_y_sc_tun_sched(3,5);
+    setpoints_struct.alt_mode = altitude_mode;
+
+
     setpoints_struct.pitch_setpoint = rad2deg(pitch_setpoint);
     setpoints_struct.pitch_setpoint_ramp = rad2deg(pitch_setpoint_ramp);
 
@@ -388,7 +403,7 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.gain_scale_d_q = tune_d_q;
     setpoints_struct.gain_scale_p_r = tune_p_r;
     setpoints_struct.gain_scale_d_r = tune_d_r;
-    setpoints_struct.tuner_mode = tune_mod;
+    setpoints_struct.tuner_mode = tune_mode;
 
     setpoints_struct.case_int_f_int = 1.0f*case_int + f_int;
     setpoints_struct.scheduler_status = schedule_K_status;
@@ -589,10 +604,10 @@ int My_LQR_control::read_y_state(){
         
     y( 0,0) = 0.0f*vehicle_local_position.x;
     y( 1,0) = 0.0f*vehicle_local_position.y;
-    y( 2,0) = 0.0f*vehicle_local_position.z;
+    y( 2,0) =-1.0f*vehicle_local_position.z;
     y( 3,0) = 0.0f*vehicle_local_position.vx;
     y( 4,0) = 0.0f*vehicle_local_position.vy;
-    y( 5,0) = 0.0f*vehicle_local_position.vz;
+    y( 5,0) =-1.0f*vehicle_local_position.vz;
     y( 6,0) = 1.0f*omg_filtered(0);
     y( 7,0) = 1.0f*omg_filtered(1);
     y( 8,0) = 1.0f*omg_filtered(2);
@@ -798,6 +813,39 @@ int My_LQR_control::read_y_setpoint(){
     }
     y_setpoint(11,0) = yaw_setpoint;
 
+
+    // Altitude control
+    alt_rate_setpoint = 0.0f;
+    if((altitude_mode == 1) && (fabsf(y_setpoint(7,0)) > 0.1f)){
+        alt_rate_setpoint = y(5,0); // don't limit the climb/descend now
+        if(k_sw(0,0) > 0.001f){
+            alt_setpoint = y(2,0) + Del_c_x(1,0)/k_sw(0,0); // preserve the last control contribution
+            alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(0,0), y(2,0) + Del_c_lim(0,0)/k_sw(0,0)); // integral windup this
+        }
+        else{
+            altitude_mode = -10;
+            alt_setpoint = y(2,0);
+        }
+    }
+    if((altitude_mode == 2) && (fabsf(c_setpoint(3,0)-0.5f) > 0.1f)){
+        alt_rate_setpoint = 5*(c_setpoint(3,0)-0.5f); 
+        if(k_sw(2,1) > 0.001f){
+            alt_setpoint = y(2,0) + Del_c_x(3,0)/k_sw(2,1); // preserve the last control contribution
+            alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(2,1), y(2,0) + Del_c_lim(0,0)/k_sw(2,1)); // integral windup this
+        }
+        else{
+            altitude_mode = -20;
+            alt_setpoint = y(2,0);
+        }
+    }
+    if(altitude_mode <= 0){
+        alt_setpoint = y(2,0);
+        alt_rate_setpoint = 0.0f;
+    }
+
+    y_setpoint(2,0) = alt_setpoint;
+    y_setpoint(5,0) = alt_rate_setpoint;
+
     return PX4_OK;
 }
 int My_LQR_control::omg_setpoints_scale(){
@@ -902,6 +950,15 @@ int My_LQR_control::gains_scale(){
     K_feedback_y_sc_tun_sched = K_feedback_y_scaled_tuned;
     k_scheds_sc_tun = k_scheds_sc;
 
+    k_sw(0,0) = k_sw1_qz.get(); //// cruise&fast [qz, qvz, mz, mvz];
+    k_sw(1,0) = k_sw1_qvz.get();
+    k_sw(2,0) = k_sw1_mz.get();
+    k_sw(3,0) = k_sw1_mvz.get();
+    k_sw(0,1) = k_sw2_qz.get(); //// slow&hover [qz, qvz, mz, mvz];
+    k_sw(1,1) = k_sw2_qvz.get();
+    k_sw(2,1) = k_sw2_mz.get();
+    k_sw(3,1) = k_sw2_mvz.get();
+
     return PX4_OK;
 }
 int My_LQR_control::gains_tune(){
@@ -917,15 +974,15 @@ int My_LQR_control::gains_tune(){
         rc_sc_eps_last = rc_channels.channels[10];
 
         // updating only those scales that are currently selected, the rest stays as it was
-        if((tune_mod == 0) | (tune_mod == 10) | (tune_mod == 20)  | (tune_mod == 210)){
+        if((tune_mode == 0) | (tune_mode == 10) | (tune_mode == 20)  | (tune_mode == 210)){
             tune_d_p = tune_d;
             tune_p_p = tune_p;
         }
-        if((tune_mod == 1) | (tune_mod == 10) | (tune_mod == 21)  | (tune_mod == 210)){
+        if((tune_mode == 1) | (tune_mode == 10) | (tune_mode == 21)  | (tune_mode == 210)){
             tune_d_q = tune_d;
             tune_p_q = tune_p;
         }
-        if((tune_mod == 2) | (tune_mod == 20) | (tune_mod == 21)  | (tune_mod == 210)){
+        if((tune_mode == 2) | (tune_mode == 20) | (tune_mode == 21)  | (tune_mode == 210)){
             tune_d_r = tune_d;
             tune_p_r = tune_p;
         }
@@ -1009,6 +1066,48 @@ int My_LQR_control::gains_schedule(){
             K_feedback_y_sc_tun_sched(2,9) = k_scheds_sc_tun_int(6,0);
             K_feedback_y_sc_tun_sched(2,11) = k_scheds_sc_tun_int(7,0);
         }
+
+
+        // Switches between the two altitude stabilisation modes based on flight mode.
+        if(c_alt_bool < 0.5f){ // == 0 but it's a float
+            altitude_mode = 0;
+        }
+        else{
+            if(pitch_setpoint_ramp < deg2rad(10.0f)){
+                altitude_mode = 1; // use elevator
+                /* Let it stall if the pilot decides to go so low throttle and hold altitude.
+                if(airspeed.true_airspeed_m_s < 15.0f){ //  don't cause stall
+                    altitude_mode = -1; // reject alt mode 1
+                    K_feedback_y_sc_tun_sched(1,2) = 0.0f; // qz
+                    K_feedback_y_sc_tun_sched(1,5) = 0.0f; // qvz
+                    K_feedback_y_sc_tun_sched(3,2) = 0.0f; // mz
+                    K_feedback_y_sc_tun_sched(3,5) = 0.0f; // mvz
+                }
+                else{ */
+                    K_feedback_y_sc_tun_sched(1,2) = k_sw(0,0); // qz
+                    K_feedback_y_sc_tun_sched(1,5) = k_sw(1,0); // qvz
+                    K_feedback_y_sc_tun_sched(3,2) = k_sw(2,0); // mz
+                    K_feedback_y_sc_tun_sched(3,5) = k_sw(3,0); // mvz
+                //}
+            }
+            else{
+                altitude_mode = 2; // use motors
+                if(c_setpoint(3,0) < 0.20f){ // don't add throttle if not already using the motors
+                    altitude_mode = -2; // reject alt mode 2
+                    K_feedback_y_sc_tun_sched(1,2) = 0.0f; // qz
+                    K_feedback_y_sc_tun_sched(1,5) = 0.0f; // qvz
+                    K_feedback_y_sc_tun_sched(3,2) = 0.0f; // mz
+                    K_feedback_y_sc_tun_sched(3,5) = 0.0f; // mvz
+                }
+                else{
+                    K_feedback_y_sc_tun_sched(1,2) = k_sw(0,1); // qz
+                    K_feedback_y_sc_tun_sched(1,5) = k_sw(1,1); // qvz
+                    K_feedback_y_sc_tun_sched(3,2) = k_sw(2,1); // mz
+                    K_feedback_y_sc_tun_sched(3,5) = k_sw(3,1); // mvz
+                }
+            }
+        }
+
     }
     else{
         schedule_K_status = 0;
@@ -1016,8 +1115,11 @@ int My_LQR_control::gains_schedule(){
         f_int = 0.0f;
     }
 
+
     return PX4_OK;
 }
+
+
 
 int My_LQR_control::recursiveLS(){
     if(do_recursiveLS){
@@ -1092,13 +1194,16 @@ int My_LQR_control::control_fun(){
     project_del_psi();
     omg_setpoints_scale();
     // del_epsilon_to_body_frame(); // depreciated
+    
+    /* depreciated, this is already imited later
     // Let's constrain Del_eps so I dont get overreaction at large perturbs. The Del_c is limited but if this is too large then the omg compensation wont be able to react
     math::constrain(Del_y_eps(0,0), -deg2rad(30.0f), deg2rad(30.0f));
     math::constrain(Del_y_eps(1,0), -deg2rad(30.0f), deg2rad(30.0f));
     math::constrain(Del_y_eps(2,0), -deg2rad(30.0f), deg2rad(30.0f));
+    */ 
 
-    //Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
-    //Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
+    Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
+    Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
     // Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
     Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*(y.slice<3,1>(6,0).emult(gain_limiter)); // slice omg contribution, this way RC input indep of K
     Del_c_omg(0,0) += y_setpoint(6,0); // p
@@ -1106,14 +1211,14 @@ int My_LQR_control::control_fun(){
     Del_c_omg(2,0) += y_setpoint(8,0); // r
     Del_c_eps = -K_feedback_y_sc_tun_sched.T().slice<3,4>(9,0).T()*Del_y_eps; // sliced eps contribution
     for(int i = 0; i < 4; i++){ // not necessarily (-1,1), just a sanity check against NaNs
-        Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0));
+        Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0)*(altitude_mode != 1)); // only downward elev trim for our purpose now
         Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0));
         Del_c_omg(i,0) = math::constrain(Del_c_omg(i,0), -Del_c_lim(2,0), Del_c_lim(2,0));
         Del_c_eps(i,0) = math::constrain(Del_c_eps(i,0), -Del_c_lim(3,0), Del_c_lim(3,0));
     }
 
     stabilisation_mode();
-    Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg;
+    Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg + (Del_c_v + Del_c_x)*c_alt_bool;
     if(abs(proj_theta_status) == 10){ // swap roll and yaw proportional compensation if above the treshold pitch deg
         Del_c(0,0) = -Del_c_eps(2,0)*c_eps_bool(2,0) + Del_c_omg(0,0);
         Del_c(2,0) = Del_c_eps(0,0)*c_eps_bool(0,0) + Del_c_omg(2,0);
@@ -1151,6 +1256,12 @@ int My_LQR_control::stabilisation_mode(){
     }
     if(rc_channels.channels[5] < 0.5f){ // yaw rate compensation only
         c_eps_bool(2,0) = 0.0f;
+    }
+
+
+    c_alt_bool = 0.0f;
+    if(rc_channels.channels[13] > 0.5f){ // altitude stab on
+        c_alt_bool = 1.0f;
     }
 
     return PX4_OK;
@@ -1194,7 +1305,7 @@ int My_LQR_control::manual_override(){
 
 int My_LQR_control::px4_override(){
     if(rc_channels.channels[13] > 0.5f){ // PX4 override
-        if(vehicle_id != 2){ // don't let this happen in custer, px4 not set up yet and could be in some weird hold mode
+        if((vehicle_id != 2) && (vehicle_id != 3)){ // don't let this happen in custer, px4 not set up yet and could be in some weird hold mode
             actuator_controls_virtual_poll();
             for(int i=0; i<8; i++){
                 cf(i,0) = actuator_controls_virtual.control[i];
@@ -1326,6 +1437,9 @@ int My_LQR_control::printouts(){
             }*/
 
             //PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
+            PX4_INFO("Alt_setpoint = %4.2f", (double)y_setpoint(2,0));
+            PX4_INFO("Altitude mode = %d, c_qx = %4.3f, c_qv = %4.3f, c_mx = %4.3f, c_mv = %4.3f", altitude_mode, (double)Del_c_x(1,0), (double)Del_c_v(1,0), (double)Del_c_x(3,0), (double)Del_c_v(3,0));
+            PX4_INFO(" ");
             PX4_WARN("V= %3.1f m/s, alt= %3.1f m", (double)airspeed.true_airspeed_m_s, -(double)vehicle_local_position.z); // using warn here cos that will log. Can debug if the printouts stop
             PX4_INFO("pitch setpoint [deg]: %3.1f", (double)rad2deg(pitch_setpoint));
             PX4_INFO("theta0 [deg]: %3.1f, theta proj [deg]: %3.1f", (double)rad2deg(theta0), (double)rad2deg(y(10,0)));    
@@ -1368,6 +1482,7 @@ int My_LQR_control::initialize_variables(){
     r_setpoint.setAll(0.0f);
     pitch_setpoint = 0.0f;
     control_status = 0;
+    altitude_mode = 0;
 
     y.setAll(0.0f);
     r.setAll(0.0f);
@@ -1387,6 +1502,7 @@ int My_LQR_control::initialize_variables(){
     tune_d_r = 1.0f;
 
     k_scheds.setAll(0.0f);
+    k_sw.setAll(0.0f);
 
     if(vehicle_id == 1){ // S500 quad
         K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.11f; K_feedback_y(0,7) =   0.00f; K_feedback_y(0,8) =   0.00f; K_feedback_y(0,9) =   0.50f; K_feedback_y(0,10) =   0.00f; K_feedback_y(0,11) =   0.00f; 
@@ -1412,6 +1528,12 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   2.00f; k_scheds(9,2) =   3.00f; k_sch
         tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.5708f; 
         // pitch angles (0.35, 0.52, 0.70, 0.78, 0.87, 1.04, 1.57 rad = 20, 30, 40, 45, 50, 60, 90 deg)
         //// [pp, pr, rp, rr, ..., q, tht]
+        k_sw(0,0) = 0.02f; k_sw(0,1) = 0.00f;
+        k_sw(1,0) = 0.02f; k_sw(1,1) = 0.00f;
+        k_sw(2,0) = 0.00f; k_sw(2,1) = 0.01f;
+        k_sw(3,0) = 0.00f; k_sw(3,1) = 0.01f;
+        // at fast&cruise vs slow&hover
+        //// [qz, qvz, mz, mvz];
     }
     else if(vehicle_id == 3){ // Custer HITL
         K_feedback_y(0,0) =   0.0000f; K_feedback_y(0,1) =   0.0000f; K_feedback_y(0,2) =   0.0000f; K_feedback_y(0,3) =   0.0000f; K_feedback_y(0,4) =   0.0000f; K_feedback_y(0,5) =   0.0000f; K_feedback_y(0,6) =   0.1000f; K_feedback_y(0,7) =  -0.0000f; K_feedback_y(0,8) =   0.2000f; K_feedback_y(0,9) =   1.2910f; K_feedback_y(0,10) =  -0.0000f; K_feedback_y(0,11) =   0.2000f; 
@@ -1431,6 +1553,12 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
         tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.3963f; tht_ints(0,6) = 3.0f;
         // pitch angles (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
         //// [pp, pr, rp, rr, ..., q, tht]
+        k_sw(0,0) = 0.02f; k_sw(0,1) = 0.00f;
+        k_sw(1,0) = 0.02f; k_sw(1,1) = 0.00f;
+        k_sw(2,0) = 0.00f; k_sw(2,1) = 0.01f;
+        k_sw(3,0) = 0.00f; k_sw(3,1) = 0.01f;
+        // at fast&cruise vs slow&hover
+        //// [qz, qvz, mz, mvz];
     }
     else{ // Not specified
         PX4_WARN("No airframe specified, using unit gains K");
@@ -1628,7 +1756,7 @@ int My_LQR_control::local_parameters_update(){
     do_printouts = bool_printouts.get() == 1;
 
     tune_expo = tune_ex.get();
-    tune_mod = tune_mode.get();
+    tune_mode = tune_mod.get();
 
     pitch_sp_max = tht_sp_m.get();
     pitch_sp_min = tht_sp_min.get();
