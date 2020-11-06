@@ -1518,7 +1518,7 @@ int My_LQR_control::initialize_variables(){
 k_scheds(0,0) =   0.10f; k_scheds(0,1) =   0.10f; k_scheds(0,2) =   0.70f; k_scheds(0,3) =   1.20f; k_scheds(0,4) =   1.45f; k_scheds(0,5) =   1.45f; 
 k_scheds(1,0) =   0.00f; k_scheds(1,1) =   0.00f; k_scheds(1,2) =   0.00f; k_scheds(1,3) =   0.00f; k_scheds(1,4) =   0.00f; k_scheds(1,5) =   0.00f;  
 k_scheds(2,0) =   0.00f; k_scheds(2,1) =   0.00f; k_scheds(2,2) =   0.00f; k_scheds(2,3) =   0.00f; k_scheds(2,4) =   0.00f; k_scheds(2,5) =   0.00f;  
-k_scheds(3,0) =   0.10f; k_scheds(3,1) =   0.10f; k_scheds(3,2) =   0.70f; k_scheds(3,3) =   1.20f; k_scheds(3,4) =   1.20f; k_scheds(3,4) =   1.20f;  
+k_scheds(3,0) =   0.10f; k_scheds(3,1) =   0.10f; k_scheds(3,2) =   0.90f; k_scheds(3,3) =   1.50f; k_scheds(3,4) =   1.50f; k_scheds(3,4) =   1.50f;  
 k_scheds(4,0) =   1.30f; k_scheds(4,1) =   2.00f; k_scheds(4,2) =   5.00f; k_scheds(4,3) =   6.00f; k_scheds(4,4) =   6.00f; k_scheds(4,5) =   6.00f; 
 k_scheds(5,0) =   0.00f; k_scheds(5,1) =   0.00f; k_scheds(5,2) =   0.00f; k_scheds(5,3) =   0.00f; k_scheds(5,4) =   0.00f; k_scheds(5,5) =   0.00f; 
 k_scheds(6,0) =   0.00f; k_scheds(6,1) =   0.00f; k_scheds(6,2) =   0.00f; k_scheds(6,3) =   0.00f; k_scheds(6,4) =   0.00f; k_scheds(6,5) =   0.00f; 
