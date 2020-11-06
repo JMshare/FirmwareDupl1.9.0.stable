@@ -345,6 +345,7 @@ private:
         float c_alt_bool = 0.0f;
         float alt_setpoint = 0.0f;
         float alt_rate_setpoint = 0.0f;
+        float alt_rate_rc_scale = 5.0f;
 
 
 		Matrix<float,4,12> K_feedback_y_scaled;
@@ -432,7 +433,8 @@ private:
 		(ParamFloat<px4::params::MY_LQR_CQ_TRM>) cq_trim,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_P>) rc_scale_p,
 		(ParamFloat<px4::params::MY_LQR_RC_SC_Q>) rc_scale_q,
-		(ParamFloat<px4::params::MY_LQR_RC_SC_R>) rc_scale_r, 
+		(ParamFloat<px4::params::MY_LQR_RC_SC_R>) rc_scale_r,
+		(ParamFloat<px4::params::MY_LQR_RC_SC_M>) rc_scale_m,
 		(ParamFloat<px4::params::MY_LQR_MAX_U>) param_max_u,   
 		(ParamFloat<px4::params::MY_LQR_MAX_V>) param_max_v,
 		(ParamFloat<px4::params::MY_LQR_MAX_W>) param_max_w,

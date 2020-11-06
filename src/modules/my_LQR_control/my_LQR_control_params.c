@@ -508,6 +508,19 @@ PARAM_DEFINE_FLOAT(MY_LQR_RC_SC_Q, 1.0f);
  */
 PARAM_DEFINE_FLOAT(MY_LQR_RC_SC_R, 1.0f);
 
+/**
+ * RC setpoint scaling on M
+ * Scale to change the responsivness of the plane
+ *
+ * @unit []
+ * @min 0
+ * @max 1000
+ * @decimal 2
+ * @increment 0.05
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_RC_SC_M, 10.0f);
+
 
 /**
  * PTT bool
