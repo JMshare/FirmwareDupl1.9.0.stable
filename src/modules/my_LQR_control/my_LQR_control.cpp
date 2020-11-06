@@ -828,7 +828,7 @@ int My_LQR_control::read_y_setpoint(){
         }
     }
     if((altitude_mode == 2) && (fabsf(c_setpoint(3,0)-0.5f) > 0.1f)){
-        alt_rate_setpoint = alt_rate_rc_scale*(c_setpoint(3,0)-0.5f); 
+        alt_rate_setpoint = 5*(c_setpoint(3,0)-0.5f); 
         if(k_sw(2,1) > 0.001f){
             alt_setpoint = y(2,0) + Del_c_x(3,0)/k_sw(2,1); // preserve the last control contribution
             alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(2,1), y(2,0) + Del_c_lim(0,0)/k_sw(2,1)); // integral windup this
@@ -1707,7 +1707,6 @@ int My_LQR_control::local_parameters_update(){
     RC_scale_base(0,0) = rc_scale_p.get();
     RC_scale_base(1,0) = rc_scale_q.get();
     RC_scale_base(2,0) = rc_scale_r.get();
-    alt_rate_rc_scale = rc_scale_m.get();
 
     c_nominal_control(1,0) = cq_trim.get();
     
