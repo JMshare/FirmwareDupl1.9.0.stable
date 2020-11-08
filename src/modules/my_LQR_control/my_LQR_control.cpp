@@ -665,7 +665,7 @@ int My_LQR_control::filter_omg(){
         omg_filtered_temp_lp2 = lp2_filter_omg.apply(omg);
         omg_filtered_temp_lp3 = lp3_filter_omg.apply(omg);
         filter_status_omg = 0; // ok
-        if((lpf_order == 3) && (tune_mode(omg_filtered_temp_lp3(0)) && isbound(omg_filtered_temp_lp3(1)) && isbound(omg_filtered_temp_lp3(2)))){
+        if((lpf_order == 3) && (isbound(omg_filtered_temp_lp3(0)) && isbound(omg_filtered_temp_lp3(1)) && isbound(omg_filtered_temp_lp3(2)))){
             omg_filtered = omg_filtered_temp_lp3;
         }
         else if((lpf_order == 2) && (isbound(omg_filtered_temp_lp2(0)) && isbound(omg_filtered_temp_lp2(1)) && isbound(omg_filtered_temp_lp2(2)))){
