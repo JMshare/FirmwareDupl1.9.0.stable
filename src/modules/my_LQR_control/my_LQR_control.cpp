@@ -260,23 +260,6 @@ int My_LQR_control::airspeed_poll(){
     return PX4_ERROR;
 }
 
-int My_LQR_control::my_rpm_topic_poll(){
-    bool my_rpm_topic_updated;
-    orb_check(my_rpm_topic_sub, &my_rpm_topic_updated);
-    if(my_rpm_topic_updated){
-        orb_copy(ORB_ID(my_rpm_topic), my_rpm_topic_sub, &my_rpm_topic);
-        current1 = 0.9f*current1 + 0.1f*my_rpm_topic.current1;
-        current2 = 0.9f*current2 + 0.1f*my_rpm_topic.current2;
-        return PX4_OK;
-    }
-    if((hrt_absolute_time() - my_rpm_topic.timestamp) > 2000000){ // if no new data for 2 seconds
-        my_rpm_topic.status = 5; // set different to zero
-        current1 = 0.0f;
-        current2 = 0.0f;
-    }
-    return PX4_ERROR;
-}
-
 int My_LQR_control::actuator_controls_publish(){
     bound_controls(); // bounds pqr control to (-1,1) and thrust to (0,1)
 
@@ -481,7 +464,6 @@ void My_LQR_control::run(){
     actuator_controls_virtual_sub = orb_subscribe(actuator_controls_virtual_id);
     home_position_sub = orb_subscribe(ORB_ID(home_position));
     airspeed_sub = orb_subscribe(ORB_ID(airspeed));
-    my_rpm_topic_sub = orb_subscribe(ORB_ID(my_rpm_topic));
     
     // advertise topics
     actuator_controls_0_pub = orb_advertise(ORB_ID(actuator_controls_0), &actuator_controls_0);    
@@ -558,7 +540,6 @@ void My_LQR_control::run(){
     orb_unsubscribe(actuator_controls_virtual_sub);
     orb_unsubscribe(home_position_sub);
     orb_unsubscribe(airspeed_sub);
-    orb_unsubscribe(my_rpm_topic_sub);
 
     // unadvertise topics
     orb_unadvertise(actuator_controls_0_pub);    
