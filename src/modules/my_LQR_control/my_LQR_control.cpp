@@ -684,7 +684,7 @@ int My_LQR_control::filter_omg(){
         omg_filtered_temp_lp2 = lp2_filter_omg.apply(omg);
         omg_filtered_temp_lp3 = lp3_filter_omg.apply(omg);
         filter_status_omg = 0; // ok
-        if((lpf_order == 3) && (isbound(omg_filtered_temp_lp3(0)) && isbound(omg_filtered_temp_lp3(1)) && isbound(omg_filtered_temp_lp3(2)))){
+        if((lpf_order == 3) && (tune_mode(omg_filtered_temp_lp3(0)) && isbound(omg_filtered_temp_lp3(1)) && isbound(omg_filtered_temp_lp3(2)))){
             omg_filtered = omg_filtered_temp_lp3;
         }
         else if((lpf_order == 2) && (isbound(omg_filtered_temp_lp2(0)) && isbound(omg_filtered_temp_lp2(1)) && isbound(omg_filtered_temp_lp2(2)))){
@@ -1294,7 +1294,7 @@ int My_LQR_control::manual_override(){
         cf(2,0) = cm(2,0);
     }
     control_status = 0;
-    if(!PX4_ISFINITE(cf(0,0)) || !PX4_ISFINITE(cf(1,0)) || !PX4_ISFINITE(cf(2,0)) || !PX4_ISFINITE(cf(3,0))){ // check for errors in the stabilised control
+    if(!isbound(cf(0,0)) || !isbound(cf(1,0)) || !isbound(cf(2,0)) || !isbound(cf(3,0))){ // check for errors in the stabilised control
         control_status = 1;
     }
     if(rc_channels.channels[13] < -0.5f || control_status == 1){ // manual override all
