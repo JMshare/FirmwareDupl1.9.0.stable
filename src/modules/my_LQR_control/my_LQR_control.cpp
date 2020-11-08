@@ -298,7 +298,7 @@ int My_LQR_control::actuator_controls_publish(){
     actuator_controls_1.timestamp = hrt_absolute_time();
     actuator_controls_1.timestamp_sample = vehicle_attitude.timestamp;
 
-    orb_publish(ORB_ID(actuator_controls_1), actuator_controls_1_pub, &actuator_controls_1)
+    orb_publish(ORB_ID(actuator_controls_1), actuator_controls_1_pub, &actuator_controls_1);
     
     return PX4_OK;
 }
@@ -383,8 +383,10 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.del_c_eps_tht = Del_c_eps(1,0);
     setpoints_struct.del_c_eps_psi = Del_c_eps(2,0);
 
-    setpoints_struct.del_c_v_vz = Del_c_v(2,0);
-    setpoints_struct.del_c_x_z = Del_c_x(2,0);
+    setpoints_struct.del_c_x_q = Del_c_x(1,0);
+    setpoints_struct.del_c_x_m = Del_c_x(3,0);
+    setpoints_struct.del_c_v_q = Del_c_v(1,0);
+    setpoints_struct.del_c_v_m = Del_c_v(3,0);
     setpoints_struct.k_x_qz = K_feedback_y_sc_tun_sched(1,2);
     setpoints_struct.k_x_mz = K_feedback_y_sc_tun_sched(3,2);
     setpoints_struct.k_v_qvz = K_feedback_y_sc_tun_sched(1,5);
@@ -522,7 +524,7 @@ void My_LQR_control::run(){
                 read_setpoints();
 
                 gains_tune(); // gains tune based on RC knobs
-                gains_schedule(); // gains schedule based on pitch angle
+                gains_schedule(); // gains schedule based on pitch setpoint
 
                 recursiveLS();
                 adaptive_control();

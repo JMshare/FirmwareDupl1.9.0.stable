@@ -93,8 +93,10 @@ float32 sp_y9
 float32 sp_y10
 float32 sp_y11
 
-float32 del_c_x_z
-float32 del_c_v_vz
+float32 del_c_x_q
+float32 del_c_x_m
+float32 del_c_v_q
+float32 del_c_v_m
 
 float32 k_x_qz
 float32 k_x_mz
