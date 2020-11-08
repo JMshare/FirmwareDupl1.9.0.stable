@@ -74,7 +74,6 @@
 #include <uORB/topics/home_position.h>
 #include <uORB/topics/angular_rates_filtered.h>
 #include <uORB/topics/my_LQR_setpoints.h>
-#include <uORB/topics/my_rpm_topic.h>
 #include <uORB/topics/debug_value.h>
 #include <uORB/topics/airspeed.h>
 
@@ -133,7 +132,6 @@ private:
         int actuator_controls_virtual_poll();
 		int home_position_poll();
 		int airspeed_poll();
-		int my_rpm_topic_poll();
 		int actuator_controls_publish();
 		int angular_rates_filtered_publish();
 		int setpoints_publish();
@@ -169,7 +167,6 @@ private:
 		int adaptive_control();
 		int recursiveLS();
 		int gains_limiter_fun();
-		int print_my_rpm();
 		float deg2rad(float);
 		float rad2deg(float);
 		bool isbound(float);
@@ -195,7 +192,6 @@ private:
 		struct my_LQR_setpoints_s setpoints_struct{};
 		struct debug_value_s dbg_val{};
 		struct airspeed_s airspeed{};
-		struct my_rpm_topic_s my_rpm_topic{};
 
         /**
         * My subscription topics subsriptors
@@ -209,7 +205,6 @@ private:
         int actuator_controls_virtual_sub = -1;
 		int home_position_sub = -1;
 		int airspeed_sub = -1;
-		int my_rpm_topic_sub = -1;
 		
 		/**
 		* My publication topics publictors
@@ -414,10 +409,7 @@ private:
     	float dtlim = 0.2f;
     	math::Detect_oscillations_Vector3f detected_oscillations{pksz, dtlim};
 
-    	float current1 = 0.0f;
-    	float current2 = 0.0f;
-    	char telem_string1[35];
-    	char telem_string2[35];
+  
 
 		
 		
