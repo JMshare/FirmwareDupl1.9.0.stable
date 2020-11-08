@@ -157,7 +157,7 @@ private:
         int supporting_outputs();
 		int bound_controls();
 		int rc_loss_failsafe();
-		int printouts();
+		int debug_printouts();
 		int stabilisation_mode();
 		int manual_override();
 		int px4_override();

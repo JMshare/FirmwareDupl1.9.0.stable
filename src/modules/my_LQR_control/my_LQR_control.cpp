@@ -521,7 +521,7 @@ void My_LQR_control::run(){
                 
                 publish_topics();
 
-                printouts();
+                debug_printouts();
                 
             }
             perf_end(_loop_perf);
@@ -1364,93 +1364,13 @@ int My_LQR_control::bound_controls(){
 
 
 
-int My_LQR_control::printouts(){
+int My_LQR_control::debug_printouts(){
     if(do_printouts){ // Never ever do this in flight, only for debug. The messaging is slow and blocking
-        my_rpm_topic_poll();
         dt_print = dt_print + dt;
         if(dt_print > 2.0f){
             PX4_INFO(" ");
-            PX4_INFO(" ");
-            PX4_INFO(" ");
-            //PX4_INFO("dt:%2.5f", (double)dt);
-
-            
-            if(my_rpm_topic.status == 0){
-                print_my_rpm();
-            }
-            else if(my_rpm_topic.status == 5){
-                PX4_INFO("my_rpm_topic sensors not updated");
-            }
-            else if(my_rpm_topic.status == 1){
-                PX4_INFO("my_rpm_topic sensors reading failed");
-            }
-
-            //PX4_INFO("x:%2.2f, xd:%2.2f", (double)y(0,0), (double)y_setpoint(0,0));
-            
-            //PX4_INFO("m1:%2.4f, m2:%2.4f, m3:%2.4f, m4:%2.4f\n", (double)uf(0,0), (double)uf(1,0), (double)uf(2,0), (double)uf(3,0));
-
-            //PX4_INFO("m5:%2.4f, m6:%2.4f, m7:%2.4f, m8:%2.4f\n", (double)uf(4,0), (double)uf(5,0), (double)uf(6,0), (double)uf(7,0));
-            PX4_INFO(" ");
-            PX4_INFO("roll: %4.1f, y2: %4.1f, y3: %4.1f   [deg]", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
-            PX4_INFO("c1(roll): %2.2f, c2(pitch): %2.2f, c3(yaw): %2.2f, c4(thrust): %2.4f", (double)cf(0,0), (double)cf(1,0), (double)cf(2,0), (double)cf(3,0));
-            //PX4_INFO("y1(roll):%2.4f, y2(pitch):%2.4f, y3(yaw):%2.4f", (double)rad2deg(y(9,0)), (double)rad2deg(y(10,0)), (double)rad2deg(y(11,0)));
-
-            //PX4_INFO("Dcf1:%2.2f, Dcf2:%2.2f, Dcf3:%2.2f, Dcf4:%2.2f\n", (double)Del_cf(0,0), (double)Del_cf(1,0), (double)Del_cf(2,0), (double)Del_cf(3,0));
-
-            //PX4_INFO("Dc1:%2.4f, Dc2:%2.4f, Dc3:%2.4f, Dc4:%2.4f\n", (double)Del_c(0,0), (double)Del_c(1,0), (double)Del_c(2,0), (double)Del_c(3,0));
-
-            //PX4_INFO("Dy1:%2.2f, Dy2:%2.2f, Dy3:%2.2f, Dy4:%2.2f, Dy5:%2.2f, Dy6:%2.2f\n", (double)Del_y(6,0), (double)Del_y(7,0), (double)Del_y(8,0), (double)Del_y(9,0), (double)Del_y(10,0), (double)Del_y(11,0));
-
-            PX4_INFO(" ");
-            if(filter_status_omg == 1){
-                PX4_ERR("Filtering rates results in NANs!");
-            }
-            if(filter_status_omg == 2){
-                PX4_WARN("Filtering omg freqn off range 100Hz, disabled!");
-            }
-            if(filter_status_eps == 1){
-                PX4_ERR("Filtering angles results in NANs!");
-            }
-            if(filter_status_RC == 1){
-                PX4_ERR("Filtering RC results in NANs!");
-            }
-            if(control_status == 1){
-                PX4_ERR("Control resulted in NANs! Using manual.");
-            }
-
-            /*if(schedule_K_status == 2){
-                PX4_WARN("Gain scheduler restricted by Airspeed!");
-            }*/
-
-            //PX4_INFO("dpsi projected [deg]: %3.1f", (double)rad2deg(Del_y_eps(2,0)));
-            PX4_INFO("Alt_setpoint = %4.2f", (double)y_setpoint(2,0));
-            PX4_INFO("Altitude mode = %d, c_qx = %4.3f, c_qv = %4.3f, c_mx = %4.3f, c_mv = %4.3f", altitude_mode, (double)Del_c_x(1,0), (double)Del_c_v(1,0), (double)Del_c_x(3,0), (double)Del_c_v(3,0));
-            PX4_INFO(" ");
-            PX4_WARN("V= %3.1f m/s, alt= %3.1f m", (double)airspeed.true_airspeed_m_s, -(double)vehicle_local_position.z); // using warn here cos that will log. Can debug if the printouts stop
-            PX4_INFO("pitch setpoint [deg]: %3.1f", (double)rad2deg(pitch_setpoint));
-            PX4_INFO("theta0 [deg]: %3.1f, theta proj [deg]: %3.1f", (double)rad2deg(theta0), (double)rad2deg(y(10,0)));    
-            PX4_INFO("Scheduler interval: %d, f_int: %2.4f", case_int, (double)f_int);
-
-            PX4_INFO(" ");
             PX4_INFO("KD p = %5.2f, KD q = %5.2f, KD r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,6), (double)K_feedback_y_sc_tun_sched(1,7), (double)K_feedback_y_sc_tun_sched(2,8));
             PX4_INFO("KP p = %5.2f, KP q = %5.2f, KP r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,9), (double)K_feedback_y_sc_tun_sched(1,10), (double)K_feedback_y_sc_tun_sched(2,11));
-            //(K_feedback_y_sc_tun_sched.T().slice<6,4>(6,0)).T().print();
-
-            //PX4_INFO("adapt Kp: %2.2f, adapt Kphi: %2.2f", (double)K_p_adapt, (double)K_phi_adapt);
-
-            if(gains_limiter_on){
-                PX4_INFO(" ");
-                PX4_INFO("glm_p: %1.2f, glm_q: %1.2f, glm_r: %1.2f, glm_pksz: %1.4f", (double)gain_limiter(0,0), (double)gain_limiter(1,0), (double)gain_limiter(2,0), (double)pksz);
-            }
-
-            //(-K_feedback_y*SC_Del_y_eps*Del_y.slice<3,1>(9,0)).print();
-            //Del_c_eps.print();
-            //(-K_feedback_y.T().slice<3,8>(9,0)).T().print();
-
-            //PX4_INFO("angular_rates_timestamp:%2.2f", (double)angular_rates_filtered.timestamp_sample);
-            //omg_filtered.print();
-            //omg.print();
-
             dt_print = 0.0f;
         }
     }
