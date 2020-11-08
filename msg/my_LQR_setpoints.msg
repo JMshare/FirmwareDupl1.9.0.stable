@@ -2,8 +2,12 @@
 
 uint64 timestamp		# time since system start (microseconds)
 uint64 timestamp_sample	    # the timestamp the data this control response is based on was sampled
-	
+
+float32 y0
+float32 y1	
 float32 y2
+float32 y3
+float32 y4
 float32 y5
 float32 y6			
 float32 y7
@@ -75,8 +79,12 @@ int32 oscillating_p
 int32 oscillating_q
 int32 oscillating_r
 
-		
+
+float32 sp_y0
+float32 sp_y1		
 float32 sp_y2
+float32 sp_y3
+float32 sp_y4
 float32 sp_y5
 float32 sp_y6			
 float32 sp_y7
