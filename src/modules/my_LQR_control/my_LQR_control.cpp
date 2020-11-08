@@ -290,9 +290,7 @@ int My_LQR_control::actuator_controls_publish(){
     actuator_controls_0.timestamp = hrt_absolute_time();
     actuator_controls_0.timestamp_sample = vehicle_attitude.timestamp;
 
-    if(orb_publish(ORB_ID(actuator_controls_0), actuator_controls_0_pub, &actuator_controls_0) != PX4_OK){
-        PX4_WARN("Unable to publish actuator_controls0!");
-    }
+    orb_publish(ORB_ID(actuator_controls_0), actuator_controls_0_pub, &actuator_controls_0);
 
     for(int i=0; i < 8; i++){
         actuator_controls_1.control[i] = uf(i,0);
@@ -300,9 +298,7 @@ int My_LQR_control::actuator_controls_publish(){
     actuator_controls_1.timestamp = hrt_absolute_time();
     actuator_controls_1.timestamp_sample = vehicle_attitude.timestamp;
 
-    if(orb_publish(ORB_ID(actuator_controls_1), actuator_controls_1_pub, &actuator_controls_1) != PX4_OK){
-        PX4_WARN("Unable to publish actuator_controls1!");
-    }
+    orb_publish(ORB_ID(actuator_controls_1), actuator_controls_1_pub, &actuator_controls_1)
     
     return PX4_OK;
 }
@@ -330,7 +326,7 @@ int My_LQR_control::angular_rates_filtered_publish(){
     angular_rates_filtered.timestamp_sample = vehicle_attitude.timestamp;
 
     if(orb_publish(ORB_ID(angular_rates_filtered), angular_rates_filtered_pub, &angular_rates_filtered) != PX4_OK){
-        PX4_WARN("Unable to publish angular_rates_filtered!");
+        return PX4_ERROR;
     }
     
     return PX4_OK;
@@ -431,7 +427,7 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.timestamp_sample = vehicle_attitude.timestamp;
 
     if(orb_publish(ORB_ID(my_LQR_setpoints), setpoints_pub, &setpoints_struct) != PX4_OK){
-        PX4_WARN("Unable to publish my_setpoints!");
+        return PX4_ERROR;
     }
     
     return PX4_OK;
@@ -446,7 +442,7 @@ int My_LQR_control::debug_publish(){
     dbg_val.timestamp = hrt_absolute_time();
 
     if(orb_publish(ORB_ID(debug_value), dbg_val_pub, &dbg_val) != PX4_OK){
-        PX4_WARN("Unable to publish debug value!");
+        return PX4_ERROR;
     }
     
     return PX4_OK;
@@ -1379,7 +1375,7 @@ int My_LQR_control::bound_controls(){
 
 
 int My_LQR_control::printouts(){
-    if(do_printouts){
+    if(do_printouts){ // Never ever do this in flight, only for debug. The messaging is slow and blocking
         my_rpm_topic_poll();
         dt_print = dt_print + dt;
         if(dt_print > 2.0f){
