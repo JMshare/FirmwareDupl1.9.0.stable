@@ -1649,8 +1649,6 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     angular_rates_filtered.rc_yaw = 0.0f;
     angular_rates_filtered.cutoff_freqn_rc = cutoff_freqn_RC;
 
-    my_rpm_topic.status = 1; // manually preset different to zero to make sure it's faulty if no updates
-
     Del_c_lim.setAll(1.0f);
 
     E2B.setAll(0.0f);
