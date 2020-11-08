@@ -90,6 +90,7 @@ px4_add_board(
 		vtol_att_control
 		wind_estimator
 		my_LQR_control
+		my_LQR_printouts
 
 	SYSTEMCMDS
 		bl_update
