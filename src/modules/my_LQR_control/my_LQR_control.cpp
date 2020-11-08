@@ -801,32 +801,36 @@ int My_LQR_control::read_y_setpoint(){
 
 
     // Altitude control
-    alt_rate_setpoint = 0.0f;
-    if((altitude_mode == 1) && (fabsf(y_setpoint(7,0)) > 0.1f)){
-        alt_rate_setpoint = y(5,0); // don't limit the climb/descend now
-        if(k_sw(0,0) > 0.001f){
-            alt_setpoint = y(2,0) + Del_c_x(1,0)/k_sw(0,0); // preserve the last control contribution
-            alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(0,0), y(2,0) + Del_c_lim(0,0)/k_sw(0,0)); // integral windup this
-        }
-        else{
-            altitude_mode = -10;
-            alt_setpoint = y(2,0);
-        }
-    }
-    if((altitude_mode == 2) && (fabsf(c_setpoint(3,0)-0.5f) > 0.1f)){
-        alt_rate_setpoint = alt_rate_rc_scale*(c_setpoint(3,0)-0.5f); 
-        if(k_sw(2,1) > 0.001f){
-            alt_setpoint = y(2,0) + Del_c_x(3,0)/k_sw(2,1); // preserve the last control contribution
-            alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(2,1), y(2,0) + Del_c_lim(0,0)/k_sw(2,1)); // integral windup this
-        }
-        else{
-            altitude_mode = -20;
-            alt_setpoint = y(2,0);
-        }
-    }
-    if(altitude_mode <= 0){
-        alt_setpoint = y(2,0);
+    if(altitude_mode == 1){
         alt_rate_setpoint = 0.0f;
+        if(fabsf(y_setpoint(7,0)) > 0.1f){
+            alt_rate_setpoint = y(5,0); // don't limit the climb/descend now
+            if(k_sw(0,0) > 0.001f){
+                alt_setpoint = y(2,0) + Del_c_x(1,0)/k_sw(0,0); // preserve the last control contribution
+                alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(0,0), y(2,0) + Del_c_lim(0,0)/k_sw(0,0)); // integral windup this
+            }
+            else{
+                altitude_mode = -10;
+                alt_setpoint = y(2,0);
+            }
+        }
+    }
+    if(altitude_mode == 2){
+        alt_rate_setpoint = alt_rate_rc_scale*(c_setpoint(3,0)-0.5f);
+        if(fabsf(c_setpoint(3,0) - 0.5f) > 0.1f){
+            if(k_sw(2,1) > 0.001f){
+                alt_setpoint = y(2,0) + Del_c_x(3,0)/k_sw(2,1); // preserve the last control contribution
+                alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(2,1), y(2,0) + Del_c_lim(0,0)/k_sw(2,1)); // integral windup this
+            }
+            else{
+                altitude_mode = -20;
+                alt_setpoint = y(2,0);
+            }
+        }
+    }
+    if(altitude_mode == 0){
+        alt_setpoint = y(2,0);
+        alt_rate_setpoint = y(5,0);
     }
 
     y_setpoint(2,0) = alt_setpoint;
@@ -1078,7 +1082,7 @@ int My_LQR_control::gains_schedule(){
             }
             else{
                 altitude_mode = 2; // use motors
-                if(c_setpoint(3,0) < 0.20f){ // don't add throttle if not already using the motors
+                if(c_setpoint(3,0) < 0.10f){ // don't add throttle if not already using the motors
                     altitude_mode = -2; // reject alt mode 2
                     K_feedback_y_sc_tun_sched(1,2) = 0.0f; // qz
                     K_feedback_y_sc_tun_sched(1,5) = 0.0f; // qvz
