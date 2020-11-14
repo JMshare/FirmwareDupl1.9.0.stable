@@ -81,8 +81,8 @@ int My_LQR_printouts::task_spawn(int argc, char *argv[])
 {
         _task_id = px4_task_spawn_cmd("my_LQR_printouts",
                                       SCHED_DEFAULT,
-                                      150,
-                                      1000, // stack size
+                                      50, // priority
+                                      1500, // stack size
                                       (px4_main_t)&run_trampoline,
                                       (char *const *)argv);
 
