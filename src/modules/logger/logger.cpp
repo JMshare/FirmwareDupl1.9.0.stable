@@ -750,7 +750,8 @@ void Logger::add_system_identification_topics()
 	add_topic("sensor_combined");
 	add_topic("angular_rates_filtered"); // for comparison with not-filtered, need high freqn update here
 	add_topic("my_LQR_setpoints"); // for debug only, need high freqn now for adaptive checs
-	add_topic("actuator_controls_virtual_fw", 200); // for comparison only
+	add_topic("actuator_controls_virtual_fw", 100); // for comparison only
+	add_topic("actuator_controls_3", 100);
 	add_topic("rc_channels", 200); // for comparison only
 	add_topic("my_rpm_topic");
 	add_topic("my_scale_topic");
