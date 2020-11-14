@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <unistd.h>
+#include <mathlib/mathlib.h>
 
 #include <perf/perf_counter.h>
 
@@ -494,7 +495,7 @@ SF1XX::collect()
 	report.timestamp = hrt_absolute_time();
 	report.type = distance_sensor_s::MAV_DISTANCE_SENSOR_LASER;
 	report.orientation = _rotation;
-	report.current_distance = distance_m;
+	report.current_distance = math::constrain(distance_m, get_minimum_distance(), get_maximum_distance());
 	report.min_distance = get_minimum_distance();
 	report.max_distance = get_maximum_distance();
 	report.variance = 0.0f;
