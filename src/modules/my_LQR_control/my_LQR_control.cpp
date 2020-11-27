@@ -1433,7 +1433,7 @@ k_scheds(4,0) =   1.30f; k_scheds(4,1) =   2.00f; k_scheds(4,2) =   5.00f; k_sch
 k_scheds(5,0) =   0.00f; k_scheds(5,1) =   0.00f; k_scheds(5,2) =   0.00f; k_scheds(5,3) =   0.00f; k_scheds(5,4) =   0.00f; k_scheds(5,5) =   0.00f; 
 k_scheds(6,0) =   0.00f; k_scheds(6,1) =   0.00f; k_scheds(6,2) =   0.00f; k_scheds(6,3) =   0.00f; k_scheds(6,4) =   0.00f; k_scheds(6,5) =   0.00f; 
 k_scheds(7,0) =   1.30f; k_scheds(7,1) =   1.30f; k_scheds(7,2) =   1.75f; k_scheds(7,3) =   1.75f; k_scheds(7,4) =   1.75f; k_scheds(7,5) =   1.75f; 
-k_scheds(8,0) =   0.05f; k_scheds(8,1) =   0.05f; k_scheds(8,2) =   0.12f; k_scheds(8,3) =   0.20f; k_scheds(8,4) =   0.20f; k_scheds(8,5) =   0.20f; 
+k_scheds(8,0) =   0.05f; k_scheds(8,1) =   0.05f; k_scheds(8,2) =   0.12f; k_scheds(8,3) =   0.15f; k_scheds(8,4) =   0.15f; k_scheds(8,5) =   0.15f; 
 k_scheds(9,0) =   1.40f; k_scheds(9,1) =   2.00f; k_scheds(9,2) =   3.00f; k_scheds(9,3) =   4.00f; k_scheds(9,4) =   4.00f; k_scheds(9,5) =   4.00f; 
         tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.5708f; 
         // pitch angles (0.35, 0.52, 0.70, 0.78, 0.87, 1.04, 1.57 rad = 20, 30, 40, 45, 50, 60, 90 deg)
