@@ -104,6 +104,7 @@ float32 k_v_qvz
 float32 k_v_mvz
 
 int32 alt_mode 				# altitude stabilisation 0 off, 1 cruise, 2 slow, -2 slow rejected
+float32 c_alt_support
 
 
 

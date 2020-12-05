@@ -375,6 +375,7 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.k_v_qvz = K_feedback_y_sc_tun_sched(1,5);
     setpoints_struct.k_v_mvz = K_feedback_y_sc_tun_sched(3,5);
     setpoints_struct.alt_mode = altitude_mode;
+    setpoints_struct.c_alt_support = c_alt_support;
 
 
     setpoints_struct.pitch_setpoint = rad2deg(pitch_setpoint);
@@ -768,7 +769,7 @@ int My_LQR_control::read_c_setpoint(){
 
     // Attitude control
     /* we control thrust directly by rc */
-    thrust_setpoint = rc_channels.channels[3] - 0.5f; 
+    thrust_setpoint = rc_channels.channels[3] - 0.5f; // [0,1] to [-0.5, 0.5]
     c_setpoint(3,0) = math::constrain(c_nominal_control(3,0) + thrust_setpoint, 0.0f, 1.0f);
 
     return PX4_OK;
@@ -820,7 +821,7 @@ int My_LQR_control::read_y_setpoint(){
         if(fabsf(c_setpoint(3,0) - 0.5f) > 0.1f){
             if(k_sw(2,1) > 0.001f){
                 alt_setpoint = y(2,0) + Del_c_x(3,0)/k_sw(2,1); // preserve the last control contribution
-                alt_setpoint = math::constrain(alt_setpoint, y(2,0) - Del_c_lim(0,0)/k_sw(2,1), y(2,0) + Del_c_lim(0,0)/k_sw(2,1)); // integral windup this
+                alt_setpoint = math::constrain(alt_setpoint, y(2,0), y(2,0) + Del_c_lim(0,0)/k_sw(2,1)); // integral windup this from up side and don't use from bottom
             }
             else{
                 altitude_mode = -20;
@@ -1194,6 +1195,7 @@ int My_LQR_control::control_fun(){
 
     Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
     Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
+    c_alt_support = math::constrain(Del_c_v(3,0) - Del_c_lim(1,0), 0.0f, 1.0f) + math::constrain(Del_c_x(3,0) - Del_c_lim(0,0), 0.0f, 1.0f); // store the throttle remainder after bounding to its upper limit (this will only add throttle, never reduce)
     // Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*Del_y.slice<3,1>(6,0); // slice omg contribution
     Del_c_omg = -K_feedback_y_sc_tun_sched.T().slice<3,4>(6,0).T()*(y.slice<3,1>(6,0).emult(gain_limiter)); // slice omg contribution, this way RC input indep of K
     Del_c_omg(0,0) += y_setpoint(6,0); // p
@@ -1202,7 +1204,7 @@ int My_LQR_control::control_fun(){
     Del_c_eps = -K_feedback_y_sc_tun_sched.T().slice<3,4>(9,0).T()*Del_y_eps; // sliced eps contribution
     for(int i = 0; i < 4; i++){ // not necessarily (-1,1), just a sanity check against NaNs
         Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0)*(altitude_mode != 1)); // only downward elev trim for our purpose now
-        Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0));
+        Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0)); // should be more careful here cos the throttle is actually [0,1] not [-1,1], but will do for now as it doesn't mix anywhere
         Del_c_omg(i,0) = math::constrain(Del_c_omg(i,0), -Del_c_lim(2,0), Del_c_lim(2,0));
         Del_c_eps(i,0) = math::constrain(Del_c_eps(i,0), -Del_c_lim(3,0), Del_c_lim(3,0));
     }
@@ -1214,6 +1216,7 @@ int My_LQR_control::control_fun(){
         Del_c(2,0) = Del_c_eps(0,0)*c_eps_bool(0,0) + Del_c_omg(2,0);
     }
     cf = c_setpoint + Del_c;
+    c_alt_support = math::constrain(c_alt_support + math::constrain(cf(3,0)-1.0f, 0.0f, 1.0f), 0.0f, 1.0f); // add what will be scrapped by cf limit and then limit the total to [0,1]
         
     return PX4_OK;
 }
@@ -1311,7 +1314,7 @@ int My_LQR_control::supporting_outputs(){
     uf.setAll(0.0f);
 
     // front propeller thrust
-    uf(3,0) = math::constrain(c_nominal_control(3,0) + rc_channels.channels[8]/2.0f, 0.0f, 1.0f);
+    uf(3,0) = math::constrain(c_nominal_control(3,0) + rc_channels.channels[8]/2.0f + c_alt_support*c_alt_bool, 0.0f, 1.0f); // adding alto the alt_hold support not divided by 2 because I want up to full throttle
 
     // roll support to the spilt elevators
     if(rc_channels.channels[12] > -0.5f){
@@ -1376,6 +1379,8 @@ int My_LQR_control::debug_printouts(){
             PX4_INFO("KD p = %5.2f, KD q = %5.2f, KD r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,6), (double)K_feedback_y_sc_tun_sched(1,7), (double)K_feedback_y_sc_tun_sched(2,8));
             PX4_INFO("KP p = %5.2f, KP q = %5.2f, KP r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,9), (double)K_feedback_y_sc_tun_sched(1,10), (double)K_feedback_y_sc_tun_sched(2,11));
             dt_print = 0.0f;
+
+            PX4_INFO("c_alt_support for throttle: %2.5f", (double)c_alt_support);
         }
     }
     return PX4_OK;

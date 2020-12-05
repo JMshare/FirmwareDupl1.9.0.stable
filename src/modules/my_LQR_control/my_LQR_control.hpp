@@ -341,6 +341,7 @@ private:
         float alt_setpoint = 0.0f;
         float alt_rate_setpoint = 0.0f;
         float alt_rate_rc_scale = 5.0f;
+        float c_alt_support = 0.0f;
 
 
 		Matrix<float,4,12> K_feedback_y_scaled;

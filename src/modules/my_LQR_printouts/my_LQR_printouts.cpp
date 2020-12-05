@@ -379,6 +379,9 @@ int My_LQR_printouts::printouts(){
             PX4_INFO("glm_r: %1.2f", (double)my_LQR_setpoints.gain_limiter_r);
         }
 
+        PX4_INFO(" ");
+        PX4_INFO("c_alt_support for front engine: %2.5f", (double)my_LQR_setpoints.c_alt_support);
+
         dt_print = 0.0f;
     }
     return PX4_OK;
