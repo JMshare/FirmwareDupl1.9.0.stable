@@ -798,6 +798,9 @@ int My_LQR_control::read_y_setpoint(){
     if(fabsf(y_setpoint(8,0)) > 0.1f || ((fabsf(y_setpoint(6,0)) > 0.1f) && ((vehicle_id == 2) || (vehicle_id == 3))) || fabsf(yaw_setpoint) <= 0.0f){ // at yaw||(roll if fw) rate command or at the startup
         yaw_setpoint = y(11,0);
     }
+    if((fabsf(y(11,0) - setpoints_struct.y11) > 0.08f) && (fabsf(y(11,0) - setpoints_struct.y11) < 6.0f)){ // if jump in psi more than 4.5 degrees, but not the 360 deg jump when crossing the 180 limit
+        yaw_setpoint = y(11,0) - (setpoints_struct.y11 - setpoints_struct.sp_y11); // preserve the last del_y
+    }
     y_setpoint(11,0) = yaw_setpoint;
 
 
