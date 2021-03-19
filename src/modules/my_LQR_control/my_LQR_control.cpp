@@ -415,6 +415,11 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.oscillating_q = oscillating(1,0);
     setpoints_struct.oscillating_r = oscillating(2,0);
 
+    setpoints_struct.c_eps_satur_p = c_eps_satur(0,0);
+    setpoints_struct.c_eps_satur_q = c_eps_satur(1,0);
+    setpoints_struct.c_eps_satur_r = c_eps_satur(2,0);
+    setpoints_struct.c_eps_satur_m = c_eps_satur(3,0);
+
 
     setpoints_struct.timestamp = hrt_absolute_time();
     setpoints_struct.timestamp_sample = vehicle_attitude.timestamp;
@@ -1205,6 +1210,9 @@ int My_LQR_control::control_fun(){
     Del_c_omg(1,0) += y_setpoint(7,0); // q
     Del_c_omg(2,0) += y_setpoint(8,0); // r
     Del_c_eps = -K_feedback_y_sc_tun_sched.T().slice<3,4>(9,0).T()*Del_y_eps; // sliced eps contribution
+    for(int i = 0; i < 4; i++){ // get the reminders after the constraining that follows
+        c_eps_satur(i,0) = copysignf(1.0f, Del_c_eps(i,0))*math::constrain(fabsf(Del_c_eps(i,0)) - Del_c_lim(3,0), 0.0f, 1.0f);
+    }
     for(int i = 0; i < 4; i++){ // not necessarily (-1,1), just a sanity check against NaNs
         Del_c_x(i,0)   = math::constrain(Del_c_x(i,0)  , -Del_c_lim(0,0), Del_c_lim(0,0)*(altitude_mode != 1)); // only downward elev trim for our purpose now
         Del_c_v(i,0)   = math::constrain(Del_c_v(i,0)  , -Del_c_lim(1,0), Del_c_lim(1,0)); // should be more careful here cos the throttle is actually [0,1] not [-1,1], but will do for now as it doesn't mix anywhere
@@ -1214,10 +1222,20 @@ int My_LQR_control::control_fun(){
 
     stabilisation_mode();
     Del_c = Del_c_eps.emult(c_eps_bool) + Del_c_omg + (Del_c_v + Del_c_x)*c_alt_bool;
+
     if(abs(proj_theta_status) == 10){ // swap roll and yaw proportional compensation if above the treshold pitch deg
         Del_c(0,0) = -Del_c_eps(2,0)*c_eps_bool(2,0) + Del_c_omg(0,0);
         Del_c(2,0) = Del_c_eps(0,0)*c_eps_bool(0,0) + Del_c_omg(2,0);
     }
+
+    c_eps_satur = c_eps_satur.emult(c_eps_bool); // put the component to zero if stabilisation disabled
+    if((Del_c(2,0) > 0.0f) && (c_eps_satur(0,0) < 0.0f)){
+        Del_c(2,0) = math::constrain(Del_c(2,0) + c_eps_satur(0,0), 0.0f, 1.0f);  // add the negative saturated roll from the positive yaw compensation that is likely causing this by diff thrust
+    }
+    else if((Del_c(2,0) < 0.0f) && (c_eps_satur(0,0) > 0.0f)){
+        Del_c(2,0) = math::constrain(Del_c(2,0) + c_eps_satur(0,0), -1.0f, 0.0f); // add the positive saturated roll from the negative yaw compensation that is likely causing this by diff thrust
+    }
+
     cf = c_setpoint + Del_c;
     c_alt_support = math::constrain(c_alt_support + math::constrain(cf(3,0)-1.0f, 0.0f, 1.0f), 0.0f, 1.0f); // add what will be scrapped by cf limit and then limit the total to [0,1]
         
@@ -1582,6 +1600,7 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_sch
     angular_rates_filtered.cutoff_freqn_rc = cutoff_freqn_RC;
 
     Del_c_lim.setAll(1.0f);
+    c_eps_satur.setAll(0.0f);
 
     E2B.setAll(0.0f);
     E2B(0,0) = 1.0f;

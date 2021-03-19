@@ -358,6 +358,7 @@ private:
 		Matrix<float,4,1> Del_c_eps; 
 		Matrix<float,4,1> Del_c_lim; // limits on max Del_c for x,v,omg,eps
 		Matrix<float,4,1> c_eps_bool; // stabilisation mode, will be zeros or ones based on RC switch
+		Matrix<float,4,1> c_eps_satur; // store the remainders after bounding to [-1,1]
 
 		float theta0 = 0.0f;
 		bool proj_theta = 0;

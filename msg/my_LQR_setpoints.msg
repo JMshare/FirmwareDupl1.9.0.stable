@@ -106,6 +106,12 @@ float32 k_v_mvz
 int32 alt_mode 				# altitude stabilisation 0 off, 1 cruise, 2 slow, -2 slow rejected
 float32 c_alt_support
 
+float32 c_eps_satur_p 		# remainder after cropping the Del_eps_c to [-1,1] -> roll saturation to be coupled to yaw
+float32 c_eps_satur_q
+float32 c_eps_satur_r
+float32 c_eps_satur_m
+
+
 
 
 # TOPICS my_LQR_setpoints
