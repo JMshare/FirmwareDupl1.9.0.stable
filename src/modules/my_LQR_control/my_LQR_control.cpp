@@ -1477,17 +1477,17 @@ k_scheds(9,0) =   1.40f; k_scheds(9,1) =   2.00f; k_scheds(9,2) =   3.00f; k_sch
         K_feedback_y(1,0) =   0.0000f; K_feedback_y(1,1) =   0.0000f; K_feedback_y(1,2) =   0.0000f; K_feedback_y(1,3) =   0.0000f; K_feedback_y(1,4) =   0.0000f; K_feedback_y(1,5) =   0.0000f; K_feedback_y(1,6) =  -0.0000f; K_feedback_y(1,7) =   0.0500f; K_feedback_y(1,8) =  -0.0000f; K_feedback_y(1,9) =  -0.0000f; K_feedback_y(1,10) =   1.2910f; K_feedback_y(1,11) =  -0.0000f; 
         K_feedback_y(2,0) =   0.0000f; K_feedback_y(2,1) =   0.0000f; K_feedback_y(2,2) =   0.0000f; K_feedback_y(2,3) =   0.0000f; K_feedback_y(2,4) =   0.0000f; K_feedback_y(2,5) =   0.0000f; K_feedback_y(2,6) =  -0.0000f; K_feedback_y(2,7) =  -0.0000f; K_feedback_y(2,8) =   0.1000f; K_feedback_y(2,9) =  -0.0000f; K_feedback_y(2,10) =  -0.0000f; K_feedback_y(2,11) =   1.2910f; 
         K_feedback_y(3,0) =   0.0000f; K_feedback_y(3,1) =   0.0000f; K_feedback_y(3,2) =   0.0000f; K_feedback_y(3,3) =   0.0000f; K_feedback_y(3,4) =   0.0000f; K_feedback_y(3,5) =   0.0000f; K_feedback_y(3,6) =   0.0000f; K_feedback_y(3,7) =   0.0000f; K_feedback_y(3,8) =   0.0000f; K_feedback_y(3,9) =   0.0000f; K_feedback_y(3,10) =   0.0000f; K_feedback_y(3,11) =   0.0000f; 
-k_scheds(0,0) =   0.10f; k_scheds(0,1) =   0.10f; k_scheds(0,2) =   1.00f; k_scheds(0,3) =   1.20f; k_scheds(0,4) =   1.30f; k_scheds(0,5) =   1.45f; k_scheds(0,6) =   1.45f; 
+k_scheds(0,0) =   0.01f; k_scheds(0,1) =   0.01f; k_scheds(0,2) =   0.01f; k_scheds(0,3) =   0.10f; k_scheds(0,4) =   0.50f; k_scheds(0,5) =   0.50f; k_scheds(0,6) =   0.50f; 
 k_scheds(1,0) =   0.00f; k_scheds(1,1) =   0.00f; k_scheds(1,2) =   0.00f; k_scheds(1,3) =   0.00f; k_scheds(1,4) =   0.00f; k_scheds(1,5) =   0.00f; k_scheds(1,6) =   0.00f; 
-k_scheds(2,0) =   0.00f; k_scheds(2,1) =   0.00f; k_scheds(2,2) =   0.00f; k_scheds(2,3) =  -0.00f; k_scheds(2,4) =  -0.00f; k_scheds(2,5) =  -0.00f; k_scheds(2,6) =  -0.00f;
-k_scheds(3,0) =   0.30f; k_scheds(3,1) =   0.30f; k_scheds(3,2) =   1.00f; k_scheds(3,3) =   10.0f; k_scheds(3,4) =   10.0f; k_scheds(3,5) =   10.0f; k_scheds(3,6) =   10.0f;
-k_scheds(4,0) =   1.30f; k_scheds(4,1) =   1.30f; k_scheds(4,2) =   2.30f; k_scheds(4,3) =   4.60f; k_scheds(4,4) =   4.60f; k_scheds(4,5) =   4.60f; k_scheds(4,6) =   4.60f;
+k_scheds(2,0) =   0.00f; k_scheds(2,1) =   0.00f; k_scheds(2,2) =   0.00f; k_scheds(2,3) =   0.00f; k_scheds(2,4) =   0.00f; k_scheds(2,5) =   0.00f; k_scheds(2,6) =   0.00f;
+k_scheds(3,0) =   0.01f; k_scheds(3,1) =   0.01f; k_scheds(3,2) =   0.01f; k_scheds(3,3) =   0.80f; k_scheds(3,4) =   1.00f; k_scheds(3,5) =   4.00f; k_scheds(3,6) =   4.00f;
+k_scheds(4,0) =   1.20f; k_scheds(4,1) =   1.20f; k_scheds(4,2) =   1.30f; k_scheds(4,3) =   1.30f; k_scheds(4,4) =   1.00f; k_scheds(4,5) =   1.00f; k_scheds(4,6) =   0.20f;
 k_scheds(5,0) =  -0.00f; k_scheds(5,1) =  -0.00f; k_scheds(5,2) =  -0.00f; k_scheds(5,3) =  -0.00f; k_scheds(5,4) =  -0.00f; k_scheds(5,5) =  -0.00f; k_scheds(5,6) =  -0.00f;
 k_scheds(6,0) =  -0.00f; k_scheds(6,1) =  -0.00f; k_scheds(6,2) =  -0.00f; k_scheds(6,3) =  -0.00f; k_scheds(6,4) =  -0.00f; k_scheds(6,5) =  -0.00f; k_scheds(6,6) =  -0.00f;
-k_scheds(7,0) =   0.35f; k_scheds(7,1) =   0.35f; k_scheds(7,2) =   0.35f; k_scheds(7,3) =   0.35f; k_scheds(7,4) =   0.35f; k_scheds(7,5) =   0.35f; k_scheds(7,6) =   0.35f;
-k_scheds(8,0) =   0.05f; k_scheds(8,1) =   0.05f; k_scheds(8,2) =   0.20f; k_scheds(8,3) =   0.80f; k_scheds(8,4) =   0.80f; k_scheds(8,5) =   0.80f; k_scheds(8,6) =   0.80f;
-k_scheds(9,0) =   1.40f; k_scheds(9,1) =   1.40f; k_scheds(9,2) =   2.30f; k_scheds(9,3) =   4.00f; k_scheds(9,4) =   4.00f; k_scheds(9,5) =   4.00f; k_scheds(9,6) =   4.00f; 
-        tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   1.0472f; tht_ints(0,5) =   1.3963f; tht_ints(0,6) = 3.0f;
+k_scheds(7,0) =   0.35f; k_scheds(7,1) =   0.35f; k_scheds(7,2) =   0.35f; k_scheds(7,3) =   0.35f; k_scheds(7,4) =   0.35f; k_scheds(7,5) =   0.06f; k_scheds(7,6) =   0.60f;
+k_scheds(8,0) =   0.01f; k_scheds(8,1) =   0.01f; k_scheds(8,2) =   0.01f; k_scheds(8,3) =   0.01f; k_scheds(8,4) =   0.01f; k_scheds(8,5) =   0.01f; k_scheds(8,6) =   0.01f;
+k_scheds(9,0) =   1.30f; k_scheds(9,1) =   1.30f; k_scheds(9,2) =   2.40f; k_scheds(9,3) =   3.50f; k_scheds(9,4) =   3.50f; k_scheds(9,5) =   3.50f; k_scheds(9,6) =   2.60f; 
+        tht_ints(0,0) =  -1.5708f; tht_ints(0,1) =   0.0000f; tht_ints(0,2) =   0.3491f; tht_ints(0,3) =   0.6981f; tht_ints(0,4) =   0.87f; tht_ints(0,5) =   1.04f; tht_ints(0,6) = 1.57f;
         // pitch angles (0.35, 0.52, 0.70, 0.87 rad = 20, 30, 40, 50 deg)
         //// [pp, pr, rp, rr, ..., q, tht]
         k_sw(0,0) = 0.02f; k_sw(0,1) = 0.00f;
