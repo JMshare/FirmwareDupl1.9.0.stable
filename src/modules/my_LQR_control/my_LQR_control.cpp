@@ -854,7 +854,7 @@ int My_LQR_control::omg_setpoints_scale(){
 
     RC_scale = RC_scale_base;
     if(do_rc_scale){
-        for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the p-compensation pushing me back to zero
+        for(int i=0; i<3; i++){ // scaling the RC input up based on K_eps gains, so that if K_eps high, I can stil move the plane without the KP-compensation pushing me back to zero
             f_scale = K_feedback_y_sc_tun_sched(i,9+i); // this scales the RC such that I reach exactly eps==1[rad]~57.3[deg] at c==1 (omg==0).
             
             p_scale = fabsf(Del_y_eps(i,0))/RC_scale_base(i,0); // however it may make the RC scale so small that it would give very small inputs at eps==0 if Keps->0. Same way, if keps->large, I get overreactions at eps==0.
@@ -1195,7 +1195,7 @@ int My_LQR_control::control_fun(){
     omg_setpoints_scale();
     // del_epsilon_to_body_frame(); // depreciated
     
-    /* depreciated, this is already imited later
+    /* depreciated, this is already limited later
     // Let's constrain Del_eps so I dont get overreaction at large perturbs. The Del_c is limited but if this is too large then the omg compensation wont be able to react
     math::constrain(Del_y_eps(0,0), -deg2rad(30.0f), deg2rad(30.0f));
     math::constrain(Del_y_eps(1,0), -deg2rad(30.0f), deg2rad(30.0f));
