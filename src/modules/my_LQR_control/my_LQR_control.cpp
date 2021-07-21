@@ -786,7 +786,8 @@ int My_LQR_control::read_y_setpoint(){
 
     pitch_setpoint = deg2rad(pitch_sp_min) + ((rc_channels.channels[9] + 1.0f)/2.0f)*deg2rad(pitch_sp_max); // 0 to pitch_sp_max deg based on RS stick input
     //pitch_setpoint = rc_channels.channels[9]*deg2rad(pitch_sp_max); // -90 to 90 deg based on RS stick input just for test
-    pitch_setpoint_ramp = pitch_setpoint_ramp + (dt/1.0f)*(pitch_setpoint - pitch_setpoint_ramp); // 1st order lag for use with gain scheduler
+    
+    //pitch_setpoint_ramp = pitch_setpoint_ramp + (dt/1.0f)*(pitch_setpoint - pitch_setpoint_ramp); // 1st order lag for use with gain scheduler
     pitch_setpoint_ramp = pitch_setpoint_ramp + dt*(deg2rad(20.0f)/2.0f)*((pitch_setpoint - pitch_setpoint_ramp) > (dt*(deg2rad(20.0f)/2.0f))) - dt*(deg2rad(20.0f)/2.0f)*((pitch_setpoint - pitch_setpoint_ramp) < (-dt*(deg2rad(20.0f)/2.0f))); // or linear ramp
 
     /* 
