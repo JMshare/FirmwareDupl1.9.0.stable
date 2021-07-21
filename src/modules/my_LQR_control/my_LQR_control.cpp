@@ -296,6 +296,7 @@ int My_LQR_control::angular_rates_filtered_publish(){
     angular_rates_filtered.rc_roll = RC_filtered(0);
     angular_rates_filtered.rc_pitch = RC_filtered(1);
     angular_rates_filtered.rc_yaw = RC_filtered(2);
+    angular_rates_filtered.hdot = hdot_filtered;
     angular_rates_filtered.loop_update_freqn = loop_update_freqn;
     angular_rates_filtered.cutoff_freqn_omg = cutoff_freqn_omg;
     angular_rates_filtered.filter_status_omg = filter_status_omg;
@@ -303,6 +304,8 @@ int My_LQR_control::angular_rates_filtered_publish(){
     angular_rates_filtered.filter_status_eps = filter_status_eps;
     angular_rates_filtered.cutoff_freqn_rc = cutoff_freqn_RC;
     angular_rates_filtered.filter_status_rc = filter_status_RC;
+    angular_rates_filtered.cutoff_freqn_hdot = cutoff_freqn_hdot;
+    angular_rates_filtered.filter_status_hdot = filter_status_hdot;
     angular_rates_filtered.lpf_order = lpf_order;
     
     angular_rates_filtered.timestamp = hrt_absolute_time();
@@ -579,6 +582,7 @@ int My_LQR_control::timer_clock(){
             lp3_filter_omg.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_omg);
             lp3_filter_eps.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_eps);
             lp2_filter_RC.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_RC);
+            lp2_filter_hdot.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_hdot);            
         }
         dt_loop = 0.0f;
         loop_counter = 0.0f;
@@ -595,13 +599,14 @@ int My_LQR_control::read_y_state(){
     convert_quaternions();
     filter_omg();
     filter_eps();
+    filter_hdot();
         
     y( 0,0) = 0.0f*vehicle_local_position.x;
     y( 1,0) = 0.0f*vehicle_local_position.y;
     y( 2,0) =-1.0f*vehicle_local_position.z;
     y( 3,0) = 0.0f*vehicle_local_position.vx;
     y( 4,0) = 0.0f*vehicle_local_position.vy;
-    y( 5,0) =-1.0f*vehicle_local_position.vz;
+    y( 5,0) =-1.0f*hdot_filtered;
     y( 6,0) = 1.0f*omg_filtered(0);
     y( 7,0) = 1.0f*omg_filtered(1);
     y( 8,0) = 1.0f*omg_filtered(2);
@@ -750,6 +755,22 @@ int My_LQR_control::filter_RC(){
     else{
         RC_filtered = RC; 
         filter_status_RC = 2; // no cutoff
+    }
+
+    return PX4_OK;
+}
+int My_LQR_control::filter_hdot(){
+    if(cutoff_freqn_hdot <= 100.0f){
+        hdot_filtered = lp2_filter_hdot.apply(vehicle_local_position.vz);
+        filter_status_hdot = 0; // ok
+        if(!isbound(hdot_filtered)){ 
+            filter_status_hdot = 1; // whops
+            hdot_filtered = vehicle_local_position.vz; // definitely better to use the non-filtered than nothing
+        }
+    }
+    else{
+        hdot_filtered = vehicle_local_position.vz; 
+        filter_status_hdot = 2; // no cutoff
     }
 
     return PX4_OK;
@@ -1677,6 +1698,10 @@ int My_LQR_control::local_parameters_update(){
     if(fabsf(cutoff_freqn_RC - math::constrain(cutoff_fn_RC.get(), 1.0f, 300.0f)) > 0.1f){
         cutoff_freqn_RC = math::constrain(cutoff_fn_RC.get(), 1.0f, 300.0f);
         lp2_filter_RC.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_RC);
+    }
+    if(fabsf(cutoff_freqn_hdot - math::constrain(cutoff_fn_hdot.get(), 1.0f, 300.0f)) > 0.1f){
+        cutoff_freqn_hdot = math::constrain(cutoff_fn_hdot.get(), 1.0f, 300.0f);
+        lp2_filter_hdot.set_cutoff_frequency(loop_update_freqn, cutoff_freqn_hdot);
     }
 
     tailerons_scaling = tailerons_sc.get();

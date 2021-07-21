@@ -25,5 +25,9 @@ float32 cutoff_freqn_rc # cutoff param in lp_filter_RC
 int32 filter_status_rc 		# filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn)
 # always using 2nd order for RC for safety
 
+float32 hdot		      # filtered hdot
+float32 cutoff_freqn_hdot # cutoff param in lp_filter_hdot
+int32 filter_status_hdot  # filter status (0 = ok, 1 = NaNs, 2 = too high cutofffqn)
+
 
 # TOPICS angular_rates_filtered

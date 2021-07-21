@@ -109,6 +109,18 @@ PARAM_DEFINE_FLOAT(MY_LQR_CTF_EPS, 250.0f);
 PARAM_DEFINE_FLOAT(MY_LQR_CTF_RC, 3.0f);
 
 /**
+ * Cutoff frequency for alt rate
+ *
+ * @unit [Hz]
+ * @min 0
+ * @max 250
+ * @decimal 1
+ * @increment 0.1
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_FLOAT(MY_LQR_CTF_HDOT, 2.0f);
+
+/**
  * LPF order
  * set to 2 or 3
  *

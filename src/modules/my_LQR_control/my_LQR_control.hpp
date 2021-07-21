@@ -85,6 +85,7 @@ using matrix::Quatf;
 
 #include <mathlib/math/filter/LowPassFilter2pVector3f.hpp>
 #include <mathlib/math/my_lib/LowPassFilter3pVector3f.hpp>
+#include <mathlib/math/filter/LowPassFilter2p.hpp>
 #include <mathlib/math/my_lib/Detect_oscillations_Vector3f.hpp>
 
 #define MY_PI 3.14159265359f
@@ -147,6 +148,7 @@ private:
         int filter_omg();
         int filter_eps();
         int filter_RC();
+        int filter_hdot();
         int read_setpoints();
         int read_y_setpoint();
         int read_c_setpoint();
@@ -306,6 +308,12 @@ private:
 		float cutoff_freqn_RC = 5.0f;
 		math::LowPassFilter2pVector3f lp2_filter_RC{loop_update_freqn, cutoff_freqn_RC};
 		int filter_status_RC = 0;
+
+		float hdot;
+		float hdot_filtered;
+		float cutoff_freqn_hdot = 2.0f;
+		math::LowPassFilter2p lp2_filter_hdot{loop_update_freqn, cutoff_freqn_hdot};
+		int filter_status_hdot = 0;
 
 
 		int case_int = 1;
@@ -472,6 +480,7 @@ private:
         (ParamFloat<px4::params::MY_LQR_CTF_OMG>) cutoff_fn_omg,
         (ParamFloat<px4::params::MY_LQR_CTF_EPS>) cutoff_fn_eps,
         (ParamFloat<px4::params::MY_LQR_CTF_RC>) cutoff_fn_RC,
+        (ParamFloat<px4::params::MY_LQR_CTF_HDOT>) cutoff_fn_hdot,
         (ParamInt<px4::params::MY_LQR_LPF_ORD>) lpf_ord,
         (ParamFloat<px4::params::MY_LQR_TAILERONS>) tailerons_sc,
         (ParamFloat<px4::params::MY_LQR_MOTORONSP>) motorons_p_sc,
