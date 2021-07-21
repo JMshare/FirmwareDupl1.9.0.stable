@@ -1238,7 +1238,7 @@ int My_LQR_control::control_fun(){
     }
 
     cf = c_setpoint + Del_c;
-    c_alt_support = math::constrain(c_alt_support + math::constrain(cf(3,0)-1.0f, 0.0f, 1.0f), 0.0f, 1.0f); // add what will be scrapped by cf limit and then limit the total to [0,1]
+    c_alt_support = math::constrain(c_alt_support + math::constrain(cf(3,0)-1.0f, 0.0f, 1.0f), 0.0f, 1.0f); // add also what will be scrapped by cf limit and then limit the total to [0,1]
         
     return PX4_OK;
 }
