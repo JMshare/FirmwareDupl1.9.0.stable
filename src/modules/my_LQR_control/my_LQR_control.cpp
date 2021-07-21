@@ -376,6 +376,7 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.k_v_mvz = K_feedback_y_sc_tun_sched(3,5);
     setpoints_struct.alt_mode = altitude_mode;
     setpoints_struct.c_alt_support = c_alt_support;
+    setpoints_struct.c_alt_support_bool = alt_support_on;
 
 
     setpoints_struct.pitch_setpoint = rad2deg(pitch_setpoint);
@@ -419,6 +420,7 @@ int My_LQR_control::setpoints_publish(){
     setpoints_struct.c_eps_satur_q = c_eps_satur(1,0);
     setpoints_struct.c_eps_satur_r = c_eps_satur(2,0);
     setpoints_struct.c_eps_satur_m = c_eps_satur(3,0);
+    setpoints_struct.c_eps_satur_bool = att_support_on;
 
 
     setpoints_struct.timestamp = hrt_absolute_time();
@@ -1708,6 +1710,9 @@ int My_LQR_control::local_parameters_update(){
         dtlim = glm_dtlim.get();
         detected_oscillations.reset(pksz, dtlim);
     }
+
+    alt_support_on = bool_alt_satur.get() == 1;
+    att_support_on = bool_att_satur.get() == 1;
     
     return PX4_OK;
 }

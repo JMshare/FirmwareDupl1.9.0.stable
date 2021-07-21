@@ -470,6 +470,22 @@ PARAM_DEFINE_FLOAT(MY_LQR_GLM_PKSZ, 0.08f);
 PARAM_DEFINE_FLOAT(MY_LQR_GLM_DTLIM, 0.2f);
 
 /**
+ * Altitude saturation support to front engine
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_ALTS, 0);
+
+/**
+ * Attitude saturation support to diff thrust roll
+ *
+ * @unit bool
+ * @group MY LQR Control
+ */
+PARAM_DEFINE_INT32(MY_LQR_BOOL_ATTS, 0);
+
+/**
  * RC setpoint scaling on P
  * Scale to change the responsivness of the plane
  *

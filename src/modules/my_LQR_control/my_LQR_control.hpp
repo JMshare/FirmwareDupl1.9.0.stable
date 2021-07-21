@@ -411,6 +411,8 @@ private:
     	float dtlim = 0.2f;
     	math::Detect_oscillations_Vector3f detected_oscillations{pksz, dtlim};
 
+    	bool alt_support_on = 0;
+    	bool att_support_on = 0;
   
 
 		
@@ -481,6 +483,8 @@ private:
         (ParamInt<px4::params::MY_LQR_BOOL_PDP>) bool_proj_dpsi,
         (ParamInt<px4::params::MY_LQR_BOOL_ADP>) bool_adaptive,
         (ParamInt<px4::params::MY_LQR_BOOL_RLS>) bool_recursiveLS,
+        (ParamInt<px4::params::MY_LQR_BOOL_ALTS>) bool_alt_satur,
+        (ParamInt<px4::params::MY_LQR_BOOL_ATTS>) bool_att_satur,
         (ParamFloat<px4::params::MY_LQR_LMBD_RLS>) lambda_rls,
         (ParamInt<px4::params::MY_LQR_BOOL_GLM>) bool_gains_limiter,
         (ParamFloat<px4::params::MY_LQR_GLM_PKSZ>) glm_pksz,

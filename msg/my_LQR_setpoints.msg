@@ -104,12 +104,14 @@ float32 k_v_qvz
 float32 k_v_mvz
 
 int32 alt_mode 				# altitude stabilisation 0 off, 1 cruise, 2 slow, -2 slow rejected
-float32 c_alt_support
+float32 c_alt_support    	# remainder after cropping the Del_c_x and Del_c_v to [0,1] -> front engine
+int32 c_alt_support_bool	# do this or not?
 
-float32 c_eps_satur_p 		# remainder after cropping the Del_eps_c to [-1,1] -> roll saturation to be coupled to yaw
+float32 c_eps_satur_p 		# remainder after cropping the Del_c_eps to [-1,1] -> roll saturation to be coupled to yaw
 float32 c_eps_satur_q
 float32 c_eps_satur_r
 float32 c_eps_satur_m
+int32 c_eps_satur_bool 		# do this or not?
 
 
 
