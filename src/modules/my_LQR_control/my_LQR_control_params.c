@@ -127,7 +127,7 @@ PARAM_DEFINE_FLOAT(MY_LQR_CTF_HDOT, 2.0f);
  * @unit none
  * @group MY LQR Control
  */
-PARAM_DEFINE_INT32(MY_LQR_LPF_ORD, 3);
+PARAM_DEFINE_INT32(MY_LQR_LPF_ORD, 2);
 
 /**
  * Pitch setpoint max
@@ -495,7 +495,7 @@ PARAM_DEFINE_INT32(MY_LQR_BOOL_ALTS, 0);
  * @unit bool
  * @group MY LQR Control
  */
-PARAM_DEFINE_INT32(MY_LQR_BOOL_ATTS, 0);
+PARAM_DEFINE_INT32(MY_LQR_BOOL_ATTS, 1);
 
 /**
  * RC setpoint scaling on P
