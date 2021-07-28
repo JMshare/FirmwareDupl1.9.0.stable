@@ -382,6 +382,9 @@ int My_LQR_printouts::printouts(){
         PX4_INFO(" ");
         PX4_INFO("c_alt_support for front engine: %2.5f", (double)my_LQR_setpoints.c_alt_support);
 
+        PX4_INFO(" ");
+        PX4_INFO("c_att_support for roll diff thrust: %2.5f", (double)my_LQR_setpoints.c_eps_satur_p);
+
         dt_print = 0.0f;
     }
     return PX4_OK;

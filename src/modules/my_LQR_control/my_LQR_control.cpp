@@ -440,7 +440,7 @@ int My_LQR_control::debug_publish(){
     dbg_val.ind = 0;
     //dbg_val.value = y(6,0); // roll rate to see filtered vibrations
     //dbg_val.value = X_RLS(1,0); // identified values
-    dbg_val.value = gain_limiter(0,0); // limiter on p gain
+    dbg_val.value = pitch_setpoint_ramp; // limiter on p gain
     
     dbg_val.timestamp = hrt_absolute_time();
 
@@ -1422,11 +1422,20 @@ int My_LQR_control::debug_printouts(){
         dt_print = dt_print + dt;
         if(dt_print > 2.0f){
             PX4_INFO(" ");
-            PX4_INFO("KD p = %5.2f, KD q = %5.2f, KD r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,6), (double)K_feedback_y_sc_tun_sched(1,7), (double)K_feedback_y_sc_tun_sched(2,8));
-            PX4_INFO("KP p = %5.2f, KP q = %5.2f, KP r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,9), (double)K_feedback_y_sc_tun_sched(1,10), (double)K_feedback_y_sc_tun_sched(2,11));
-            dt_print = 0.0f;
+            //PX4_INFO("KD p = %5.2f, KD q = %5.2f, KD r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,6), (double)K_feedback_y_sc_tun_sched(1,7), (double)K_feedback_y_sc_tun_sched(2,8));
+            //PX4_INFO("KP p = %5.2f, KP q = %5.2f, KP r = %5.2f", (double)K_feedback_y_sc_tun_sched(0,9), (double)K_feedback_y_sc_tun_sched(1,10), (double)K_feedback_y_sc_tun_sched(2,11));
+            //dt_print = 0.0f;
 
-            PX4_INFO("c_alt_support for throttle: %2.5f", (double)c_alt_support);
+            //PX4_INFO("c_alt_support for throttle: %2.5f", (double)c_alt_support);
+            //PX4_INFO("c_alt_support rem: %2.5f", (double)math::constrain(Del_c_v(3,0) + Del_c_x(3,0) - 1.0f, 0.0f, 1.0f));
+
+            //Del_c_x   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(0,0).T()*Del_y.slice<3,1>(0,0); // slice x contribution
+            //Del_c_v   = -K_feedback_y_sc_tun_sched.T().slice<3,4>(3,0).T()*Del_y.slice<3,1>(3,0); // slice v contribution
+            //PX4_INFO("Del_c_v: %2.5f, Del_c_x: %2.5f", (double)Del_c_v(3,0), (double)Del_c_x(3,0));
+            //PX4_INFO("c_alt_support v: %2.5f, x: %2.5f", (double)math::constrain(Del_c_v(3,0) - Del_c_lim(1,0), 0.0f, 1.0f), (double)math::constrain(Del_c_x(3,0) - Del_c_lim(0,0), 0.0f, 1.0f));
+        }
+        if(fabsf(c_eps_satur(0,0)) > 0.0f){
+            PX4_INFO("c_att_support for roll diff thrust: %2.5f", (double)c_eps_satur(0,0));
         }
     }
     return PX4_OK;
